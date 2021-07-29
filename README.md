@@ -46,7 +46,7 @@ We wanted to create a solution for durable metal seed backup with those thoughts
 - **Easy to use** - it is easy to create a backup for everyone as well as read it
 
 # Theory about a seed
-I suppose everyone who is here understands, what does seed is. But for our backup is important to know these facts:
+We suppose everyone who is here understands, what does seed is. But for our backup is important to know these facts:
 
 1. **seed is composed of a few (usually 12 or 24) words**
 2. **each word is determined by its first 4 characters**
@@ -65,7 +65,7 @@ The best way is to explain by example. Imagine, you have the metal card (plate, 
 
 3. Attach stencil on the metal card (use glue or tape) and punch a dent by center punch tool over the paper. 
 
-That's it, backup is complete. In the end, you can remove the stencil and destroy it. Seed backup without stencil is readable "just by sight" (but do not rely on that - if you have a photo of a card, for example, you can read it just with a little work).
+That's it, backup is complete. In the end, you can remove the stencil and destroy it. Seed backup without stencil is not readable "just by sight" (but do not rely on that - if you have a photo of a card, for example, you can read it just with a little work).
 
 In the picture below, you can see how to store seed with leading words **bike**, **acid**, **key**, **satoshi** and how does it look like after you will remove the stencil.
 
