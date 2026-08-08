@@ -1,12 +1,12 @@
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
 import { GeneratorParameters, CardParameters, CardSectionParameters } from './params';
-import { EncodingType } from './encoding';
+import { EncodingType, encodingLayout } from './encoding';
 import * as Config from './config';
 import { getFontSizeForBox } from './fontFit';
 import { getCardSafeAreaSize, getOriginForCard } from './geometry';
-import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledCircleTL } from './pdfDraw';
+import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledCircleTL, drawRotatedTextInBoxTL } from './pdfDraw';
 import { getTopLeftCornerMarkOffsets, getTopRightCornerMarkOffset } from './cornerMarks';
-import { Point, point } from '../units';
+import { Point, point, size } from '../units';
 
 const BLACK = rgb(0, 0, 0);
 const CARD_OUTLINE = BLACK;
@@ -32,10 +32,12 @@ export async function generateWriterPdf(parameters: GeneratorParameters): Promis
     currentPageNumber++;
   }
 
+  const headerHeight = parameters.seedEncoding === EncodingType.Binary ? Config.BINARY_HEADER_HEIGHT : 0;
+
   for (let set = 1; set <= parameters.copies; set++) {
     for (let i = 1; i <= parameters.effectiveCardCount; i++) {
       const cardIndex = i + (set - 1) * parameters.effectiveCardCount;
-      const safeArea = getCardSafeAreaSize(parameters.cardSize);
+      const safeArea = getCardSafeAreaSize(size(parameters.cardSize.width, parameters.cardSize.height + headerHeight));
       const origin = getOriginForCard(cardIndex, safeArea);
 
       if (origin.page > currentPageNumber) {
@@ -45,8 +47,12 @@ export async function generateWriterPdf(parameters: GeneratorParameters): Promis
 
       const cardOrigin = point(
         Config.DOCUMENT_MARGIN_H + origin.point.x,
-        Config.DOCUMENT_MARGIN_TOP + origin.point.y,
+        Config.DOCUMENT_MARGIN_TOP + origin.point.y + headerHeight,
       );
+
+      if (headerHeight > 0) {
+        drawBinaryColumnHeader(page, font, cardOrigin, parameters.cardSize.width, parameters.cardPadding, headerHeight);
+      }
 
       renderCard(page, font, boldFont, parameters.getCardParameters(i), cardOrigin);
     }
@@ -103,6 +109,30 @@ function drawCornerMarks(page: PDFPage, card: CardParameters, cardOrigin: Point)
   );
 }
 
+function drawBinaryColumnHeader(
+  page: PDFPage,
+  font: PDFFont,
+  cardOrigin: Point,
+  cardWidth: number,
+  cardPadding: number,
+  headerHeight: number,
+): void {
+  const gridWidth = cardWidth - 2 * cardPadding;
+  const colWidth = gridWidth / Config.BINARY_COLUMN_VALUES.length;
+  const fontSize = getFontSizeForBox({
+    font,
+    fontSizeRange: Config.CELL_FONT_SIZE_RANGE,
+    increaseStep: 0.2,
+    sampleText: '1024',
+    maxSize: size(headerHeight, colWidth),
+  });
+
+  Config.BINARY_COLUMN_VALUES.forEach((value, i) => {
+    const colOrigin = point(cardOrigin.x + cardPadding + colWidth * i, cardOrigin.y - headerHeight);
+    drawRotatedTextInBoxTL(page, `${value}`, font, fontSize, colOrigin, size(colWidth, headerHeight), HEADER_TEXT_COLOR);
+  });
+}
+
 function drawSection(
   page: PDFPage,
   font: PDFFont,
@@ -116,7 +146,7 @@ function drawSection(
       drawRectTL(page, wordOrigin, section.wordSize, { color: SHADE });
     }
     drawRectTL(page, wordOrigin, section.wordSize, { borderColor: CARD_OUTLINE, borderWidth: Config.PEN_NORMAL });
-    drawWordNumber(page, boldFont, wordOrigin, section.wordSize, wordNumber);
+    drawWordNumber(page, boldFont, wordOrigin, section.wordSize, wordNumber, section.encoding);
     drawWordGridLines(page, wordOrigin, section.wordSize, section.cellSize, section.encoding);
     drawWordCellCharacters(page, font, wordOrigin, section.cellSize, section.encoding);
 
@@ -130,6 +160,7 @@ function drawWordNumber(
   origin: Point,
   wordSize: { width: number; height: number },
   wordNumber: number,
+  encoding: EncodingType,
 ): void {
   const fontSize = getFontSizeForBox({
     font: boldFont,
@@ -138,7 +169,11 @@ function drawWordNumber(
     sampleText: '42.',
     maxSize: wordSize,
   });
-  drawTextInBoxTL(page, `${wordNumber}`, boldFont, fontSize, origin, wordSize, { horizontal: 'center', vertical: 'top' }, WORD_NR_TEXT);
+  if (encoding === EncodingType.Binary) {
+    drawTextInBoxTL(page, `${wordNumber}`, boldFont, fontSize, origin, wordSize, { horizontal: 'left', vertical: 'center' }, WORD_NR_TEXT);
+  } else {
+    drawTextInBoxTL(page, `${wordNumber}`, boldFont, fontSize, origin, wordSize, { horizontal: 'center', vertical: 'top' }, WORD_NR_TEXT);
+  }
 }
 
 function drawWordGridLines(
@@ -148,11 +183,12 @@ function drawWordGridLines(
   cellSize: { width: number; height: number },
   encoding: EncodingType,
 ): void {
-  for (let row = 1; row < encoding; row++) {
+  const layout = encodingLayout(encoding);
+  for (let row = 1; row < layout.rows; row++) {
     const y = origin.y + cellSize.height * row;
     drawLineTL(page, point(origin.x, y), point(origin.x + wordSize.width, y), { color: GRID_LINE, thickness: Config.PEN_THIN });
   }
-  for (let col = 1; col < 4; col++) {
+  for (let col = 1; col < layout.cols; col++) {
     const x = origin.x + cellSize.width * col;
     drawLineTL(page, point(x, origin.y), point(x, origin.y + wordSize.height), { color: GRID_LINE, thickness: Config.PEN_THIN });
   }
@@ -165,6 +201,9 @@ function drawWordCellCharacters(
   cellSize: { width: number; height: number },
   encoding: EncodingType,
 ): void {
+  const layout = encodingLayout(encoding);
+  if (!layout.cellLabels) return; // Binary: cells stay blank
+
   const fontSize = getFontSizeForBox({
     font,
     fontSizeRange: Config.CELL_FONT_SIZE_RANGE,
@@ -173,10 +212,9 @@ function drawWordCellCharacters(
     maxSize: cellSize,
   });
 
-  const startChar = encoding === EncodingType.Alphabet ? 'a'.charCodeAt(0) : '0'.charCodeAt(0);
-  for (let row = 0; row < encoding; row++) {
-    const text = String.fromCharCode(startChar + row);
-    for (let col = 0; col < 4; col++) {
+  for (let row = 0; row < layout.rows; row++) {
+    const text = layout.cellLabels[row];
+    for (let col = 0; col < layout.cols; col++) {
       const cellOrigin = point(origin.x + cellSize.width * col, origin.y + cellSize.height * row);
       drawTextInBoxTL(page, text, font, fontSize, cellOrigin, cellSize, { horizontal: 'center', vertical: 'center' }, CELL_TEXT);
     }
