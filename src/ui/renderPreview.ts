@@ -157,6 +157,10 @@ function renderBinaryBigCard(card: PreviewCard, columnLabels: string[]): HTMLEle
   const wrapper = document.createElement('div');
   wrapper.className = 'preview-card-wrapper';
 
+  const box = document.createElement('div');
+  box.className = 'preview-card preview-card--large';
+  box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
+
   const header = document.createElement('div');
   header.className = 'preview-binary-header';
   header.style.gridTemplateColumns = `repeat(${columnLabels.length}, 1fr)`;
@@ -166,11 +170,7 @@ function renderBinaryBigCard(card: PreviewCard, columnLabels: string[]): HTMLEle
     cell.textContent = label;
     header.appendChild(cell);
   }
-  wrapper.appendChild(header);
-
-  const box = document.createElement('div');
-  box.className = 'preview-card preview-card--large';
-  box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
+  box.appendChild(header);
 
   for (const section of card.sections.filter((s) => s.words.length > 0)) {
     const word = section.words[0];

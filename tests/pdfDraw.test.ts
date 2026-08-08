@@ -27,6 +27,9 @@ describe('drawing primitives', () => {
     expect(() =>
       drawRotatedTextInBoxTL(page, '1024', font, 8, point(0, 0), size(10, 30), rgb(0, 0, 0)),
     ).not.toThrow();
+    expect(() =>
+      drawRotatedTextInBoxTL(page, '1024', font, 8, point(0, 0), size(10, 30), rgb(0, 0, 0), 'end'),
+    ).not.toThrow();
 
     const bytes = await doc.save();
     expect(bytes.length).toBeGreaterThan(0);

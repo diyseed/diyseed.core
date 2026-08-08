@@ -129,7 +129,7 @@ function drawBinaryColumnHeader(
 
   Config.BINARY_COLUMN_VALUES.forEach((value, i) => {
     const colOrigin = point(cardOrigin.x + cardPadding + colWidth * i, cardOrigin.y - headerHeight);
-    drawRotatedTextInBoxTL(page, `${value}`, font, fontSize, colOrigin, size(colWidth, headerHeight), HEADER_TEXT_COLOR);
+    drawRotatedTextInBoxTL(page, `${value}`, font, fontSize, colOrigin, size(colWidth, headerHeight), HEADER_TEXT_COLOR, 'end');
   });
 }
 

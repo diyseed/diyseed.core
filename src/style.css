@@ -320,9 +320,10 @@ button[type="submit"]:hover {
 
 .preview-binary-header {
   display: grid;
+  align-items: end;
   gap: 1px;
   height: 28px;
-  margin-bottom: 4px;
+  flex-shrink: 0;
 }
 
 .preview-binary-header__cell {
@@ -352,6 +353,7 @@ button[type="submit"]:hover {
 
 .preview-binary-row .preview-cell {
   border: none;
+  margin: 0;
   background: var(--color-surface);
 }
 
