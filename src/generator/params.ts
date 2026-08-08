@@ -186,3 +186,84 @@ export class CardSectionParameters {
     return this.parent.sectionSize;
   }
 }
+
+export interface PassphraseParametersInput {
+  cardSize: Size;
+  cardPadding: number;
+  cardCornerRadius: number;
+  cardCount: number;
+  binaryDirection: BinaryDirection;
+  copies: number;
+  cellSize: Size;
+}
+
+export class PassphraseParameters {
+  readonly cardSize: Size;
+  readonly cardPadding: number;
+  readonly cardCornerRadius: number;
+  readonly cardCount: number;
+  readonly binaryDirection: BinaryDirection;
+  readonly copies: number;
+  readonly cellSize: Size;
+
+  constructor(input: PassphraseParametersInput) {
+    checkRange(input.cardCount, Config.CARD_COUNT_RANGE, 'cardCount');
+    checkRange(input.cardSize.width, Config.CARD_WIDTH_RANGE, 'cardSize.width');
+    checkRange(input.cardSize.height, Config.CARD_HEIGHT_RANGE, 'cardSize.height');
+    checkRange(input.cardCornerRadius, Config.CARDS_RADIUS_RANGE, 'cardCornerRadius');
+    checkRange(input.cardPadding, Config.CARDS_PADDING_RANGE, 'cardPadding');
+    checkRange(input.copies, Config.WRITER_COPIES_RANGE, 'copies');
+    if (input.cellSize.width <= 0 || input.cellSize.height <= 0) {
+      throw new RangeError(`cellSize must be positive, got ${input.cellSize.width}x${input.cellSize.height}`);
+    }
+
+    this.cardSize = input.cardSize;
+    this.cardPadding = input.cardPadding;
+    this.cardCornerRadius = input.cardCornerRadius;
+    this.cardCount = input.cardCount;
+    this.binaryDirection = input.binaryDirection;
+    this.copies = input.copies;
+    this.cellSize = input.cellSize;
+  }
+
+  get gridSize(): Size {
+    return size(this.cardSize.width - 2 * this.cardPadding, this.cardSize.height - 2 * this.cardPadding);
+  }
+
+  get charsPerBlock(): number {
+    return this.binaryDirection === 'horizontal'
+      ? Math.floor(this.gridSize.width / this.cellSize.width)
+      : Math.floor(this.gridSize.height / this.cellSize.height);
+  }
+
+  get blockThickness(): number {
+    const bitCount = Config.PASSPHRASE_COLUMN_VALUES.length;
+    return this.binaryDirection === 'horizontal' ? bitCount * this.cellSize.height : bitCount * this.cellSize.width;
+  }
+
+  get blockCount(): 1 | 2 {
+    const farAxis = this.binaryDirection === 'horizontal' ? this.gridSize.height : this.gridSize.width;
+    return farAxis >= 2 * this.blockThickness + this.cardPadding ? 2 : 1;
+  }
+
+  get capacityPerCard(): number {
+    return this.charsPerBlock * this.blockCount;
+  }
+
+  get totalCapacity(): number {
+    return this.capacityPerCard * this.cardCount;
+  }
+
+  getCardCharacters(cardNumber: number): number[][] {
+    if (cardNumber < 1 || cardNumber > this.cardCount) {
+      throw new RangeError(`cardNumber ${cardNumber} out of range [1-${this.cardCount}]`);
+    }
+    const first = (cardNumber - 1) * this.capacityPerCard + 1;
+    const blocks: number[][] = [];
+    for (let b = 0; b < this.blockCount; b++) {
+      const blockStart = first + b * this.charsPerBlock;
+      blocks.push(Array.from({ length: this.charsPerBlock }, (_, i) => blockStart + i));
+    }
+    return blocks;
+  }
+}
