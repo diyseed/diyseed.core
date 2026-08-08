@@ -58,3 +58,7 @@ export const MAX_CELL_ASPECT_RATIO = 2;
 // CORNER MARKS
 export const CORNER_MARK_RADIUS = mm(0.35);
 export const CORNER_MARK_PITCH = mm(1);
+
+// BINARY ENCODING
+export const BINARY_COLUMN_VALUES: number[] = [1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1];
+export const BINARY_HEADER_HEIGHT = mm(6);

@@ -7,6 +7,7 @@ describe('encoding', () => {
   it('has the BIP39-alphabet and number row counts', () => {
     expect(EncodingType.Alphabet).toBe(26);
     expect(EncodingType.Number).toBe(10);
+    expect(EncodingType.Binary).toBe(11);
   });
 });
 
@@ -57,5 +58,12 @@ describe('card padding range', () => {
   it('has a 1mm minimum so every card has room for at least one corner-mark dot', () => {
     expect(Config.CARDS_PADDING_RANGE[0]).toBeCloseTo(mm(1), 6);
     expect(Config.CARDS_PADDING_RANGE[1]).toBeCloseTo(mm(5), 6);
+  });
+});
+
+describe('binary encoding constants', () => {
+  it('defines 11 descending place-value columns and a 6mm header strip', () => {
+    expect(Config.BINARY_COLUMN_VALUES).toEqual([1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]);
+    expect(Config.BINARY_HEADER_HEIGHT).toBeCloseTo(mm(6), 6);
   });
 });
