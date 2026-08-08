@@ -1,5 +1,5 @@
 import { Size, size } from '../units';
-import { EncodingType } from './encoding';
+import { EncodingType, encodingLayout } from './encoding';
 import * as Config from './config';
 
 export interface GeneratorParametersInput {
@@ -35,10 +35,20 @@ export class GeneratorParameters {
     checkRange(input.cardSize.width, Config.CARD_WIDTH_RANGE, 'cardSize.width');
     checkRange(input.cardSize.height, Config.CARD_HEIGHT_RANGE, 'cardSize.height');
 
-    const cardSplit = input.cardSplit ?? Config.CARD_SPLIT_DEFAULT;
+    const encoding = input.encoding ?? Config.CARDS_ENCODING_DEFAULT;
     const copies = input.copies ?? Config.WRITER_COPIES_DEFAULT;
-    checkRange(cardSplit, Config.CARD_SPLIT_RANGE, 'cardSplit');
     checkRange(copies, Config.WRITER_COPIES_RANGE, 'copies');
+
+    let cardSplit: number;
+    if (encoding === EncodingType.Binary) {
+      // Binary lays out exactly one word per row, so the split is however many
+      // rows are needed to fit the seed across the requested card count - not a
+      // user-configurable value like it is for the other encodings.
+      cardSplit = Math.ceil(input.seedLength / input.cardCount);
+    } else {
+      cardSplit = input.cardSplit ?? Config.CARD_SPLIT_DEFAULT;
+      checkRange(cardSplit, Config.CARD_SPLIT_RANGE, 'cardSplit');
+    }
 
     const cardCornerRadius = input.cardCornerRadius ?? Config.CARDS_RADIUS_DEFAULT;
     const cardPadding = input.cardPadding ?? Config.CARDS_PADDING_DEFAULT;
@@ -49,7 +59,7 @@ export class GeneratorParameters {
     this.cardCount = input.cardCount;
     this.cardSize = input.cardSize;
     this.cardSplit = cardSplit;
-    this.seedEncoding = input.encoding ?? Config.CARDS_ENCODING_DEFAULT;
+    this.seedEncoding = encoding;
     this.copies = copies;
     this.cardCornerRadius = cardCornerRadius;
     this.cardPadding = cardPadding;
@@ -68,7 +78,8 @@ export class GeneratorParameters {
   }
 
   get cellSize(): Size {
-    return size(this.wordSize.width / 4, this.wordSize.height / this.seedEncoding);
+    const layout = encodingLayout(this.seedEncoding);
+    return size(this.wordSize.width / layout.cols, this.wordSize.height / layout.rows);
   }
 
   get totalSectionCount(): number {
