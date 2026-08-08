@@ -595,6 +595,15 @@ describe('renderPreview — passphrase', () => {
 
   it('renders the 7-column header with ASCII place values', () => {
     renderPreview(container, null, makePassphraseLayout());
+    const cells = container.querySelectorAll('.preview-passphrase .preview-binary-row-header__cell');
+    expect(cells).toHaveLength(7);
+    expect(cells[0].textContent).toBe('64');
+    expect(cells[6].textContent).toBe('1');
+  });
+
+  it('renders the top header for vertical passphrase direction', () => {
+    const layout = makePassphraseLayout({ binaryDirection: 'vertical' });
+    renderPreview(container, null, layout);
     const cells = container.querySelectorAll('.preview-passphrase .preview-binary-header__cell');
     expect(cells).toHaveLength(7);
     expect(cells[0].textContent).toBe('64');

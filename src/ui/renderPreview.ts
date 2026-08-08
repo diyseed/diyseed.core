@@ -149,7 +149,7 @@ function renderPassphraseBigCard(card: PassphraseCard, columnLabels: string[], d
   }
   renderCornerMarks(box, card.cardNumber);
 
-  if (direction === 'horizontal') {
+  if (direction === 'vertical') {
     const header = renderBinaryHeader(columnLabels, 'top');
     wrapper.appendChild(header.labels);
     wrapper.appendChild(header.arrows);
