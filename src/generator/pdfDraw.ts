@@ -133,11 +133,13 @@ export function drawRotatedTextInBoxTL(
 
   // After a 90° CCW rotation, the text's length runs along the box's height
   // (bottom-to-top), and its ascent runs along the box's width (left-to-right).
-  // 'end' flushes the text against the box's bottom (TL-space) edge instead of
-  // centering it - used for column headers that should touch the grid/card
-  // edge they label, rather than floating in the middle of their strip.
+  // 'end' anchors the text near the box's bottom (TL-space) edge instead of
+  // centering it - used for column headers that should read close to the
+  // grid/card edge they label. A small gap (half a character's height) is
+  // left between the text and that edge so it doesn't touch it.
   const x = origin.x + boxSize.width / 2 + ascent / 2;
-  const anchorTopY = verticalAlign === 'end' ? origin.y + boxSize.height : origin.y + boxSize.height / 2 + textLength / 2;
+  const endGap = ascent / 2;
+  const anchorTopY = verticalAlign === 'end' ? origin.y + boxSize.height - endGap : origin.y + boxSize.height / 2 + textLength / 2;
   const y = page.getHeight() - anchorTopY;
 
   page.drawText(text, { x, y, size: fontSize, font, color, rotate: degrees(90) });

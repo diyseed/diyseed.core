@@ -193,9 +193,15 @@ function renderBinaryBigCard(card: PreviewCard, columnLabels: string[]): HTMLEle
   }
   wrapper.appendChild(header);
 
-  const arrow = document.createElement('div');
-  arrow.className = 'preview-binary-header-arrow';
-  wrapper.appendChild(arrow);
+  const arrowRow = document.createElement('div');
+  arrowRow.className = 'preview-binary-header-arrows';
+  arrowRow.style.gridTemplateColumns = `repeat(${columnLabels.length}, 1fr)`;
+  for (let i = 0; i < columnLabels.length; i++) {
+    const arrow = document.createElement('div');
+    arrow.className = 'preview-binary-header-arrow';
+    arrowRow.appendChild(arrow);
+  }
+  wrapper.appendChild(arrowRow);
 
   const box = document.createElement('div');
   box.className = 'preview-card preview-card--large';

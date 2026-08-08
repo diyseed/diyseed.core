@@ -423,6 +423,22 @@ describe('renderPreview', () => {
     });
   });
 
+  it('renders one down-arrow per column, not a single centered one', () => {
+    const layout = makeLayout({
+      isBinary: true,
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      cards: [
+        makeCard({
+          sections: [{ sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] }],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+
+    const arrows = container.querySelectorAll('.preview-big .preview-binary-header-arrow');
+    expect(arrows).toHaveLength(11);
+  });
+
   it('uses binary-specific wording ("card count") for the cellNotSquare warning when isBinary is true', () => {
     const layout = makeLayout({
       isBinary: true,
