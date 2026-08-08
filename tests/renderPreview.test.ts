@@ -299,9 +299,10 @@ describe('renderPreview', () => {
     expect(headerCells?.[0].textContent).toBe('1024');
     expect(headerCells?.[10].textContent).toBe('1');
 
-    // the header is part of the card itself (preview-only difference from the PDF,
-    // which draws it outside the card outline) - not a sibling floating above it.
-    expect(container.querySelector('.preview-big .preview-card--large .preview-binary-header')).not.toBeNull();
+    // the header sits above the card outline, matching the PDF's placement -
+    // not nested inside the card box.
+    const bigBox = container.querySelector('.preview-big .preview-card--large') as HTMLElement;
+    expect(bigBox.contains(header)).toBe(false);
   });
 
   it('renders one row per word in the big binary card, each with 11 blank cells and a word-number label', () => {
