@@ -52,6 +52,10 @@ describe('corner mark geometry', () => {
     expect(Config.CORNER_MARK_RADIUS).toBeCloseTo(mm(0.35), 6);
     expect(Config.CORNER_MARK_PITCH).toBeCloseTo(mm(1), 6);
   });
+
+  it('defines a fixed 0.5mm inset from the card corner, independent of card padding', () => {
+    expect(Config.CORNER_MARK_INSET).toBeCloseTo(mm(0.5), 6);
+  });
 });
 
 describe('card padding range', () => {

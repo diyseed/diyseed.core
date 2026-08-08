@@ -202,6 +202,7 @@ describe('renderPreview', () => {
     const box = container.querySelector('.preview-cards .preview-card') as HTMLElement;
     expect(box.querySelectorAll('.corner-mark--top-left')).toHaveLength(3);
     expect(box.querySelectorAll('.corner-mark--top-right')).toHaveLength(1);
+    expect(box.querySelectorAll('.corner-mark--bottom-left')).toHaveLength(1);
   });
 
   it('renders the big card mesh as empty frames (no letters), just the word-number overlay', () => {

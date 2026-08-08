@@ -1,17 +1,20 @@
 import { Point, point } from '../units';
 import * as Config from './config';
 
-export function getTopLeftCornerMarkOffsets(count: number, padding: number): Point[] {
-  const y = padding / 2;
+export function getTopLeftCornerMarkOffsets(count: number): Point[] {
   const offsets: Point[] = [];
   for (let i = 0; i < count; i++) {
-    offsets.push(point(padding + i * Config.CORNER_MARK_PITCH, y));
+    offsets.push(point(Config.CORNER_MARK_INSET + i * Config.CORNER_MARK_PITCH, Config.CORNER_MARK_INSET));
   }
   return offsets;
 }
 
-export function getTopRightCornerMarkOffset(padding: number): Point {
-  return point(-padding, padding / 2);
+export function getTopRightCornerMarkOffset(): Point {
+  return point(-Config.CORNER_MARK_INSET, Config.CORNER_MARK_INSET);
+}
+
+export function getBottomLeftCornerMarkOffset(): Point {
+  return point(Config.CORNER_MARK_INSET, -Config.CORNER_MARK_INSET);
 }
 
 export function physicalCardNumberOf(cardNumber: number): number {

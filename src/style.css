@@ -477,3 +477,9 @@ button[type="submit"]:hover {
 .corner-mark--top-right {
   right: 4px;
 }
+
+.corner-mark--bottom-left {
+  top: auto;
+  bottom: 2px;
+  left: 3px;
+}

@@ -5,7 +5,7 @@ import * as Config from './config';
 import { getFontSizeForBox } from './fontFit';
 import { getCardSafeAreaSize, getOriginForCard } from './geometry';
 import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledCircleTL, drawRotatedTextInBoxTL } from './pdfDraw';
-import { getTopLeftCornerMarkOffsets, getTopRightCornerMarkOffset } from './cornerMarks';
+import { getTopLeftCornerMarkOffsets, getTopRightCornerMarkOffset, getBottomLeftCornerMarkOffset } from './cornerMarks';
 import { Point, point, size } from '../units';
 
 const BLACK = rgb(0, 0, 0);
@@ -104,14 +104,22 @@ function renderCard(page: PDFPage, font: PDFFont, boldFont: PDFFont, card: CardP
 }
 
 function drawCornerMarks(page: PDFPage, card: CardParameters, cardOrigin: Point): void {
-  for (const offset of getTopLeftCornerMarkOffsets(card.number, card.padding)) {
+  for (const offset of getTopLeftCornerMarkOffsets(card.number)) {
     drawFilledCircleTL(page, point(cardOrigin.x + offset.x, cardOrigin.y + offset.y), Config.CORNER_MARK_RADIUS, CARD_OUTLINE);
   }
 
-  const topRight = getTopRightCornerMarkOffset(card.padding);
+  const topRight = getTopRightCornerMarkOffset();
   drawFilledCircleTL(
     page,
     point(cardOrigin.x + card.size.width + topRight.x, cardOrigin.y + topRight.y),
+    Config.CORNER_MARK_RADIUS,
+    CARD_OUTLINE,
+  );
+
+  const bottomLeft = getBottomLeftCornerMarkOffset();
+  drawFilledCircleTL(
+    page,
+    point(cardOrigin.x + bottomLeft.x, cardOrigin.y + card.size.height + bottomLeft.y),
     Config.CORNER_MARK_RADIUS,
     CARD_OUTLINE,
   );

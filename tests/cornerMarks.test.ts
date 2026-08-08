@@ -2,34 +2,38 @@ import { describe, it, expect } from 'vitest';
 import {
   getTopLeftCornerMarkOffsets,
   getTopRightCornerMarkOffset,
+  getBottomLeftCornerMarkOffset,
   physicalCardNumberOf,
   sideOf,
 } from '../src/generator/cornerMarks';
 import * as Config from '../src/generator/config';
-import { mm } from '../src/units';
 
 describe('getTopLeftCornerMarkOffsets', () => {
-  it('starts at x = padding (aligned with the grid start) and y = padding/2 (centered in the padding band)', () => {
-    const padding = mm(2);
-    const offsets = getTopLeftCornerMarkOffsets(3, padding);
+  it('starts at a fixed 0.5mm inset from the corner, independent of card padding', () => {
+    const offsets = getTopLeftCornerMarkOffsets(3);
     expect(offsets).toHaveLength(3);
-    expect(offsets[0]).toEqual({ x: padding, y: padding / 2 });
-    expect(offsets[1].x).toBeCloseTo(padding + Config.CORNER_MARK_PITCH, 6);
-    expect(offsets[2].x).toBeCloseTo(padding + 2 * Config.CORNER_MARK_PITCH, 6);
+    expect(offsets[0]).toEqual({ x: Config.CORNER_MARK_INSET, y: Config.CORNER_MARK_INSET });
+    expect(offsets[1].x).toBeCloseTo(Config.CORNER_MARK_INSET + Config.CORNER_MARK_PITCH, 6);
+    expect(offsets[2].x).toBeCloseTo(Config.CORNER_MARK_INSET + 2 * Config.CORNER_MARK_PITCH, 6);
     for (const offset of offsets) {
-      expect(offset.y).toBeCloseTo(padding / 2, 6);
+      expect(offset.y).toBeCloseTo(Config.CORNER_MARK_INSET, 6);
     }
   });
 
   it('returns an empty array for count 0', () => {
-    expect(getTopLeftCornerMarkOffsets(0, mm(1.5))).toEqual([]);
+    expect(getTopLeftCornerMarkOffsets(0)).toEqual([]);
   });
 });
 
 describe('getTopRightCornerMarkOffset', () => {
-  it('sits at x = -padding (aligned with the grid end) and y = padding/2 (centered in the padding band)', () => {
-    const padding = mm(2);
-    expect(getTopRightCornerMarkOffset(padding)).toEqual({ x: -padding, y: padding / 2 });
+  it('sits at a fixed 0.5mm inset from the top-right corner, independent of card padding', () => {
+    expect(getTopRightCornerMarkOffset()).toEqual({ x: -Config.CORNER_MARK_INSET, y: Config.CORNER_MARK_INSET });
+  });
+});
+
+describe('getBottomLeftCornerMarkOffset', () => {
+  it('sits at a fixed 0.5mm inset from the bottom-left corner, independent of card padding', () => {
+    expect(getBottomLeftCornerMarkOffset()).toEqual({ x: Config.CORNER_MARK_INSET, y: -Config.CORNER_MARK_INSET });
   });
 });
 

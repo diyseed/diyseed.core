@@ -336,4 +336,8 @@ function renderCornerMarks(box: HTMLElement, cardNumber: number): void {
   const rightDot = document.createElement('span');
   rightDot.className = 'corner-mark corner-mark--top-right';
   box.appendChild(rightDot);
+
+  const bottomLeftDot = document.createElement('span');
+  bottomLeftDot.className = 'corner-mark corner-mark--bottom-left';
+  box.appendChild(bottomLeftDot);
 }

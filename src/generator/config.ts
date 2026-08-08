@@ -58,6 +58,8 @@ export const MAX_CELL_ASPECT_RATIO = 2;
 // CORNER MARKS
 export const CORNER_MARK_RADIUS = mm(0.35);
 export const CORNER_MARK_PITCH = mm(1);
+// Fixed inset from the actual card corner - stays put even if card padding changes.
+export const CORNER_MARK_INSET = mm(0.5);
 
 // BINARY ENCODING
 export const BINARY_COLUMN_VALUES: number[] = [1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1];
