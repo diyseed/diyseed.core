@@ -133,9 +133,12 @@ function renderBinaryMesh(rows: PreviewSection[], columnCount: number, showNumbe
   grid.style.gridTemplateRows = `repeat(${rows.length}, 1fr)`;
   rows.forEach((section) => {
     const shaded = section.words[0]?.shaded ?? false;
-    for (let i = 0; i < columnCount; i++) {
+    for (let col = 0; col < columnCount; col++) {
       const cell = document.createElement('div');
-      cell.className = 'preview-cell' + (shaded ? ' preview-cell--shaded' : '');
+      let className = 'preview-cell';
+      if (shaded) className += ' preview-cell--shaded';
+      if (col % 2 === 1) className += ' preview-cell--col-shaded';
+      cell.className = className;
       grid.appendChild(cell);
     }
   });
@@ -189,6 +192,10 @@ function renderBinaryBigCard(card: PreviewCard, columnLabels: string[]): HTMLEle
     header.appendChild(cell);
   }
   wrapper.appendChild(header);
+
+  const arrow = document.createElement('div');
+  arrow.className = 'preview-binary-header-arrow';
+  wrapper.appendChild(arrow);
 
   const box = document.createElement('div');
   box.className = 'preview-card preview-card--large';

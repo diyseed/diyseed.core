@@ -404,6 +404,25 @@ describe('renderPreview', () => {
     expect(cells).toHaveLength(11); // only the one real row, not a blank row for the empty section
   });
 
+  it('shades every second binary column, independent of row shading', () => {
+    const layout = makeLayout({
+      isBinary: true,
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      cards: [
+        makeCard({
+          sections: [{ sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] }],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+
+    const cells = container.querySelectorAll('.preview-big .preview-binary-mesh .preview-cell');
+    expect(cells).toHaveLength(11);
+    Array.from(cells).forEach((cell, col) => {
+      expect(cell.classList.contains('preview-cell--col-shaded')).toBe(col % 2 === 1);
+    });
+  });
+
   it('uses binary-specific wording ("card count") for the cellNotSquare warning when isBinary is true', () => {
     const layout = makeLayout({
       isBinary: true,

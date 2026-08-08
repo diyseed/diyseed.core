@@ -145,6 +145,9 @@ function drawSection(
     if ((section.number + i) % 2 === 0) {
       drawRectTL(page, wordOrigin, section.wordSize, { color: SHADE });
     }
+    if (section.encoding === EncodingType.Binary) {
+      drawBinaryColumnShading(page, wordOrigin, section.wordSize, section.cellSize);
+    }
     drawRectTL(page, wordOrigin, section.wordSize, { borderColor: CARD_OUTLINE, borderWidth: Config.PEN_NORMAL });
     drawWordNumber(page, boldFont, wordOrigin, section.wordSize, wordNumber, section.encoding);
     drawWordGridLines(page, wordOrigin, section.wordSize, section.cellSize, section.encoding);
@@ -152,6 +155,19 @@ function drawSection(
 
     wordOrigin = point(wordOrigin.x + section.wordSize.width, wordOrigin.y);
   });
+}
+
+function drawBinaryColumnShading(
+  page: PDFPage,
+  origin: Point,
+  wordSize: { width: number; height: number },
+  cellSize: { width: number; height: number },
+): void {
+  const cols = encodingLayout(EncodingType.Binary).cols;
+  for (let col = 1; col < cols; col += 2) {
+    const x = origin.x + cellSize.width * col;
+    drawRectTL(page, point(x, origin.y), size(cellSize.width, wordSize.height), { color: SHADE });
+  }
 }
 
 function drawWordNumber(
