@@ -25,6 +25,7 @@ function readForm(): FormValues {
   const binaryDirectionEl = document.getElementById('binaryDirectionVertical') as HTMLInputElement | null;
 
   return {
+    includeSeed: DEFAULT_FORM_VALUES.includeSeed,
     seedLength: num('seedLength', DEFAULT_FORM_VALUES.seedLength),
     cardCount: num('cardCount', DEFAULT_FORM_VALUES.cardCount),
     cardWidthMm: num('cardWidthMm', DEFAULT_FORM_VALUES.cardWidthMm),
@@ -34,6 +35,8 @@ function readForm(): FormValues {
     copies: num('copies', DEFAULT_FORM_VALUES.copies),
     encoding: Number(encodingEl.value) as EncodingType,
     binaryDirection: binaryDirectionEl?.checked ? 'vertical' : 'horizontal',
+    // TODO(Task 8): wire real passphrase form controls; until then this mirrors DEFAULT_FORM_VALUES.
+    passphrase: { ...DEFAULT_FORM_VALUES.passphrase },
   };
 }
 
