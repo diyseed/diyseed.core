@@ -1,10 +1,10 @@
-# DIYseed.core .NET library
+# HoboHodl stencil generator
 
-.NET library to generate stencils for cryptocurrency-wallet seed backup.
+A web tool to generate stencils for cryptocurrency-wallet seed backup.
 
-Online version at [DIYseed.net](https://diyseed.net/)
+Online version at [HoboHodl.com](https://hobohodl.com/)
 
-![DIYSeed PDF generator console app](graphics/product-photo.jpg)
+![HoboHodl PDF stencil generator](graphics/product-photo.jpg)
 
 The solution is inspired by commercial seed backup solutions (Seedplate, Steelplate, and many others...).
 
@@ -12,13 +12,13 @@ The solution is inspired by commercial seed backup solutions (Seedplate, Steelpl
 
 ## Create seed backup
 
-The library generates a PDF containing a "table" to store your seed. You just print it and check your seed words as you see on animation.
+The tool generates a PDF containing a "table" to store your seed. You just print it and check your seed words as you see on animation.
 
 When it is complete, you can stick it on a metal sheet (metal card) and punch each character over the paper to the metal.
 
 When it is done, remove the paper. You have durable seed backup.
 
-![DIYSeed PDF generator console app](graphics/writer-animation.gif)
+![HoboHodl PDF stencil generator](graphics/writer-animation.gif)
 
 - **specify seed properties** - generate stencil for any length of the seed
 - **specify metal card properties** - generate stencil for any size of metal card
@@ -27,11 +27,11 @@ When it is done, remove the paper. You have durable seed backup.
 
 To read seed backup cards, you can print writing stencil to transparent paper and overlay the card.
 
-If you can't print to transparent paper, you can use the generated reader, which is part of the generated PDF.
+If you can't print to transparent paper, you can use a generated reader. The reading-stencil / overlay approach described below is planned for the generated PDF, but the reader section is not yet implemented in the JS app (see the To-Do list).
 
 The principle is shown below. Just cut the red line on the paper, insert the backup card and move it character by character.
 
-![DIYSeed PDF generator console app](graphics/reader-animation.gif)
+![HoboHodl PDF stencil generator](graphics/reader-animation.gif)
 
 
 # Motivation
@@ -59,7 +59,7 @@ We suppose everyone who is here understands, what does seed is. But for our back
 
 The best way is to explain by example. Imagine, you have the metal card (plate, sheet) of size 100x60mm and you want to create seed backup.
 
-1. Use generator [DIYseed.net](https://diyseed.net/) and fill properties of the card and seed. You will get PDF with a stencil the same size as your card, prepared to store your seed.
+1. Use generator [HoboHodl.com](https://hobohodl.com/) and fill properties of the card and seed. You will get PDF with a stencil the same size as your card, prepared to store your seed.
 
 2. Check your seed words to the writing stencil. The writing stencil is a simple table. The **Y-axis** represents alphabet characters. The **X-axis** represents words of seed. Each word is made by 4 characters ([Read theory about a seed](#theory-about-a-seed)).
 
@@ -69,7 +69,7 @@ That's it, backup is complete. In the end, you can remove the stencil and destro
 
 In the picture below, you can see how to store seed with leading words **bike**, **acid**, **key**, **satoshi** and how does it look like after you will remove the stencil.
 
-![Example of DIYseed solution](graphics/card-animation.gif)
+![Example of HoboHodl solution](graphics/card-animation.gif)
 
 # How can you read back your seed?
 
@@ -77,37 +77,44 @@ In the picture below, you can see how to store seed with leading words **bike**,
 Use writing stencil, printed on transparent paper. Just overlay the metal backup and you will see, what letter each dent represents.
 
 ## option 2
-Another solution is to use our reader, which will be generated along with the writer. The principle is shown on the gif at the beginning.
+Another solution is to use our reader, which is planned to be generated along with the writer but is not yet implemented in the JS app (see the To-Do list). The principle is shown on the gif at the beginning.
 
-# The .NET stencils generator solution
-The solution contains 2 projects:
-- **Diyseed.Core** - class library containing PDF generator
-- **Diyseed.App** - sample console app to demonstrate the generator
+# The HoboHodl stencil generator
 
-## Parameters of Diyseed.Core generator
+A client-side TypeScript web app. No install, no server, no account — open
+the page, fill in your card and seed parameters, and it generates the
+Writer stencil PDF entirely in your browser.
 
-- **Card size** - the size of the card in mm
-- **Card count** - number of cards to split seed over[See sample #1 - 2 cards split](samples/sample1.pdf)
-- **Seed length** - number of words of the seed (12, 24, 33...)
-- **Card split** - Number of rows per card (if you have a bigger card, you can store more rows of words per card. [See sample #2](samples/sample2.pdf)
-- **Card encoding** - You can store each word either represented by alphabet or as a number. [See sample #3](samples/sample3.pdf)
-- **Copies** - Number of copies of the stencil
-- **Sections** - You can choose what is par of generated PDF. Reader, writer, and manual.
-- **Manual PDF** - PDF with manual, appended to end of the generated document
+## Parameters
 
-## Use of the sample console app
-![DIYSeed PDF generator console app](graphics/app-animation.gif)
+- **Seed length** — number of words in your seed (10-39)
+- **Card count** — number of metal cards to split the seed across (1-13)
+- **Card size** — width/height of your metal card in mm (20-180mm)
+- **Card split** — number of word-rows per card, for taller cards (1-5)
+- **Encoding** — store each word as its 4-letter alphabet prefix, or as its BIP-39 index digits (0-9)
+- **Copies** — number of stencil sets to generate (1-10)
 
-## Sample PDF files
-- [Sample #1 (24 words seed, 2 cards, size 100x60mm)](samples/sample1.pdf)
-- [Sample #2 (24 words seed, 1 card, size 100x100mm, 2 rows split)](samples/sample2.pdf)
-- [Sample #3 (12 words seed, 4 cards, size 20x20mm, numbers encoding)](samples/sample3.pdf)
+## Running locally
+
+```
+npm install
+npm run dev
+```
+
+## Building for deployment
+
+```
+npm run build
+```
+
+Outputs a static site to `dist/`, deployable to any static host.
 
 ### To-Do
-- [x] Possibility to generate multiple sets of writing stencils
 - [ ] Add top-left corner marker to stencils (dent to the edge, represents top left corner and number of the card)
 - [ ] Add how-to videos
 - [ ] Write generator parameters to the stencils
+- [ ] Port the Reader stencil section to the JS app
+- [ ] Port the Manual PDF section to the JS app
 
 # FAQ
 

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HoboHodl — Seed Backup Stencil Generator</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="form-panel">
+        <h1>HoboHodl</h1>
+        <p>Generate a punching stencil to back up your crypto-wallet seed on metal.</p>
+        <form id="generator-form">
+          <label>Seed length (words)
+            <input type="number" id="seedLength" value="24" min="10" max="39" step="1" required aria-describedby="seedLength-hint" />
+          </label>
+          <p class="field-hint" id="seedLength-hint">Number of words in your seed phrase (usually 12 or 24).</p>
+
+          <label>Card count
+            <input type="number" id="cardCount" value="2" min="1" max="13" step="1" required aria-describedby="cardCount-hint" />
+          </label>
+          <p class="field-hint" id="cardCount-hint">How many physical cards to split your seed across.</p>
+
+          <label>Card size (mm)
+            <span class="field-row">
+              <input type="number" id="cardWidthMm" value="100" min="20" max="180" step="0.1" required aria-describedby="cardSizeMm-hint" aria-label="Card width (mm)" />
+              <span class="field-row__sep">×</span>
+              <input type="number" id="cardHeightMm" value="60" min="20" max="180" step="0.1" required aria-describedby="cardSizeMm-hint" aria-label="Card height (mm)" />
+            </span>
+          </label>
+          <p class="field-hint" id="cardSizeMm-hint">Width × height of your metal card blank, in millimeters.</p>
+
+          <label>Stencil sets
+            <input type="number" id="copies" value="1" min="1" max="10" step="1" aria-describedby="copies-hint" />
+          </label>
+          <p class="field-hint" id="copies-hint">Print multiple identical stencils if you're punching more than one backup card set.</p>
+
+          <details class="advanced-options">
+            <summary>Advanced options</summary>
+
+            <label>Card split (rows per card)
+              <input type="number" id="cardSplit" value="1" min="1" max="5" step="1" aria-describedby="cardSplit-hint" />
+            </label>
+            <p class="field-hint" id="cardSplit-hint">Rows of words per card — useful for taller cards.</p>
+
+            <label>Encoding
+              <select id="encoding" aria-describedby="encoding-hint">
+                <option value="26">Alphabet</option>
+                <option value="10">Number</option>
+              </select>
+            </label>
+            <p class="field-hint" id="encoding-hint">Store each word as its 4-letter prefix, or as its BIP-39 index digits (0–9) for a smaller grid.</p>
+
+            <label>Card padding (mm)
+              <input type="number" id="cardPaddingMm" value="1.5" min="1" max="5" step="0.1" aria-describedby="cardPaddingMm-hint" />
+            </label>
+            <p class="field-hint" id="cardPaddingMm-hint">Blank margin around the punch grid inside the card. More padding means a safer distance from the edge.</p>
+          </details>
+
+          <button type="submit">Generate PDF</button>
+        </form>
+        <ul id="form-errors" aria-live="polite"></ul>
+      </section>
+      <aside class="preview-panel" id="preview-panel"></aside>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
