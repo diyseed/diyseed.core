@@ -64,8 +64,8 @@ export function toGeneratorParameters(values: FormValues): GeneratorParameters {
 export const DEFAULT_FORM_VALUES: FormValues = {
   seedLength: Config.SEED_LENGTH_DEFAULT,
   cardCount: Config.CARD_COUNT_DEFAULT,
-  cardWidthMm: 100,
-  cardHeightMm: 60,
+  cardWidthMm: 85.6,
+  cardHeightMm: 54,
   cardSplit: Config.CARD_SPLIT_DEFAULT,
   cardPaddingMm: 1.5,
   copies: Config.WRITER_COPIES_DEFAULT,

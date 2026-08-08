@@ -165,6 +165,24 @@ describe('renderPreview', () => {
     expect(container.querySelectorAll('.preview-cards .preview-card--small')).toHaveLength(2);
   });
 
+  it('groups thumbnails into a labeled set per stencil set when there is more than one', () => {
+    const layout = makeLayout({ copies: 3 });
+    renderPreview(container, layout);
+    const sets = container.querySelectorAll('.preview-cards .preview-set');
+    expect(sets).toHaveLength(3);
+    expect(sets[0].querySelector('.preview-set__label')?.textContent).toBe('Set 1');
+    expect(sets[1].querySelector('.preview-set__label')?.textContent).toBe('Set 2');
+    expect(sets[2].querySelector('.preview-set__label')?.textContent).toBe('Set 3');
+    expect(sets[0].querySelectorAll('.preview-card--small')).toHaveLength(2);
+  });
+
+  it('does not label the single set when copies is 1', () => {
+    renderPreview(container, makeLayout({ copies: 1 }));
+    const sets = container.querySelectorAll('.preview-cards .preview-set');
+    expect(sets).toHaveLength(1);
+    expect(sets[0].querySelector('.preview-set__label')).toBeNull();
+  });
+
   it('wraps warning banners in an aria-live container, and leaves the cards container without one', () => {
     renderPreview(container, makeLayout({ warnings: { cellTooSmall: true, cellNotSquare: false, cellSizeInvalid: false } }));
     const warningsEl = container.querySelector('.preview-warnings');

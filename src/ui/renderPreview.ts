@@ -52,9 +52,7 @@ export function renderPreview(container: HTMLElement, layout: PreviewLayout | nu
   const cardsEl = document.createElement('div');
   cardsEl.className = 'preview-cards';
   for (let set = 0; set < layout.copies; set++) {
-    for (const card of layout.cards) {
-      cardsEl.appendChild(renderCard(card));
-    }
+    cardsEl.appendChild(renderCardSet(layout.cards, set, layout.copies));
   }
   container.appendChild(cardsEl);
 }
@@ -64,6 +62,27 @@ function warningBanner(kind: 'error' | 'warning', message: string): HTMLElement 
   el.className = `preview-warning preview-warning--${kind}`;
   el.textContent = message;
   return el;
+}
+
+function renderCardSet(cards: PreviewCard[], setIndex: number, copies: number): HTMLElement {
+  const setEl = document.createElement('div');
+  setEl.className = 'preview-set';
+
+  if (copies > 1) {
+    const label = document.createElement('div');
+    label.className = 'preview-set__label';
+    label.textContent = `Set ${setIndex + 1}`;
+    setEl.appendChild(label);
+  }
+
+  const cardsRow = document.createElement('div');
+  cardsRow.className = 'preview-set__cards';
+  for (const card of cards) {
+    cardsRow.appendChild(renderCard(card));
+  }
+  setEl.appendChild(cardsRow);
+
+  return setEl;
 }
 
 function renderCard(card: PreviewCard): HTMLElement {

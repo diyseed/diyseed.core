@@ -42,9 +42,9 @@ export const CARDS_PADDING_RANGE: [number, number] = [mm(1), mm(5)];
 export const WRITER_COPIES_RANGE: [number, number] = [1, 10];
 
 // INPUT DEFAULTS
-export const SEED_LENGTH_DEFAULT = 24;
+export const SEED_LENGTH_DEFAULT = 12;
 export const CARD_COUNT_DEFAULT = 2;
-export const CARD_SIZE_DEFAULT: Size = { width: mm(100), height: mm(60) };
+export const CARD_SIZE_DEFAULT: Size = { width: mm(85.6), height: mm(54) }; // credit-card (ISO/IEC 7810 ID-1) size
 export const CARD_SPLIT_DEFAULT = 1;
 export const CARDS_ENCODING_DEFAULT: EncodingType = EncodingType.Alphabet;
 export const CARDS_RADIUS_DEFAULT = mm(1.5);

@@ -155,6 +155,23 @@ button[type="submit"]:hover {
 
 .preview-cards {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-set + .preview-set {
+  border-top: 1px dashed var(--color-border);
+  padding-top: 12px;
+}
+
+.preview-set__label {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+
+.preview-set__cards {
+  display: flex;
   flex-wrap: wrap;
   gap: 12px;
 }

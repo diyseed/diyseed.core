@@ -13,7 +13,7 @@
         <p>Generate a punching stencil to back up your crypto-wallet seed on metal.</p>
         <form id="generator-form">
           <label>Seed length (words)
-            <input type="number" id="seedLength" value="24" min="10" max="39" step="1" required aria-describedby="seedLength-hint" />
+            <input type="number" id="seedLength" value="12" min="10" max="39" step="1" required aria-describedby="seedLength-hint" />
           </label>
           <p class="field-hint" id="seedLength-hint">Number of words in your seed phrase (usually 12 or 24).</p>
 
@@ -24,9 +24,9 @@
 
           <label>Card size (mm)
             <span class="field-row">
-              <input type="number" id="cardWidthMm" value="100" min="20" max="180" step="0.1" required aria-describedby="cardSizeMm-hint" aria-label="Card width (mm)" />
+              <input type="number" id="cardWidthMm" value="85.6" min="20" max="180" step="0.1" required aria-describedby="cardSizeMm-hint" aria-label="Card width (mm)" />
               <span class="field-row__sep">×</span>
-              <input type="number" id="cardHeightMm" value="60" min="20" max="180" step="0.1" required aria-describedby="cardSizeMm-hint" aria-label="Card height (mm)" />
+              <input type="number" id="cardHeightMm" value="54" min="20" max="180" step="0.1" required aria-describedby="cardSizeMm-hint" aria-label="Card height (mm)" />
             </span>
           </label>
           <p class="field-hint" id="cardSizeMm-hint">Width × height of your metal card blank, in millimeters.</p>
