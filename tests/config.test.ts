@@ -24,7 +24,7 @@ describe('config ranges (mirrors Configuration.cs)', () => {
 
   it('matches the documented defaults', () => {
     expect(Config.SEED_LENGTH_DEFAULT).toBe(12);
-    expect(Config.CARD_COUNT_DEFAULT).toBe(2);
+    expect(Config.CARD_COUNT_DEFAULT).toBe(1);
     expect(Config.CARD_SIZE_DEFAULT).toEqual({ width: mm(85.6), height: mm(54) });
     expect(Config.CARD_SPLIT_DEFAULT).toBe(1);
     expect(Config.WRITER_COPIES_DEFAULT).toBe(1);

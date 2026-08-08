@@ -320,19 +320,20 @@ describe('renderPreview', () => {
     });
     renderPreview(container, layout);
 
-    const rows = container.querySelectorAll('.preview-big .preview-binary-row');
-    expect(rows).toHaveLength(2);
-    expect(rows[1].classList.contains('preview-binary-row--shaded')).toBe(true);
+    const mesh = container.querySelector('.preview-big .preview-binary-mesh');
+    const cells = mesh?.querySelectorAll('.preview-cell');
+    expect(cells).toHaveLength(22); // 2 rows x 11 columns
+    expect(Array.from(cells ?? []).every((el) => el.textContent === '')).toBe(true);
+    // second row (indices 11-21) is shaded, first row (indices 0-10) is not
+    expect(Array.from(cells ?? []).slice(0, 11).every((el) => !el.classList.contains('preview-cell--shaded'))).toBe(true);
+    expect(Array.from(cells ?? []).slice(11, 22).every((el) => el.classList.contains('preview-cell--shaded'))).toBe(true);
 
-    const firstRowCells = rows[0].querySelectorAll('.preview-cell');
-    expect(firstRowCells).toHaveLength(11);
-    expect(Array.from(firstRowCells).every((el) => el.textContent === '')).toBe(true);
-
-    expect(rows[0].querySelector('.preview-binary-row__number')?.textContent).toBe('1');
-    expect(rows[1].querySelector('.preview-binary-row__number')?.textContent).toBe('2');
+    const numbers = mesh?.querySelectorAll('.preview-binary-row__number');
+    expect(numbers?.[0].textContent).toBe('1');
+    expect(numbers?.[1].textContent).toBe('2');
   });
 
-  it('renders binary thumbnails as blank 11-column rows with no header', () => {
+  it('renders binary thumbnails as blank 11-column meshes with no header and no word numbers', () => {
     const layout = makeLayout({
       isBinary: true,
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
@@ -345,17 +346,18 @@ describe('renderPreview', () => {
     renderPreview(container, layout);
 
     expect(container.querySelector('.preview-cards .preview-binary-header')).toBeNull();
-    const row = container.querySelector('.preview-cards .preview-binary-row');
-    expect(row?.querySelectorAll('.preview-cell')).toHaveLength(11);
+    const mesh = container.querySelector('.preview-cards .preview-binary-mesh');
+    expect(mesh?.querySelectorAll('.preview-cell')).toHaveLength(11);
+    expect(mesh?.querySelectorAll('.preview-binary-row__number')).toHaveLength(0);
   });
 
   it('does not render binary markup for a non-binary layout', () => {
     renderPreview(container, makeLayout());
     expect(container.querySelector('.preview-binary-header')).toBeNull();
-    expect(container.querySelector('.preview-binary-row')).toBeNull();
+    expect(container.querySelector('.preview-binary-mesh')).toBeNull();
   });
 
-  it('shades binary thumbnail rows using each section\'s own model-computed shaded flag, not row index parity', () => {
+  it('shades binary thumbnail cells using each section\'s own model-computed shaded flag, not row index parity', () => {
     // Sections deliberately have shaded flags that do NOT alternate in lockstep
     // with their position (index 1 is shaded even though index%2===1 would also
     // say shaded here by coincidence, so use a genuinely non-alternating pattern:
@@ -375,14 +377,15 @@ describe('renderPreview', () => {
     });
     renderPreview(container, layout);
 
-    const rows = container.querySelectorAll('.preview-cards .preview-binary-row');
-    expect(rows).toHaveLength(3);
-    expect(rows[0].classList.contains('preview-binary-row--shaded')).toBe(false);
-    expect(rows[1].classList.contains('preview-binary-row--shaded')).toBe(true);
-    expect(rows[2].classList.contains('preview-binary-row--shaded')).toBe(true);
+    const cells = container.querySelectorAll('.preview-cards .preview-binary-mesh .preview-cell');
+    expect(cells).toHaveLength(33); // 3 rows x 11 columns
+    const rowShaded = (row: number) => Array.from(cells).slice(row * 11, row * 11 + 11).every((el) => el.classList.contains('preview-cell--shaded'));
+    expect(rowShaded(0)).toBe(false);
+    expect(rowShaded(1)).toBe(true);
+    expect(rowShaded(2)).toBe(true);
   });
 
-  it('omits a thumbnail row for a binary section with zero words', () => {
+  it('omits a mesh row for a binary section with zero words', () => {
     const layout = makeLayout({
       isBinary: true,
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
@@ -397,8 +400,8 @@ describe('renderPreview', () => {
     });
     renderPreview(container, layout);
 
-    const rows = container.querySelectorAll('.preview-cards .preview-binary-row');
-    expect(rows).toHaveLength(1);
+    const cells = container.querySelectorAll('.preview-cards .preview-binary-mesh .preview-cell');
+    expect(cells).toHaveLength(11); // only the one real row, not a blank row for the empty section
   });
 
   it('uses binary-specific wording ("card count") for the cellNotSquare warning when isBinary is true', () => {

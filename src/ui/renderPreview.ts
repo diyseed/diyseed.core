@@ -1,4 +1,4 @@
-import type { PreviewCard, PreviewLayout, PreviewWord } from './preview';
+import type { PreviewCard, PreviewLayout, PreviewSection, PreviewWord } from './preview';
 
 const SMALL_CARD_PX_PER_MM = 1.5;
 const SMALL_CARD_MAX_WIDTH_PX = 160;
@@ -123,6 +123,38 @@ function renderCard(card: PreviewCard): HTMLElement {
   return wrapper;
 }
 
+function renderBinaryMesh(rows: PreviewSection[], columnCount: number, showNumbers: boolean): HTMLElement {
+  const mesh = document.createElement('div');
+  mesh.className = 'preview-binary-mesh';
+
+  const grid = document.createElement('div');
+  grid.className = 'preview-binary-mesh__grid';
+  grid.style.gridTemplateColumns = `repeat(${columnCount}, 1fr)`;
+  grid.style.gridTemplateRows = `repeat(${rows.length}, 1fr)`;
+  rows.forEach((section) => {
+    const shaded = section.words[0]?.shaded ?? false;
+    for (let i = 0; i < columnCount; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'preview-cell' + (shaded ? ' preview-cell--shaded' : '');
+      grid.appendChild(cell);
+    }
+  });
+  mesh.appendChild(grid);
+
+  if (showNumbers) {
+    rows.forEach((section, rowIndex) => {
+      const numberEl = document.createElement('div');
+      numberEl.className = 'preview-binary-row__number';
+      numberEl.textContent = String(section.words[0].wordNumber);
+      numberEl.style.top = `${(rowIndex / rows.length) * 100}%`;
+      numberEl.style.height = `${(1 / rows.length) * 100}%`;
+      mesh.appendChild(numberEl);
+    });
+  }
+
+  return mesh;
+}
+
 function renderBinaryCard(card: PreviewCard, columnCount: number): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'preview-card-wrapper';
@@ -133,18 +165,8 @@ function renderBinaryCard(card: PreviewCard, columnCount: number): HTMLElement {
   box.style.width = `${widthPx}px`;
   box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
 
-  card.sections.filter((section) => section.words.length > 0).forEach((section) => {
-    const shaded = section.words[0]?.shaded ?? false;
-    const row = document.createElement('div');
-    row.className = 'preview-binary-row' + (shaded ? ' preview-binary-row--shaded' : '');
-    row.style.gridTemplateColumns = `repeat(${columnCount}, 1fr)`;
-    for (let i = 0; i < columnCount; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'preview-cell';
-      row.appendChild(cell);
-    }
-    box.appendChild(row);
-  });
+  const rows = card.sections.filter((section) => section.words.length > 0);
+  box.appendChild(renderBinaryMesh(rows, columnCount, false));
 
   renderCornerMarks(box, card.cardNumber);
   wrapper.appendChild(box);
@@ -172,25 +194,8 @@ function renderBinaryBigCard(card: PreviewCard, columnLabels: string[]): HTMLEle
   box.className = 'preview-card preview-card--large';
   box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
 
-  for (const section of card.sections.filter((s) => s.words.length > 0)) {
-    const word = section.words[0];
-    const row = document.createElement('div');
-    row.className = 'preview-binary-row' + (word.shaded ? ' preview-binary-row--shaded' : '');
-    row.style.gridTemplateColumns = `repeat(${columnLabels.length}, 1fr)`;
-
-    for (let i = 0; i < columnLabels.length; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'preview-cell';
-      row.appendChild(cell);
-    }
-
-    const numberEl = document.createElement('div');
-    numberEl.className = 'preview-binary-row__number';
-    numberEl.textContent = String(word.wordNumber);
-    row.appendChild(numberEl);
-
-    box.appendChild(row);
-  }
+  const rows = card.sections.filter((section) => section.words.length > 0);
+  box.appendChild(renderBinaryMesh(rows, columnLabels.length, true));
 
   renderCornerMarks(box, card.cardNumber);
   wrapper.appendChild(box);

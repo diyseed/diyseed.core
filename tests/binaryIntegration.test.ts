@@ -33,18 +33,18 @@ describe('Binary encoding end-to-end integration', () => {
       const container = document.createElement('div');
       renderPreview(container, layout);
 
-      // Big card: row count matches the model's non-empty sections for card 1.
+      // Big card: cell count matches the model's non-empty sections for card 1 (11 cols each).
       const nonEmptySectionsCard1 = params.getCardParameters(1).sections.filter((s) => s.wordNumbers.length > 0);
-      const bigRows = container.querySelectorAll('.preview-big .preview-binary-row');
-      expect(bigRows).toHaveLength(nonEmptySectionsCard1.length);
+      const bigCells = container.querySelectorAll('.preview-big .preview-binary-mesh .preview-cell');
+      expect(bigCells).toHaveLength(nonEmptySectionsCard1.length * 11);
 
-      // Every thumbnail card's row count matches that card's own non-empty sections.
+      // Every thumbnail card's cell count matches that card's own non-empty sections.
       const thumbCards = container.querySelectorAll('.preview-cards .preview-card--small');
       expect(thumbCards).toHaveLength(params.effectiveCardCount);
       thumbCards.forEach((box, i) => {
         const cardNumber = i + 1;
         const expectedRows = params.getCardParameters(cardNumber).sections.filter((s) => s.wordNumbers.length > 0).length;
-        expect(box.querySelectorAll('.preview-binary-row')).toHaveLength(expectedRows);
+        expect(box.querySelectorAll('.preview-binary-mesh .preview-cell')).toHaveLength(expectedRows * 11);
       });
 
       // The PDF itself must still generate and load without throwing.
@@ -71,14 +71,15 @@ describe('Binary encoding end-to-end integration', () => {
     renderPreview(container, layout);
 
     const card2Thumb = container.querySelectorAll('.preview-cards .preview-card--small')[1];
-    const rows = card2Thumb.querySelectorAll('.preview-binary-row');
+    const cells = card2Thumb.querySelectorAll('.preview-binary-mesh .preview-cell');
     const modelCard2 = params.getCardParameters(2).sections.filter((s) => s.wordNumbers.length > 0);
+    expect(cells).toHaveLength(modelCard2.length * 11);
 
-    rows.forEach((row, i) => {
-      const sectionNumber = modelCard2[i].number;
+    modelCard2.forEach((section, rowIndex) => {
       const wordIndexInSection = 0; // Binary always has exactly one word per non-empty section
-      const expectedShaded = (sectionNumber + wordIndexInSection) % 2 === 0;
-      expect(row.classList.contains('preview-binary-row--shaded')).toBe(expectedShaded);
+      const expectedShaded = (section.number + wordIndexInSection) % 2 === 0;
+      const rowCells = Array.from(cells).slice(rowIndex * 11, rowIndex * 11 + 11);
+      expect(rowCells.every((cell) => cell.classList.contains('preview-cell--shaded'))).toBe(expectedShaded);
     });
   });
 });
