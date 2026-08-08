@@ -148,6 +148,38 @@ export async function generatePassphrasePdf(parameters: PassphraseParameters): P
   return doc.save();
 }
 
+export interface StencilInput {
+  seed?: GeneratorParameters;
+  passphrase?: PassphraseParameters;
+}
+
+export async function generateStencilPdf(input: StencilInput): Promise<Uint8Array> {
+  if (!input.seed && !input.passphrase) {
+    throw new Error('At least one of seed or passphrase must be provided.');
+  }
+  if (input.seed && !input.passphrase) {
+    return generateWriterPdf(input.seed);
+  }
+  if (input.passphrase && !input.seed) {
+    return generatePassphrasePdf(input.passphrase);
+  }
+
+  const seedBytes = await generateWriterPdf(input.seed!);
+  const passphraseBytes = await generatePassphrasePdf(input.passphrase!);
+
+  const merged = await PDFDocument.create();
+  const seedDoc = await PDFDocument.load(seedBytes);
+  const passphraseDoc = await PDFDocument.load(passphraseBytes);
+
+  const seedPages = await merged.copyPages(seedDoc, seedDoc.getPageIndices());
+  seedPages.forEach((p) => merged.addPage(p));
+  const passphrasePages = await merged.copyPages(passphraseDoc, passphraseDoc.getPageIndices());
+  passphrasePages.forEach((p) => merged.addPage(p));
+
+  merged.setTitle(Config.DOCUMENT_TITLE);
+  return merged.save();
+}
+
 function renderCard(page: PDFPage, font: PDFFont, boldFont: PDFFont, card: CardParameters, cardOrigin: Point): void {
   drawRoundedRectTL(page, cardOrigin, card.size, card.radius, { borderColor: CARD_OUTLINE, borderWidth: Config.PEN_NORMAL });
   drawCornerMarks(page, card, cardOrigin);

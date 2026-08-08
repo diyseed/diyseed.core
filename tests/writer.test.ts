@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { generateWriterPdf, generatePassphrasePdf } from '../src/generator/writer';
+import { generateWriterPdf, generatePassphrasePdf, generateStencilPdf } from '../src/generator/writer';
 import { GeneratorParameters, PassphraseParameters } from '../src/generator/params';
 import { EncodingType } from '../src/generator/encoding';
 import { mm } from '../src/units';
@@ -142,5 +142,57 @@ describe('generateWriterPdf', () => {
     const bytes = await generatePassphrasePdf(params);
     const loaded = await PDFDocument.load(bytes);
     expect(loaded.getPageCount()).toBe(3);
+  });
+});
+
+describe('generateStencilPdf', () => {
+  it('generateStencilPdf returns just the seed PDF when only seed is provided', async () => {
+    const seed = new GeneratorParameters({ cardSize: { width: mm(100), height: mm(60) }, cardCount: 2, seedLength: 24 });
+    const bytes = await generateStencilPdf({ seed });
+    const direct = await generateWriterPdf(seed);
+    const loaded = await PDFDocument.load(bytes);
+    const loadedDirect = await PDFDocument.load(direct);
+    expect(loaded.getPageCount()).toBe(loadedDirect.getPageCount());
+  });
+
+  it('generateStencilPdf returns just the passphrase PDF when only passphrase is provided', async () => {
+    const passphrase = new PassphraseParameters({
+      cardSize: { width: mm(85.6), height: mm(54) },
+      cardPadding: mm(1.5),
+      cardCornerRadius: mm(1.5),
+      cardCount: 1,
+      binaryDirection: 'horizontal',
+      copies: 1,
+      cellSize: { width: mm(2), height: mm(2) },
+    });
+    const bytes = await generateStencilPdf({ passphrase });
+    const loaded = await PDFDocument.load(bytes);
+    expect(loaded.getPageCount()).toBeGreaterThanOrEqual(1);
+  });
+
+  it('generateStencilPdf merges seed and passphrase pages into one PDF when both are provided', async () => {
+    const seed = new GeneratorParameters({ cardSize: { width: mm(100), height: mm(60) }, cardCount: 2, seedLength: 24 });
+    const passphrase = new PassphraseParameters({
+      cardSize: { width: mm(100), height: mm(60) },
+      cardPadding: mm(1.5),
+      cardCornerRadius: mm(1.5),
+      cardCount: 1,
+      binaryDirection: 'horizontal',
+      copies: 1,
+      cellSize: { width: mm(2), height: mm(2) },
+    });
+
+    const seedOnlyBytes = await generateWriterPdf(seed);
+    const passphraseOnlyBytes = await generatePassphrasePdf(passphrase);
+    const seedOnlyPageCount = (await PDFDocument.load(seedOnlyBytes)).getPageCount();
+    const passphraseOnlyPageCount = (await PDFDocument.load(passphraseOnlyBytes)).getPageCount();
+
+    const mergedBytes = await generateStencilPdf({ seed, passphrase });
+    const merged = await PDFDocument.load(mergedBytes);
+    expect(merged.getPageCount()).toBe(seedOnlyPageCount + passphraseOnlyPageCount);
+  });
+
+  it('generateStencilPdf throws when neither seed nor passphrase is provided', async () => {
+    await expect(generateStencilPdf({})).rejects.toThrow();
   });
 });
