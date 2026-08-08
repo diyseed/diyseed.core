@@ -46,6 +46,8 @@ function makeLayout(overrides: Partial<PreviewLayout> = {}): PreviewLayout {
     cellWidthMm: 10,
     cellHeightMm: 10,
     cellRowLabels: ['a', 'b', 'c'],
+    isBinary: false,
+    binaryColumnLabels: [],
     copies: 1,
     warnings: { cellTooSmall: false, cellNotSquare: false, cellSizeInvalid: false },
     ...overrides,

@@ -1,5 +1,5 @@
 import { GeneratorParameters } from '../generator/params';
-import { EncodingType } from '../generator/encoding';
+import { EncodingType, encodingLayout } from '../generator/encoding';
 import * as Config from '../generator/config';
 import { toMm } from '../units';
 import { physicalCardNumberOf, sideOf } from '../generator/cornerMarks';
@@ -35,13 +35,10 @@ export interface PreviewLayout {
   cellWidthMm: number;
   cellHeightMm: number;
   cellRowLabels: string[];
+  isBinary: boolean;
+  binaryColumnLabels: string[];
   copies: number;
   warnings: PreviewWarnings;
-}
-
-function cellRowLabelsFor(encoding: EncodingType): string[] {
-  const startCode = encoding === EncodingType.Alphabet ? 'a'.charCodeAt(0) : '0'.charCodeAt(0);
-  return Array.from({ length: encoding }, (_, i) => String.fromCharCode(startCode + i));
 }
 
 export function computePreviewLayout(parameters: GeneratorParameters): PreviewLayout {
@@ -81,11 +78,15 @@ export function computePreviewLayout(parameters: GeneratorParameters): PreviewLa
   const shorter = Math.min(cellSize.width, cellSize.height);
   const cellNotSquare = !cellSizeInvalid && longer / shorter > Config.MAX_CELL_ASPECT_RATIO;
 
+  const isBinary = parameters.seedEncoding === EncodingType.Binary;
+
   return {
     cards,
     cellWidthMm,
     cellHeightMm,
-    cellRowLabels: cellRowLabelsFor(parameters.seedEncoding),
+    cellRowLabels: encodingLayout(parameters.seedEncoding)?.cellLabels ?? [],
+    isBinary,
+    binaryColumnLabels: isBinary ? Config.BINARY_COLUMN_VALUES.map(String) : [],
     copies: parameters.copies,
     warnings: { cellTooSmall, cellNotSquare, cellSizeInvalid },
   };

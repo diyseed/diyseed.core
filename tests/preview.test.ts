@@ -147,3 +147,25 @@ describe('computePreviewLayout — copies', () => {
     expect(layout.copies).toBe(1);
   });
 });
+
+describe('computePreviewLayout — Binary encoding', () => {
+  it('flags the layout as binary and provides the 11 place-value column labels', () => {
+    const params = new GeneratorParameters({
+      cardSize: { width: mm(85.6), height: mm(54) },
+      cardCount: 2,
+      seedLength: 12,
+      encoding: EncodingType.Binary,
+    });
+    const layout = computePreviewLayout(params);
+    expect(layout.isBinary).toBe(true);
+    expect(layout.binaryColumnLabels).toEqual(['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1']);
+    expect(layout.cellRowLabels).toEqual([]);
+  });
+
+  it('does not flag non-Binary layouts as binary, and leaves binaryColumnLabels empty', () => {
+    const params = new GeneratorParameters({ cardSize: { width: mm(100), height: mm(60) }, cardCount: 2, seedLength: 24 });
+    const layout = computePreviewLayout(params);
+    expect(layout.isBinary).toBe(false);
+    expect(layout.binaryColumnLabels).toEqual([]);
+  });
+});
