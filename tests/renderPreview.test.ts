@@ -439,6 +439,25 @@ describe('renderPreview', () => {
     expect(arrows).toHaveLength(11);
   });
 
+  it('marks row/column shading intersections with both classes, so CSS can darken them further', () => {
+    const layout = makeLayout({
+      isBinary: true,
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      cards: [
+        makeCard({
+          sections: [{ sectionNumber: 1, words: [{ wordNumber: 1, shaded: true }] }],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+
+    const cells = container.querySelectorAll('.preview-big .preview-binary-mesh .preview-cell');
+    Array.from(cells).forEach((cell, col) => {
+      expect(cell.classList.contains('preview-cell--shaded')).toBe(true);
+      expect(cell.classList.contains('preview-cell--col-shaded')).toBe(col % 2 === 1);
+    });
+  });
+
   it('uses binary-specific wording ("card count") for the cellNotSquare warning when isBinary is true', () => {
     const layout = makeLayout({
       isBinary: true,

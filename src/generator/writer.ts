@@ -12,6 +12,7 @@ const BLACK = rgb(0, 0, 0);
 const CARD_OUTLINE = BLACK;
 const GRID_LINE = BLACK;
 const SHADE = rgb(0.92, 0.92, 0.92);
+const SHADE_INTERSECTION = rgb(0.85, 0.85, 0.85);
 const CELL_TEXT = rgb(0.22, 0.22, 0.22);
 const WORD_NR_TEXT = rgb(0.608, 0.608, 0.608);
 const HEADER_TEXT_COLOR = rgb(0, 0, 0);
@@ -142,11 +143,12 @@ function drawSection(
 ): void {
   let wordOrigin = sectionOrigin;
   section.wordNumbers.forEach((wordNumber, i) => {
-    if ((section.number + i) % 2 === 0) {
+    const rowShaded = (section.number + i) % 2 === 0;
+    if (rowShaded) {
       drawRectTL(page, wordOrigin, section.wordSize, { color: SHADE });
     }
     if (section.encoding === EncodingType.Binary) {
-      drawBinaryColumnShading(page, wordOrigin, section.wordSize, section.cellSize);
+      drawBinaryColumnShading(page, wordOrigin, section.wordSize, section.cellSize, rowShaded);
     }
     drawRectTL(page, wordOrigin, section.wordSize, { borderColor: CARD_OUTLINE, borderWidth: Config.PEN_NORMAL });
     drawWordNumber(page, boldFont, wordOrigin, section.wordSize, wordNumber, section.encoding);
@@ -162,11 +164,13 @@ function drawBinaryColumnShading(
   origin: Point,
   wordSize: { width: number; height: number },
   cellSize: { width: number; height: number },
+  rowShaded: boolean,
 ): void {
   const cols = encodingLayout(EncodingType.Binary).cols;
+  const color = rowShaded ? SHADE_INTERSECTION : SHADE;
   for (let col = 1; col < cols; col += 2) {
     const x = origin.x + cellSize.width * col;
-    drawRectTL(page, point(x, origin.y), size(cellSize.width, wordSize.height), { color: SHADE });
+    drawRectTL(page, point(x, origin.y), size(cellSize.width, wordSize.height), { color });
   }
 }
 

@@ -378,6 +378,10 @@ button[type="submit"]:hover {
   background: rgba(0, 0, 0, 0.06);
 }
 
+.preview-cell--shaded.preview-cell--col-shaded {
+  background: rgba(0, 0, 0, 0.12);
+}
+
 .preview-binary-row__number {
   position: absolute;
   left: 2px;
