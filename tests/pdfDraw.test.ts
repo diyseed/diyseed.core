@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PDFDocument, rgb } from 'pdf-lib';
-import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledCircleTL, toPdfY } from '../src/generator/pdfDraw';
+import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledCircleTL, drawRotatedTextInBoxTL, toPdfY } from '../src/generator/pdfDraw';
 import { point, size } from '../src/units';
 
 describe('toPdfY', () => {
@@ -23,6 +23,9 @@ describe('drawing primitives', () => {
     expect(() => drawLineTL(page, point(0, 0), point(50, 50), { color: rgb(0, 0, 0), thickness: 0.1 })).not.toThrow();
     expect(() =>
       drawTextInBoxTL(page, 'Hi', font, 12, point(0, 0), size(100, 20), { horizontal: 'center', vertical: 'center' }, rgb(0, 0, 0)),
+    ).not.toThrow();
+    expect(() =>
+      drawRotatedTextInBoxTL(page, '1024', font, 8, point(0, 0), size(10, 30), rgb(0, 0, 0)),
     ).not.toThrow();
 
     const bytes = await doc.save();

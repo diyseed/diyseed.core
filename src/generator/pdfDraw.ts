@@ -1,4 +1,5 @@
 import type { PDFFont, PDFPage, RGB } from 'pdf-lib';
+import { degrees } from 'pdf-lib';
 import type { Point, Size } from '../units';
 
 export function toPdfY(page: PDFPage, origin: Point, elementHeight: number): number {
@@ -110,4 +111,30 @@ export function drawTextInBoxTL(
   const baselineY = page.getHeight() - topY - ascent;
 
   page.drawText(text, { x, y: baselineY, size: fontSize, font, color });
+}
+
+/**
+ * Draws `text` rotated 90° counterclockwise (reads bottom-to-top), centered
+ * within a top-left-origin box. Used for narrow-column headers where
+ * horizontal text wouldn't fit (e.g. Binary encoding's place-value labels).
+ */
+export function drawRotatedTextInBoxTL(
+  page: PDFPage,
+  text: string,
+  font: PDFFont,
+  fontSize: number,
+  origin: Point,
+  boxSize: Size,
+  color: RGB,
+): void {
+  const textLength = font.widthOfTextAtSize(text, fontSize);
+  const ascent = font.heightAtSize(fontSize, { descender: false });
+
+  // After a 90° CCW rotation, the text's length runs along the box's height
+  // (bottom-to-top), and its ascent runs along the box's width (left-to-right).
+  const x = origin.x + boxSize.width / 2 + ascent / 2;
+  const anchorTopY = origin.y + boxSize.height / 2 + textLength / 2;
+  const y = page.getHeight() - anchorTopY;
+
+  page.drawText(text, { x, y, size: fontSize, font, color, rotate: degrees(90) });
 }
