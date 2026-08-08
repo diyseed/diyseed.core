@@ -79,9 +79,23 @@ function hasEmptyRequiredField(): boolean {
   return REQUIRED_FIELD_IDS.some((id) => (document.getElementById(id) as HTMLInputElement | null)?.value === '');
 }
 
+function updateCardSplitVisibility(): void {
+  const encodingEl = document.getElementById('encoding') as HTMLSelectElement | null;
+  const cardSplitInput = document.getElementById('cardSplit');
+  const cardSplitLabel = cardSplitInput?.closest('label');
+  const hint = document.getElementById('cardSplit-hint');
+  if (!encodingEl || !cardSplitLabel) return;
+
+  const isBinary = Number(encodingEl.value) === EncodingType.Binary;
+  cardSplitLabel.classList.toggle('is-hidden', isBinary);
+  hint?.classList.toggle('is-hidden', isBinary);
+}
+
 function updatePreview(): void {
   const previewEl = document.getElementById('preview-panel');
   if (!previewEl) return;
+
+  updateCardSplitVisibility();
 
   if (hasEmptyRequiredField()) {
     renderPreview(previewEl, null);

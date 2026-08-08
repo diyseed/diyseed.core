@@ -96,6 +96,10 @@ form select {
   flex-basis: 100%;
 }
 
+.is-hidden {
+  display: none;
+}
+
 form input[aria-invalid="true"] {
   border-color: var(--color-error-text);
 }

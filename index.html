@@ -48,9 +48,10 @@
               <select id="encoding" aria-describedby="encoding-hint">
                 <option value="26">Alphabet</option>
                 <option value="10">Number</option>
+                <option value="11">Binary</option>
               </select>
             </label>
-            <p class="field-hint" id="encoding-hint">Store each word as its 4-letter prefix, or as its BIP-39 index digits (0–9) for a smaller grid.</p>
+            <p class="field-hint" id="encoding-hint">Store each word as its 4-letter prefix, its BIP-39 index digits (0–9), or as an 11-column binary punch pattern — binary needs the fewest punches and fits best on very small metal plates.</p>
 
             <label>Card padding (mm)
               <input type="number" id="cardPaddingMm" value="1.5" min="1" max="5" step="0.1" aria-describedby="cardPaddingMm-hint" />
