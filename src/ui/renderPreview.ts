@@ -45,14 +45,16 @@ export function renderPreview(container: HTMLElement, layout: PreviewLayout | nu
   if (layout.cards.length > 0) {
     const bigSection = document.createElement('div');
     bigSection.className = 'preview-big';
-    bigSection.appendChild(renderBigCard(layout.cards[0], layout.cellRowLabels));
+    bigSection.appendChild(
+      layout.isBinary ? renderBinaryBigCard(layout.cards[0], layout.binaryColumnLabels) : renderBigCard(layout.cards[0], layout.cellRowLabels),
+    );
     container.appendChild(bigSection);
   }
 
   const cardsEl = document.createElement('div');
   cardsEl.className = 'preview-cards';
   for (let set = 0; set < layout.copies; set++) {
-    cardsEl.appendChild(renderCardSet(layout.cards, set, layout.copies));
+    cardsEl.appendChild(renderCardSet(layout.cards, set, layout.copies, layout.isBinary, layout.binaryColumnLabels.length));
   }
   container.appendChild(cardsEl);
 }
@@ -64,7 +66,13 @@ function warningBanner(kind: 'error' | 'warning', message: string): HTMLElement 
   return el;
 }
 
-function renderCardSet(cards: PreviewCard[], setIndex: number, copies: number): HTMLElement {
+function renderCardSet(
+  cards: PreviewCard[],
+  setIndex: number,
+  copies: number,
+  isBinary: boolean,
+  binaryColumnCount: number,
+): HTMLElement {
   const setEl = document.createElement('div');
   setEl.className = 'preview-set';
 
@@ -78,7 +86,7 @@ function renderCardSet(cards: PreviewCard[], setIndex: number, copies: number): 
   const cardsRow = document.createElement('div');
   cardsRow.className = 'preview-set__cards';
   for (const card of cards) {
-    cardsRow.appendChild(renderCard(card));
+    cardsRow.appendChild(isBinary ? renderBinaryCard(card, binaryColumnCount) : renderCard(card));
   }
   setEl.appendChild(cardsRow);
 
@@ -109,6 +117,85 @@ function renderCard(card: PreviewCard): HTMLElement {
   renderCornerMarks(box, card.cardNumber);
   wrapper.appendChild(box);
   wrapper.appendChild(renderCardLabel(card));
+
+  return wrapper;
+}
+
+function renderBinaryCard(card: PreviewCard, columnCount: number): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'preview-card-wrapper';
+
+  const box = document.createElement('div');
+  box.className = 'preview-card preview-card--small';
+  const widthPx = Math.min(card.cardWidthMm * SMALL_CARD_PX_PER_MM, SMALL_CARD_MAX_WIDTH_PX);
+  box.style.width = `${widthPx}px`;
+  box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
+
+  card.sections.forEach((_section, index) => {
+    const row = document.createElement('div');
+    row.className = 'preview-binary-row' + (index % 2 === 1 ? ' preview-binary-row--shaded' : '');
+    row.style.gridTemplateColumns = `repeat(${columnCount}, 1fr)`;
+    for (let i = 0; i < columnCount; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'preview-cell';
+      row.appendChild(cell);
+    }
+    box.appendChild(row);
+  });
+
+  renderCornerMarks(box, card.cardNumber);
+  wrapper.appendChild(box);
+  wrapper.appendChild(renderCardLabel(card));
+
+  return wrapper;
+}
+
+function renderBinaryBigCard(card: PreviewCard, columnLabels: string[]): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'preview-card-wrapper';
+
+  const header = document.createElement('div');
+  header.className = 'preview-binary-header';
+  header.style.gridTemplateColumns = `repeat(${columnLabels.length}, 1fr)`;
+  for (const label of columnLabels) {
+    const cell = document.createElement('div');
+    cell.className = 'preview-binary-header__cell';
+    cell.textContent = label;
+    header.appendChild(cell);
+  }
+  wrapper.appendChild(header);
+
+  const box = document.createElement('div');
+  box.className = 'preview-card preview-card--large';
+  box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
+
+  for (const section of card.sections) {
+    const word = section.words[0];
+    const row = document.createElement('div');
+    row.className = 'preview-binary-row' + (word.shaded ? ' preview-binary-row--shaded' : '');
+    row.style.gridTemplateColumns = `repeat(${columnLabels.length}, 1fr)`;
+
+    for (let i = 0; i < columnLabels.length; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'preview-cell';
+      row.appendChild(cell);
+    }
+
+    const numberEl = document.createElement('div');
+    numberEl.className = 'preview-binary-row__number';
+    numberEl.textContent = String(word.wordNumber);
+    row.appendChild(numberEl);
+
+    box.appendChild(row);
+  }
+
+  renderCornerMarks(box, card.cardNumber);
+  wrapper.appendChild(box);
+
+  const label = document.createElement('div');
+  label.className = 'preview-card__label';
+  label.textContent = 'Full detail';
+  wrapper.appendChild(label);
 
   return wrapper;
 }

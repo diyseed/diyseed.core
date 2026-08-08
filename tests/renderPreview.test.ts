@@ -277,4 +277,76 @@ describe('renderPreview', () => {
     const bigLabel = container.querySelector('.preview-big .preview-card__label');
     expect(bigLabel?.textContent).toBe('Full detail');
   });
+
+  it('renders a rotated column-value header above the big card when the layout is binary', () => {
+    const layout = makeLayout({
+      isBinary: true,
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      cards: [
+        makeCard({
+          sections: [
+            { sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] },
+            { sectionNumber: 2, words: [{ wordNumber: 2, shaded: true }] },
+          ],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+
+    const header = container.querySelector('.preview-big .preview-binary-header');
+    const headerCells = header?.querySelectorAll('.preview-binary-header__cell');
+    expect(headerCells).toHaveLength(11);
+    expect(headerCells?.[0].textContent).toBe('1024');
+    expect(headerCells?.[10].textContent).toBe('1');
+  });
+
+  it('renders one row per word in the big binary card, each with 11 blank cells and a word-number label', () => {
+    const layout = makeLayout({
+      isBinary: true,
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      cards: [
+        makeCard({
+          sections: [
+            { sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] },
+            { sectionNumber: 2, words: [{ wordNumber: 2, shaded: true }] },
+          ],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+
+    const rows = container.querySelectorAll('.preview-big .preview-binary-row');
+    expect(rows).toHaveLength(2);
+    expect(rows[1].classList.contains('preview-binary-row--shaded')).toBe(true);
+
+    const firstRowCells = rows[0].querySelectorAll('.preview-cell');
+    expect(firstRowCells).toHaveLength(11);
+    expect(Array.from(firstRowCells).every((el) => el.textContent === '')).toBe(true);
+
+    expect(rows[0].querySelector('.preview-binary-row__number')?.textContent).toBe('1');
+    expect(rows[1].querySelector('.preview-binary-row__number')?.textContent).toBe('2');
+  });
+
+  it('renders binary thumbnails as blank 11-column rows with no header', () => {
+    const layout = makeLayout({
+      isBinary: true,
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      cards: [
+        makeCard({
+          sections: [{ sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] }],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+
+    expect(container.querySelector('.preview-cards .preview-binary-header')).toBeNull();
+    const row = container.querySelector('.preview-cards .preview-binary-row');
+    expect(row?.querySelectorAll('.preview-cell')).toHaveLength(11);
+  });
+
+  it('does not render binary markup for a non-binary layout', () => {
+    renderPreview(container, makeLayout());
+    expect(container.querySelector('.preview-binary-header')).toBeNull();
+    expect(container.querySelector('.preview-binary-row')).toBeNull();
+  });
 });
