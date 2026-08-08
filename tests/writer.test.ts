@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { generateWriterPdf } from '../src/generator/writer';
-import { GeneratorParameters } from '../src/generator/params';
+import { generateWriterPdf, generatePassphrasePdf } from '../src/generator/writer';
+import { GeneratorParameters, PassphraseParameters } from '../src/generator/params';
 import { EncodingType } from '../src/generator/encoding';
 import { mm } from '../src/units';
 import * as Config from '../src/generator/config';
@@ -96,5 +96,51 @@ describe('generateWriterPdf', () => {
     const bytes = await generateWriterPdf(params);
     const loaded = await PDFDocument.load(bytes);
     expect(loaded.getPageCount()).toBeGreaterThanOrEqual(1);
+  });
+
+  it('produces a loadable PDF for a horizontal passphrase stencil (2 cards, 85.6x54mm, 2mm cells)', async () => {
+    const params = new PassphraseParameters({
+      cardSize: { width: mm(85.6), height: mm(54) },
+      cardPadding: mm(1.5),
+      cardCornerRadius: mm(1.5),
+      cardCount: 2,
+      binaryDirection: 'horizontal',
+      copies: 1,
+      cellSize: { width: mm(2), height: mm(2) },
+    });
+    const bytes = await generatePassphrasePdf(params);
+    expect(new TextDecoder().decode(bytes.slice(0, 5))).toBe('%PDF-');
+    const loaded = await PDFDocument.load(bytes);
+    expect(loaded.getPageCount()).toBeGreaterThanOrEqual(1);
+  });
+
+  it('produces a loadable PDF for a vertical passphrase stencil', async () => {
+    const params = new PassphraseParameters({
+      cardSize: { width: mm(85.6), height: mm(54) },
+      cardPadding: mm(1.5),
+      cardCornerRadius: mm(1.5),
+      cardCount: 1,
+      binaryDirection: 'vertical',
+      copies: 1,
+      cellSize: { width: mm(2), height: mm(2) },
+    });
+    const bytes = await generatePassphrasePdf(params);
+    const loaded = await PDFDocument.load(bytes);
+    expect(loaded.getPageCount()).toBeGreaterThanOrEqual(1);
+  });
+
+  it('produces one page per copy for the passphrase stencil', async () => {
+    const params = new PassphraseParameters({
+      cardSize: { width: mm(150), height: mm(140) },
+      cardPadding: mm(1.5),
+      cardCornerRadius: mm(1.5),
+      cardCount: 1,
+      binaryDirection: 'horizontal',
+      copies: 3,
+      cellSize: { width: mm(3), height: mm(3) },
+    });
+    const bytes = await generatePassphrasePdf(params);
+    const loaded = await PDFDocument.load(bytes);
+    expect(loaded.getPageCount()).toBe(3);
   });
 });

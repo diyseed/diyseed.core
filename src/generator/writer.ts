@@ -1,5 +1,5 @@
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
-import { GeneratorParameters, CardParameters, CardSectionParameters } from './params';
+import { GeneratorParameters, CardParameters, CardSectionParameters, PassphraseParameters } from './params';
 import { EncodingType, encodingLayout, BinaryDirection } from './encoding';
 import * as Config from './config';
 import { getFontSizeForBox } from './fontFit';
@@ -66,6 +66,12 @@ export async function generateWriterPdf(parameters: GeneratorParameters): Promis
     }
   }
 
+  drawPageChrome(pages, font, boldFont);
+
+  return doc.save();
+}
+
+function drawPageChrome(pages: PDFPage[], font: PDFFont, boldFont: PDFFont): void {
   for (const page of pages) {
     drawTextInBoxTL(
       page,
@@ -88,6 +94,56 @@ export async function generateWriterPdf(parameters: GeneratorParameters): Promis
       FOOTER_TEXT_COLOR,
     );
   }
+}
+
+export async function generatePassphrasePdf(parameters: PassphraseParameters): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  doc.setTitle(Config.DOCUMENT_TITLE);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
+
+  const pages: PDFPage[] = [];
+  let currentPageNumber = 0;
+
+  function addPage(): void {
+    const page = doc.addPage([Config.DOCUMENT_SIZE.width, Config.DOCUMENT_SIZE.height]);
+    pages.push(page);
+    currentPageNumber++;
+  }
+
+  const headerHeight = parameters.binaryDirection === 'vertical' ? Config.BINARY_HEADER_HEIGHT : 0;
+  const headerWidth = parameters.binaryDirection === 'horizontal' ? Config.BINARY_HEADER_HEIGHT : 0;
+
+  for (let set = 1; set <= parameters.copies; set++) {
+    for (let i = 1; i <= parameters.cardCount; i++) {
+      const cardIndex = i + (set - 1) * parameters.cardCount;
+      const safeArea = getCardSafeAreaSize(
+        size(parameters.cardSize.width + headerWidth, parameters.cardSize.height + headerHeight),
+      );
+      const origin = getOriginForCard(cardIndex, safeArea);
+
+      if (origin.page > currentPageNumber) {
+        addPage();
+      }
+      const page = pages[origin.page - 1];
+
+      const cardOrigin = point(
+        Config.DOCUMENT_MARGIN_H + origin.point.x + headerWidth,
+        Config.DOCUMENT_MARGIN_TOP + origin.point.y + headerHeight,
+      );
+
+      if (headerHeight > 0) {
+        drawPassphraseColumnHeader(page, font, cardOrigin, parameters.cardSize.width, parameters.cardPadding, headerHeight);
+      }
+      if (headerWidth > 0) {
+        drawPassphraseRowHeader(page, font, cardOrigin, parameters.cardSize.height, parameters.cardPadding, headerWidth);
+      }
+
+      renderPassphraseCard(page, boldFont, parameters, i, cardOrigin);
+    }
+  }
+
+  drawPageChrome(pages, font, boldFont);
 
   return doc.save();
 }
@@ -181,6 +237,221 @@ function drawBinaryRowHeader(
       HEADER_TEXT_COLOR,
     );
   });
+}
+
+function drawPassphraseColumnHeader(
+  page: PDFPage,
+  font: PDFFont,
+  cardOrigin: Point,
+  cardWidth: number,
+  cardPadding: number,
+  headerHeight: number,
+): void {
+  const gridWidth = cardWidth - 2 * cardPadding;
+  const colWidth = gridWidth / Config.PASSPHRASE_COLUMN_VALUES.length;
+  const fontSize = getFontSizeForBox({
+    font,
+    fontSizeRange: Config.CELL_FONT_SIZE_RANGE,
+    increaseStep: 0.2,
+    sampleText: '64',
+    maxSize: size(headerHeight, colWidth),
+  });
+
+  Config.PASSPHRASE_COLUMN_VALUES.forEach((value, i) => {
+    const colOrigin = point(cardOrigin.x + cardPadding + colWidth * i, cardOrigin.y - headerHeight);
+    drawRotatedTextInBoxTL(page, `${value}`, font, fontSize, colOrigin, size(colWidth, headerHeight), HEADER_TEXT_COLOR, 'end');
+  });
+}
+
+function drawPassphraseRowHeader(
+  page: PDFPage,
+  font: PDFFont,
+  cardOrigin: Point,
+  cardHeight: number,
+  cardPadding: number,
+  headerWidth: number,
+): void {
+  const gridHeight = cardHeight - 2 * cardPadding;
+  const rowHeight = gridHeight / Config.PASSPHRASE_COLUMN_VALUES.length;
+  const fontSize = getFontSizeForBox({
+    font,
+    fontSizeRange: Config.CELL_FONT_SIZE_RANGE,
+    increaseStep: 0.2,
+    sampleText: '64',
+    maxSize: size(headerWidth, rowHeight),
+  });
+  const gap = fontSize * 0.5;
+
+  Config.PASSPHRASE_COLUMN_VALUES.forEach((value, i) => {
+    const rowOrigin = point(cardOrigin.x - headerWidth, cardOrigin.y + cardPadding + rowHeight * i);
+    drawTextInBoxTL(
+      page,
+      `${value}`,
+      font,
+      fontSize,
+      rowOrigin,
+      size(headerWidth - gap, rowHeight),
+      { horizontal: 'right', vertical: 'center' },
+      HEADER_TEXT_COLOR,
+    );
+  });
+}
+
+function renderPassphraseCard(
+  page: PDFPage,
+  boldFont: PDFFont,
+  parameters: PassphraseParameters,
+  cardNumber: number,
+  cardOrigin: Point,
+): void {
+  drawRoundedRectTL(page, cardOrigin, parameters.cardSize, parameters.cardCornerRadius, {
+    borderColor: CARD_OUTLINE,
+    borderWidth: Config.PEN_NORMAL,
+  });
+  drawPassphraseCornerMarks(page, parameters, cardNumber, cardOrigin);
+
+  const blocks = parameters.getCardCharacters(cardNumber);
+  const blockSize =
+    parameters.binaryDirection === 'horizontal'
+      ? size(parameters.charsPerBlock * parameters.cellSize.width, parameters.blockThickness)
+      : size(parameters.blockThickness, parameters.charsPerBlock * parameters.cellSize.height);
+
+  let blockOrigin = point(cardOrigin.x + parameters.cardPadding, cardOrigin.y + parameters.cardPadding);
+  blocks.forEach((positions) => {
+    drawPassphraseBlock(page, boldFont, positions, parameters.binaryDirection, parameters.cellSize, blockOrigin);
+    blockOrigin =
+      parameters.binaryDirection === 'horizontal'
+        ? point(blockOrigin.x, blockOrigin.y + blockSize.height + parameters.cardPadding)
+        : point(blockOrigin.x + blockSize.width + parameters.cardPadding, blockOrigin.y);
+  });
+}
+
+function drawPassphraseCornerMarks(
+  page: PDFPage,
+  parameters: PassphraseParameters,
+  cardNumber: number,
+  cardOrigin: Point,
+): void {
+  for (const offset of getTopLeftCornerMarkOffsets(cardNumber)) {
+    drawFilledCircleTL(page, point(cardOrigin.x + offset.x, cardOrigin.y + offset.y), Config.CORNER_MARK_RADIUS, CARD_OUTLINE);
+  }
+
+  const topRight = getTopRightCornerMarkOffset();
+  drawFilledCircleTL(
+    page,
+    point(cardOrigin.x + parameters.cardSize.width + topRight.x, cardOrigin.y + topRight.y),
+    Config.CORNER_MARK_RADIUS,
+    CARD_OUTLINE,
+  );
+
+  const bottomLeft = getBottomLeftCornerMarkOffset();
+  drawFilledCircleTL(
+    page,
+    point(cardOrigin.x + bottomLeft.x, cardOrigin.y + parameters.cardSize.height + bottomLeft.y),
+    Config.CORNER_MARK_RADIUS,
+    CARD_OUTLINE,
+  );
+}
+
+function drawPassphraseBlock(
+  page: PDFPage,
+  boldFont: PDFFont,
+  positions: number[],
+  binaryDirection: BinaryDirection,
+  cellSize: { width: number; height: number },
+  blockOrigin: Point,
+): void {
+  const bitCount = Config.PASSPHRASE_COLUMN_VALUES.length;
+  const charSize =
+    binaryDirection === 'horizontal' ? size(cellSize.width, bitCount * cellSize.height) : size(bitCount * cellSize.width, cellSize.height);
+
+  let charOrigin = blockOrigin;
+  positions.forEach((position) => {
+    const charShaded = position % 2 === 0;
+    if (charShaded) {
+      drawRectTL(page, charOrigin, charSize, { color: SHADE });
+    }
+    drawPassphraseBitShading(page, charOrigin, charSize, cellSize, charShaded, binaryDirection);
+    drawRectTL(page, charOrigin, charSize, { borderColor: CARD_OUTLINE, borderWidth: Config.PEN_NORMAL });
+    drawPassphraseNumber(page, boldFont, charOrigin, charSize, position, binaryDirection);
+    drawPassphraseGridLines(page, charOrigin, charSize, cellSize, binaryDirection);
+
+    charOrigin =
+      binaryDirection === 'horizontal' ? point(charOrigin.x + charSize.width, charOrigin.y) : point(charOrigin.x, charOrigin.y + charSize.height);
+  });
+}
+
+function drawPassphraseBitShading(
+  page: PDFPage,
+  origin: Point,
+  charSize: { width: number; height: number },
+  cellSize: { width: number; height: number },
+  charShaded: boolean,
+  binaryDirection: BinaryDirection,
+): void {
+  const bitCount = Config.PASSPHRASE_COLUMN_VALUES.length;
+  const color = charShaded ? SHADE_INTERSECTION : SHADE;
+  if (binaryDirection === 'vertical') {
+    for (let col = 1; col < bitCount; col += 2) {
+      const x = origin.x + cellSize.width * col;
+      drawRectTL(page, point(x, origin.y), size(cellSize.width, charSize.height), { color });
+    }
+  } else {
+    for (let row = 1; row < bitCount; row += 2) {
+      const y = origin.y + cellSize.height * row;
+      drawRectTL(page, point(origin.x, y), size(charSize.width, cellSize.height), { color });
+    }
+  }
+}
+
+function drawPassphraseNumber(
+  page: PDFPage,
+  boldFont: PDFFont,
+  origin: Point,
+  charSize: { width: number; height: number },
+  position: number,
+  binaryDirection: BinaryDirection,
+): void {
+  if (binaryDirection === 'vertical') {
+    const labelBox = size(charSize.width / Config.PASSPHRASE_COLUMN_VALUES.length, charSize.height);
+    const fontSize = getFontSizeForBox({
+      font: boldFont,
+      fontSizeRange: Config.CELL_FONT_SIZE_RANGE,
+      increaseStep: 0.2,
+      sampleText: '42.',
+      maxSize: labelBox,
+    });
+    drawTextInBoxTL(page, `${position}`, boldFont, fontSize, origin, charSize, { horizontal: 'left', vertical: 'center' }, WORD_NR_TEXT);
+    return;
+  }
+  const fontSize = getFontSizeForBox({
+    font: boldFont,
+    fontSizeRange: Config.WORD_NR_FONT_SIZE_RANGE,
+    increaseStep: 1,
+    sampleText: '42.',
+    maxSize: charSize,
+  });
+  drawTextInBoxTL(page, `${position}`, boldFont, fontSize, origin, charSize, { horizontal: 'center', vertical: 'top' }, WORD_NR_TEXT);
+}
+
+function drawPassphraseGridLines(
+  page: PDFPage,
+  origin: Point,
+  charSize: { width: number; height: number },
+  cellSize: { width: number; height: number },
+  binaryDirection: BinaryDirection,
+): void {
+  const bitCount = Config.PASSPHRASE_COLUMN_VALUES.length;
+  const rows = binaryDirection === 'horizontal' ? bitCount : 1;
+  const cols = binaryDirection === 'horizontal' ? 1 : bitCount;
+  for (let row = 1; row < rows; row++) {
+    const y = origin.y + cellSize.height * row;
+    drawLineTL(page, point(origin.x, y), point(origin.x + charSize.width, y), { color: GRID_LINE, thickness: Config.PEN_THIN });
+  }
+  for (let col = 1; col < cols; col++) {
+    const x = origin.x + cellSize.width * col;
+    drawLineTL(page, point(x, origin.y), point(x, origin.y + charSize.height), { color: GRID_LINE, thickness: Config.PEN_THIN });
+  }
 }
 
 function drawSection(
