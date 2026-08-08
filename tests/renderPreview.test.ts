@@ -48,6 +48,7 @@ function makeLayout(overrides: Partial<PreviewLayout> = {}): PreviewLayout {
     cellRowLabels: ['a', 'b', 'c'],
     isBinary: false,
     binaryColumnLabels: [],
+    binaryDirection: 'horizontal',
     copies: 1,
     warnings: { cellTooSmall: false, cellNotSquare: false, cellSizeInvalid: false },
     ...overrides,
@@ -281,6 +282,7 @@ describe('renderPreview', () => {
   it('renders a rotated column-value header above the big card when the layout is binary', () => {
     const layout = makeLayout({
       isBinary: true,
+      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -308,6 +310,7 @@ describe('renderPreview', () => {
   it('renders one row per word in the big binary card, each with 11 blank cells and a word-number label', () => {
     const layout = makeLayout({
       isBinary: true,
+      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -328,7 +331,7 @@ describe('renderPreview', () => {
     expect(Array.from(cells ?? []).slice(0, 11).every((el) => !el.classList.contains('preview-cell--shaded'))).toBe(true);
     expect(Array.from(cells ?? []).slice(11, 22).every((el) => el.classList.contains('preview-cell--shaded'))).toBe(true);
 
-    const numbers = mesh?.querySelectorAll('.preview-binary-row__number');
+    const numbers = mesh?.querySelectorAll('.preview-binary-word-number');
     expect(numbers?.[0].textContent).toBe('1');
     expect(numbers?.[1].textContent).toBe('2');
   });
@@ -336,6 +339,7 @@ describe('renderPreview', () => {
   it('renders binary thumbnails as blank 11-column meshes with no header and no word numbers', () => {
     const layout = makeLayout({
       isBinary: true,
+      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -348,13 +352,82 @@ describe('renderPreview', () => {
     expect(container.querySelector('.preview-cards .preview-binary-header')).toBeNull();
     const mesh = container.querySelector('.preview-cards .preview-binary-mesh');
     expect(mesh?.querySelectorAll('.preview-cell')).toHaveLength(11);
-    expect(mesh?.querySelectorAll('.preview-binary-row__number')).toHaveLength(0);
+    expect(mesh?.querySelectorAll('.preview-binary-word-number')).toHaveLength(0);
   });
 
   it('does not render binary markup for a non-binary layout', () => {
     renderPreview(container, makeLayout());
     expect(container.querySelector('.preview-binary-header')).toBeNull();
     expect(container.querySelector('.preview-binary-mesh')).toBeNull();
+  });
+
+  it('renders horizontal binary (default direction) with a left-side row header, right-pointing arrows, and word numbers as column headers', () => {
+    const layout = makeLayout({
+      isBinary: true,
+      binaryDirection: 'horizontal',
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      cards: [
+        makeCard({
+          sections: [
+            {
+              sectionNumber: 1,
+              words: [
+                { wordNumber: 1, shaded: false },
+                { wordNumber: 2, shaded: true },
+              ],
+            },
+          ],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+
+    const bigBox = container.querySelector('.preview-big .preview-card--large') as HTMLElement;
+    const row = container.querySelector('.preview-big .preview-binary-horizontal-row');
+    expect(row).not.toBeNull();
+    expect(row?.contains(bigBox)).toBe(true);
+
+    const sideHeader = row?.querySelector('.preview-binary-row-header');
+    const sideHeaderCells = sideHeader?.querySelectorAll('.preview-binary-row-header__cell');
+    expect(sideHeaderCells).toHaveLength(11);
+    expect(sideHeaderCells?.[0].textContent).toBe('1024');
+    expect(sideHeaderCells?.[10].textContent).toBe('1');
+
+    const arrows = row?.querySelectorAll('.preview-binary-row-header-arrow');
+    expect(arrows).toHaveLength(11);
+
+    // header sits outside the card box, matching the PDF's placement
+    expect(bigBox.contains(sideHeader ?? null)).toBe(false);
+
+    // mesh: 2 words (columns) x 11 bit-rows = 22 cells, no header/arrows nested in the mesh
+    const cells = bigBox.querySelectorAll('.preview-binary-mesh .preview-cell');
+    expect(cells).toHaveLength(22);
+
+    // word numbers are column headers now, not row labels
+    const numbers = bigBox.querySelectorAll('.preview-binary-word-number--column');
+    expect(numbers).toHaveLength(2);
+    expect(numbers[0].textContent).toBe('1');
+    expect(numbers[1].textContent).toBe('2');
+    expect(bigBox.querySelectorAll('.preview-binary-word-number--row')).toHaveLength(0);
+  });
+
+  it('renders horizontal binary thumbnails as a blank transposed mesh with no header', () => {
+    const layout = makeLayout({
+      isBinary: true,
+      binaryDirection: 'horizontal',
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      cards: [
+        makeCard({
+          sections: [{ sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }, { wordNumber: 2, shaded: true }] }],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+
+    expect(container.querySelector('.preview-cards .preview-binary-row-header')).toBeNull();
+    expect(container.querySelector('.preview-cards .preview-binary-header')).toBeNull();
+    const cells = container.querySelectorAll('.preview-cards .preview-binary-mesh .preview-cell');
+    expect(cells).toHaveLength(22); // 2 words x 11 bit-rows
   });
 
   it('shades binary thumbnail cells using each section\'s own model-computed shaded flag, not row index parity', () => {
@@ -364,6 +437,7 @@ describe('renderPreview', () => {
     // false, true, true).
     const layout = makeLayout({
       isBinary: true,
+      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -388,6 +462,7 @@ describe('renderPreview', () => {
   it('omits a mesh row for a binary section with zero words', () => {
     const layout = makeLayout({
       isBinary: true,
+      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -407,6 +482,7 @@ describe('renderPreview', () => {
   it('shades every second binary column, independent of row shading', () => {
     const layout = makeLayout({
       isBinary: true,
+      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -426,6 +502,7 @@ describe('renderPreview', () => {
   it('renders one down-arrow per column, not a single centered one', () => {
     const layout = makeLayout({
       isBinary: true,
+      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -442,6 +519,7 @@ describe('renderPreview', () => {
   it('marks row/column shading intersections with both classes, so CSS can darken them further', () => {
     const layout = makeLayout({
       isBinary: true,
+      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -461,6 +539,7 @@ describe('renderPreview', () => {
   it('uses binary-specific wording ("card count") for the cellNotSquare warning when isBinary is true', () => {
     const layout = makeLayout({
       isBinary: true,
+      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       warnings: { cellTooSmall: false, cellNotSquare: true, cellSizeInvalid: false },
     });

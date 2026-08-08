@@ -100,6 +100,21 @@ form select {
   display: none;
 }
 
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.checkbox-label input[type='checkbox'] {
+  display: inline-block;
+  width: auto;
+  margin: 0;
+}
+
 form input[aria-invalid="true"] {
   border-color: var(--color-error-text);
 }
@@ -355,6 +370,54 @@ button[type="submit"]:hover {
   opacity: 0.5;
 }
 
+.preview-binary-horizontal-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.preview-binary-horizontal-row .preview-card--large {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-binary-row-header {
+  display: grid;
+  align-items: center;
+  justify-items: end;
+  gap: 1px;
+  width: 34px;
+  flex-shrink: 0;
+  /* matches .preview-card's 2px border + 6px padding, so rows line up with the mesh alongside it */
+  padding: 8px 0;
+}
+
+.preview-binary-row-header__cell {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.preview-binary-row-header-arrows {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  width: 10px;
+  flex-shrink: 0;
+  margin-right: 4px;
+  padding: 8px 0;
+}
+
+.preview-binary-row-header-arrow {
+  width: 0;
+  height: 0;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-left: 4px solid var(--color-muted);
+  opacity: 0.5;
+}
+
 .preview-binary-mesh {
   position: relative;
   flex: 1;
@@ -382,16 +445,24 @@ button[type="submit"]:hover {
   background: rgba(0, 0, 0, 0.12);
 }
 
-.preview-binary-row__number {
+.preview-binary-word-number {
   position: absolute;
-  left: 2px;
   display: flex;
-  align-items: center;
   font-size: 0.75rem;
   font-weight: 700;
   color: rgba(26, 26, 26, 0.6);
   pointer-events: none;
   z-index: 1;
+}
+
+.preview-binary-word-number--row {
+  left: 2px;
+  align-items: center;
+}
+
+.preview-binary-word-number--column {
+  top: 2px;
+  justify-content: center;
 }
 
 .corner-mark {

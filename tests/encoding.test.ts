@@ -18,8 +18,22 @@ describe('encodingLayout', () => {
     expect(layout.cellLabels).toEqual(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
   });
 
-  it('lays out Binary as 1 row x 11 columns with no cell labels', () => {
+  it('defaults to horizontal Binary: 11 rows (bit-places) x 1 column (word) with no cell labels', () => {
     const layout = encodingLayout(EncodingType.Binary);
+    expect(layout.rows).toBe(11);
+    expect(layout.cols).toBe(1);
+    expect(layout.cellLabels).toBeNull();
+  });
+
+  it('lays out horizontal Binary explicitly as 11 rows x 1 column with no cell labels', () => {
+    const layout = encodingLayout(EncodingType.Binary, 'horizontal');
+    expect(layout.rows).toBe(11);
+    expect(layout.cols).toBe(1);
+    expect(layout.cellLabels).toBeNull();
+  });
+
+  it('lays out vertical Binary as 1 row x 11 columns with no cell labels', () => {
+    const layout = encodingLayout(EncodingType.Binary, 'vertical');
     expect(layout.rows).toBe(1);
     expect(layout.cols).toBe(11);
     expect(layout.cellLabels).toBeNull();

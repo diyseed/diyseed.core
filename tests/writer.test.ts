@@ -53,12 +53,25 @@ describe('generateWriterPdf', () => {
     expect(loaded.getPageCount()).toBeGreaterThanOrEqual(1);
   });
 
-  it('produces a loadable PDF for Binary encoding (12 words, 2 cards, 85.6x54mm)', async () => {
+  it('produces a loadable PDF for horizontal Binary encoding (default direction, 12 words, 2 cards, 85.6x54mm)', async () => {
     const params = new GeneratorParameters({
       cardSize: { width: mm(85.6), height: mm(54) },
       cardCount: 2,
       seedLength: 12,
       encoding: EncodingType.Binary,
+    });
+    const bytes = await generateWriterPdf(params);
+    const loaded = await PDFDocument.load(bytes);
+    expect(loaded.getPageCount()).toBeGreaterThanOrEqual(1);
+  });
+
+  it('produces a loadable PDF for vertical Binary encoding (12 words, 2 cards, 85.6x54mm)', async () => {
+    const params = new GeneratorParameters({
+      cardSize: { width: mm(85.6), height: mm(54) },
+      cardCount: 2,
+      seedLength: 12,
+      encoding: EncodingType.Binary,
+      binaryDirection: 'vertical',
     });
     const bytes = await generateWriterPdf(params);
     const loaded = await PDFDocument.load(bytes);

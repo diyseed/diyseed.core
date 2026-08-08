@@ -1,5 +1,5 @@
 import { GeneratorParameters } from '../generator/params';
-import { EncodingType } from '../generator/encoding';
+import { EncodingType, BinaryDirection } from '../generator/encoding';
 import * as Config from '../generator/config';
 import { mm } from '../units';
 
@@ -12,6 +12,7 @@ export interface FormValues {
   cardPaddingMm: number;
   copies: number;
   encoding: EncodingType;
+  binaryDirection: BinaryDirection;
 }
 
 export interface FieldError {
@@ -56,6 +57,7 @@ export function toGeneratorParameters(values: FormValues): GeneratorParameters {
     seedLength: values.seedLength,
     cardSplit: values.encoding === EncodingType.Binary ? undefined : values.cardSplit,
     encoding: values.encoding,
+    binaryDirection: values.binaryDirection,
     copies: values.copies,
     cardPadding: mm(values.cardPaddingMm),
   });
@@ -70,4 +72,5 @@ export const DEFAULT_FORM_VALUES: FormValues = {
   cardPaddingMm: 1.5,
   copies: Config.WRITER_COPIES_DEFAULT,
   encoding: Config.CARDS_ENCODING_DEFAULT,
+  binaryDirection: Config.BINARY_DIRECTION_DEFAULT,
 };

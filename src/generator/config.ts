@@ -1,6 +1,6 @@
 import { mm } from '../units';
 import type { Size } from '../units';
-import { EncodingType } from './encoding';
+import { EncodingType, BinaryDirection } from './encoding';
 
 // DOCUMENT STRINGS
 export const DOCUMENT_TITLE = 'Protect your crypto-wallet seed backup - HoboHodl.com';
@@ -62,3 +62,4 @@ export const CORNER_MARK_PITCH = mm(1);
 // BINARY ENCODING
 export const BINARY_COLUMN_VALUES: number[] = [1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1];
 export const BINARY_HEADER_HEIGHT = mm(6);
+export const BINARY_DIRECTION_DEFAULT: BinaryDirection = 'horizontal';

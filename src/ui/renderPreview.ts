@@ -1,4 +1,7 @@
-import type { PreviewCard, PreviewLayout, PreviewSection, PreviewWord } from './preview';
+import type { PreviewCard, PreviewLayout, PreviewWord } from './preview';
+import type { BinaryDirection } from '../generator/encoding';
+
+const BINARY_BIT_COUNT = 11;
 
 const SMALL_CARD_PX_PER_MM = 1.5;
 const SMALL_CARD_MAX_WIDTH_PX = 160;
@@ -48,7 +51,9 @@ export function renderPreview(container: HTMLElement, layout: PreviewLayout | nu
     const bigSection = document.createElement('div');
     bigSection.className = 'preview-big';
     bigSection.appendChild(
-      layout.isBinary ? renderBinaryBigCard(layout.cards[0], layout.binaryColumnLabels) : renderBigCard(layout.cards[0], layout.cellRowLabels),
+      layout.isBinary
+        ? renderBinaryBigCard(layout.cards[0], layout.binaryColumnLabels, layout.binaryDirection)
+        : renderBigCard(layout.cards[0], layout.cellRowLabels),
     );
     container.appendChild(bigSection);
   }
@@ -56,7 +61,9 @@ export function renderPreview(container: HTMLElement, layout: PreviewLayout | nu
   const cardsEl = document.createElement('div');
   cardsEl.className = 'preview-cards';
   for (let set = 0; set < layout.copies; set++) {
-    cardsEl.appendChild(renderCardSet(layout.cards, set, layout.copies, layout.isBinary, layout.binaryColumnLabels.length));
+    cardsEl.appendChild(
+      renderCardSet(layout.cards, set, layout.copies, layout.isBinary, layout.binaryDirection),
+    );
   }
   container.appendChild(cardsEl);
 }
@@ -73,7 +80,7 @@ function renderCardSet(
   setIndex: number,
   copies: number,
   isBinary: boolean,
-  binaryColumnCount: number,
+  binaryDirection: BinaryDirection,
 ): HTMLElement {
   const setEl = document.createElement('div');
   setEl.className = 'preview-set';
@@ -88,7 +95,7 @@ function renderCardSet(
   const cardsRow = document.createElement('div');
   cardsRow.className = 'preview-set__cards';
   for (const card of cards) {
-    cardsRow.appendChild(isBinary ? renderBinaryCard(card, binaryColumnCount) : renderCard(card));
+    cardsRow.appendChild(isBinary ? renderBinaryCard(card, binaryDirection) : renderCard(card));
   }
   setEl.appendChild(cardsRow);
 
@@ -123,34 +130,58 @@ function renderCard(card: PreviewCard): HTMLElement {
   return wrapper;
 }
 
-function renderBinaryMesh(rows: PreviewSection[], columnCount: number, showNumbers: boolean): HTMLElement {
+function binaryWordsOf(card: PreviewCard): PreviewWord[] {
+  return card.sections.flatMap((section) => section.words);
+}
+
+function makeBinaryCell(wordShaded: boolean, bitShaded: boolean): HTMLElement {
+  const cell = document.createElement('div');
+  let className = 'preview-cell';
+  if (wordShaded) className += ' preview-cell--shaded';
+  if (bitShaded) className += ' preview-cell--col-shaded';
+  cell.className = className;
+  return cell;
+}
+
+function renderBinaryMesh(words: PreviewWord[], direction: BinaryDirection, showNumbers: boolean): HTMLElement {
   const mesh = document.createElement('div');
   mesh.className = 'preview-binary-mesh';
 
   const grid = document.createElement('div');
   grid.className = 'preview-binary-mesh__grid';
-  grid.style.gridTemplateColumns = `repeat(${columnCount}, 1fr)`;
-  grid.style.gridTemplateRows = `repeat(${rows.length}, 1fr)`;
-  rows.forEach((section) => {
-    const shaded = section.words[0]?.shaded ?? false;
-    for (let col = 0; col < columnCount; col++) {
-      const cell = document.createElement('div');
-      let className = 'preview-cell';
-      if (shaded) className += ' preview-cell--shaded';
-      if (col % 2 === 1) className += ' preview-cell--col-shaded';
-      cell.className = className;
-      grid.appendChild(cell);
+
+  if (direction === 'vertical') {
+    grid.style.gridTemplateColumns = `repeat(${BINARY_BIT_COUNT}, 1fr)`;
+    grid.style.gridTemplateRows = `repeat(${words.length}, 1fr)`;
+    words.forEach((word) => {
+      for (let bit = 0; bit < BINARY_BIT_COUNT; bit++) {
+        grid.appendChild(makeBinaryCell(word.shaded, bit % 2 === 1));
+      }
+    });
+  } else {
+    grid.style.gridTemplateColumns = `repeat(${words.length}, 1fr)`;
+    grid.style.gridTemplateRows = `repeat(${BINARY_BIT_COUNT}, 1fr)`;
+    for (let bit = 0; bit < BINARY_BIT_COUNT; bit++) {
+      words.forEach((word) => {
+        grid.appendChild(makeBinaryCell(word.shaded, bit % 2 === 1));
+      });
     }
-  });
+  }
   mesh.appendChild(grid);
 
   if (showNumbers) {
-    rows.forEach((section, rowIndex) => {
+    words.forEach((word, i) => {
       const numberEl = document.createElement('div');
-      numberEl.className = 'preview-binary-row__number';
-      numberEl.textContent = String(section.words[0].wordNumber);
-      numberEl.style.top = `${(rowIndex / rows.length) * 100}%`;
-      numberEl.style.height = `${(1 / rows.length) * 100}%`;
+      numberEl.textContent = String(word.wordNumber);
+      if (direction === 'vertical') {
+        numberEl.className = 'preview-binary-word-number preview-binary-word-number--row';
+        numberEl.style.top = `${(i / words.length) * 100}%`;
+        numberEl.style.height = `${(1 / words.length) * 100}%`;
+      } else {
+        numberEl.className = 'preview-binary-word-number preview-binary-word-number--column';
+        numberEl.style.left = `${(i / words.length) * 100}%`;
+        numberEl.style.width = `${(1 / words.length) * 100}%`;
+      }
       mesh.appendChild(numberEl);
     });
   }
@@ -158,7 +189,7 @@ function renderBinaryMesh(rows: PreviewSection[], columnCount: number, showNumbe
   return mesh;
 }
 
-function renderBinaryCard(card: PreviewCard, columnCount: number): HTMLElement {
+function renderBinaryCard(card: PreviewCard, direction: BinaryDirection): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'preview-card-wrapper';
 
@@ -168,8 +199,7 @@ function renderBinaryCard(card: PreviewCard, columnCount: number): HTMLElement {
   box.style.width = `${widthPx}px`;
   box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
 
-  const rows = card.sections.filter((section) => section.words.length > 0);
-  box.appendChild(renderBinaryMesh(rows, columnCount, false));
+  box.appendChild(renderBinaryMesh(binaryWordsOf(card), direction, false));
 
   renderCornerMarks(box, card.cardNumber);
   wrapper.appendChild(box);
@@ -178,40 +208,55 @@ function renderBinaryCard(card: PreviewCard, columnCount: number): HTMLElement {
   return wrapper;
 }
 
-function renderBinaryBigCard(card: PreviewCard, columnLabels: string[]): HTMLElement {
+function renderBinaryHeader(labels: string[], side: 'top' | 'left'): { labels: HTMLElement; arrows: HTMLElement } {
+  const labelsEl = document.createElement('div');
+  labelsEl.className = side === 'top' ? 'preview-binary-header' : 'preview-binary-row-header';
+  if (side === 'top') labelsEl.style.gridTemplateColumns = `repeat(${labels.length}, 1fr)`;
+  else labelsEl.style.gridTemplateRows = `repeat(${labels.length}, 1fr)`;
+  for (const label of labels) {
+    const cell = document.createElement('div');
+    cell.className = side === 'top' ? 'preview-binary-header__cell' : 'preview-binary-row-header__cell';
+    cell.textContent = label;
+    labelsEl.appendChild(cell);
+  }
+
+  const arrowsEl = document.createElement('div');
+  arrowsEl.className = side === 'top' ? 'preview-binary-header-arrows' : 'preview-binary-row-header-arrows';
+  if (side === 'top') arrowsEl.style.gridTemplateColumns = `repeat(${labels.length}, 1fr)`;
+  else arrowsEl.style.gridTemplateRows = `repeat(${labels.length}, 1fr)`;
+  for (let i = 0; i < labels.length; i++) {
+    const arrow = document.createElement('div');
+    arrow.className = side === 'top' ? 'preview-binary-header-arrow' : 'preview-binary-row-header-arrow';
+    arrowsEl.appendChild(arrow);
+  }
+
+  return { labels: labelsEl, arrows: arrowsEl };
+}
+
+function renderBinaryBigCard(card: PreviewCard, columnLabels: string[], direction: BinaryDirection): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'preview-card-wrapper';
-
-  const header = document.createElement('div');
-  header.className = 'preview-binary-header';
-  header.style.gridTemplateColumns = `repeat(${columnLabels.length}, 1fr)`;
-  for (const label of columnLabels) {
-    const cell = document.createElement('div');
-    cell.className = 'preview-binary-header__cell';
-    cell.textContent = label;
-    header.appendChild(cell);
-  }
-  wrapper.appendChild(header);
-
-  const arrowRow = document.createElement('div');
-  arrowRow.className = 'preview-binary-header-arrows';
-  arrowRow.style.gridTemplateColumns = `repeat(${columnLabels.length}, 1fr)`;
-  for (let i = 0; i < columnLabels.length; i++) {
-    const arrow = document.createElement('div');
-    arrow.className = 'preview-binary-header-arrow';
-    arrowRow.appendChild(arrow);
-  }
-  wrapper.appendChild(arrowRow);
 
   const box = document.createElement('div');
   box.className = 'preview-card preview-card--large';
   box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
-
-  const rows = card.sections.filter((section) => section.words.length > 0);
-  box.appendChild(renderBinaryMesh(rows, columnLabels.length, true));
-
+  box.appendChild(renderBinaryMesh(binaryWordsOf(card), direction, true));
   renderCornerMarks(box, card.cardNumber);
-  wrapper.appendChild(box);
+
+  if (direction === 'vertical') {
+    const header = renderBinaryHeader(columnLabels, 'top');
+    wrapper.appendChild(header.labels);
+    wrapper.appendChild(header.arrows);
+    wrapper.appendChild(box);
+  } else {
+    const header = renderBinaryHeader(columnLabels, 'left');
+    const row = document.createElement('div');
+    row.className = 'preview-binary-horizontal-row';
+    row.appendChild(header.labels);
+    row.appendChild(header.arrows);
+    row.appendChild(box);
+    wrapper.appendChild(row);
+  }
 
   const label = document.createElement('div');
   label.className = 'preview-card__label';

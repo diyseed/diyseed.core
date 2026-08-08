@@ -22,6 +22,7 @@ function readForm(): FormValues {
     return el.value === '' ? fallback : value;
   };
   const encodingEl = document.getElementById('encoding') as HTMLSelectElement;
+  const binaryDirectionEl = document.getElementById('binaryDirectionVertical') as HTMLInputElement | null;
 
   return {
     seedLength: num('seedLength', DEFAULT_FORM_VALUES.seedLength),
@@ -32,6 +33,7 @@ function readForm(): FormValues {
     cardPaddingMm: num('cardPaddingMm', DEFAULT_FORM_VALUES.cardPaddingMm),
     copies: num('copies', DEFAULT_FORM_VALUES.copies),
     encoding: Number(encodingEl.value) as EncodingType,
+    binaryDirection: binaryDirectionEl?.checked ? 'vertical' : 'horizontal',
   };
 }
 
@@ -91,11 +93,24 @@ function updateCardSplitVisibility(): void {
   hint?.classList.toggle('is-hidden', isBinary);
 }
 
+function updateBinaryDirectionVisibility(): void {
+  const encodingEl = document.getElementById('encoding') as HTMLSelectElement | null;
+  const directionInput = document.getElementById('binaryDirectionVertical');
+  const directionLabel = directionInput?.closest('label');
+  const hint = document.getElementById('binaryDirection-hint');
+  if (!encodingEl || !directionLabel) return;
+
+  const isBinary = Number(encodingEl.value) === EncodingType.Binary;
+  directionLabel.classList.toggle('is-hidden', !isBinary);
+  hint?.classList.toggle('is-hidden', !isBinary);
+}
+
 function updatePreview(): void {
   const previewEl = document.getElementById('preview-panel');
   if (!previewEl) return;
 
   updateCardSplitVisibility();
+  updateBinaryDirectionVisibility();
 
   if (hasEmptyRequiredField()) {
     renderPreview(previewEl, null);

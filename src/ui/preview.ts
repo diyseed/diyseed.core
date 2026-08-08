@@ -1,5 +1,5 @@
 import { GeneratorParameters } from '../generator/params';
-import { EncodingType, encodingLayout } from '../generator/encoding';
+import { EncodingType, encodingLayout, BinaryDirection } from '../generator/encoding';
 import * as Config from '../generator/config';
 import { toMm } from '../units';
 import { physicalCardNumberOf, sideOf } from '../generator/cornerMarks';
@@ -37,6 +37,7 @@ export interface PreviewLayout {
   cellRowLabels: string[];
   isBinary: boolean;
   binaryColumnLabels: string[];
+  binaryDirection: BinaryDirection;
   copies: number;
   warnings: PreviewWarnings;
 }
@@ -84,9 +85,10 @@ export function computePreviewLayout(parameters: GeneratorParameters): PreviewLa
     cards,
     cellWidthMm,
     cellHeightMm,
-    cellRowLabels: encodingLayout(parameters.seedEncoding).cellLabels ?? [],
+    cellRowLabels: encodingLayout(parameters.seedEncoding, parameters.binaryDirection).cellLabels ?? [],
     isBinary,
     binaryColumnLabels: isBinary ? Config.BINARY_COLUMN_VALUES.map(String) : [],
+    binaryDirection: parameters.binaryDirection,
     copies: parameters.copies,
     warnings: { cellTooSmall, cellNotSquare, cellSizeInvalid },
   };

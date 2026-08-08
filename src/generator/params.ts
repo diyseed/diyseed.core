@@ -1,5 +1,5 @@
 import { Size, size } from '../units';
-import { EncodingType, encodingLayout } from './encoding';
+import { EncodingType, encodingLayout, BinaryDirection } from './encoding';
 import * as Config from './config';
 
 export interface GeneratorParametersInput {
@@ -8,6 +8,7 @@ export interface GeneratorParametersInput {
   seedLength: number;
   cardSplit?: number;
   encoding?: EncodingType;
+  binaryDirection?: BinaryDirection;
   copies?: number;
   cardCornerRadius?: number;
   cardPadding?: number;
@@ -27,6 +28,7 @@ export class GeneratorParameters {
   readonly cardPadding: number;
   readonly cardSplit: number;
   readonly seedEncoding: EncodingType;
+  readonly binaryDirection: BinaryDirection;
   readonly copies: number;
 
   constructor(input: GeneratorParametersInput) {
@@ -36,15 +38,20 @@ export class GeneratorParameters {
     checkRange(input.cardSize.height, Config.CARD_HEIGHT_RANGE, 'cardSize.height');
 
     const encoding = input.encoding ?? Config.CARDS_ENCODING_DEFAULT;
+    const binaryDirection = input.binaryDirection ?? Config.BINARY_DIRECTION_DEFAULT;
     const copies = input.copies ?? Config.WRITER_COPIES_DEFAULT;
     checkRange(copies, Config.WRITER_COPIES_RANGE, 'copies');
 
     let cardSplit: number;
-    if (encoding === EncodingType.Binary) {
-      // Binary lays out exactly one word per row, so the split is however many
-      // rows are needed to fit the seed across the requested card count - not a
-      // user-configurable value like it is for the other encodings.
+    if (encoding === EncodingType.Binary && binaryDirection === 'vertical') {
+      // Vertical lays out exactly one word per row, so the split is however
+      // many rows are needed to fit the seed across the requested card count -
+      // not a user-configurable value like it is for the other encodings.
       cardSplit = Math.ceil(input.seedLength / input.cardCount);
+    } else if (encoding === EncodingType.Binary) {
+      // Horizontal lays words out side-by-side as columns spanning the card's
+      // full height in one go, so there's always exactly one section per card.
+      cardSplit = 1;
     } else {
       cardSplit = input.cardSplit ?? Config.CARD_SPLIT_DEFAULT;
       checkRange(cardSplit, Config.CARD_SPLIT_RANGE, 'cardSplit');
@@ -60,6 +67,7 @@ export class GeneratorParameters {
     this.cardSize = input.cardSize;
     this.cardSplit = cardSplit;
     this.seedEncoding = encoding;
+    this.binaryDirection = binaryDirection;
     this.copies = copies;
     this.cardCornerRadius = cardCornerRadius;
     this.cardPadding = cardPadding;
@@ -78,7 +86,7 @@ export class GeneratorParameters {
   }
 
   get cellSize(): Size {
-    const layout = encodingLayout(this.seedEncoding);
+    const layout = encodingLayout(this.seedEncoding, this.binaryDirection);
     return size(this.wordSize.width / layout.cols, this.wordSize.height / layout.rows);
   }
 
@@ -160,6 +168,10 @@ export class CardSectionParameters {
 
   get encoding(): EncodingType {
     return this.parent.seedEncoding;
+  }
+
+  get binaryDirection(): BinaryDirection {
+    return this.parent.binaryDirection;
   }
 
   get cellSize(): Size {

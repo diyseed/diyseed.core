@@ -66,4 +66,8 @@ describe('binary encoding constants', () => {
     expect(Config.BINARY_COLUMN_VALUES).toEqual([1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]);
     expect(Config.BINARY_HEADER_HEIGHT).toBeCloseTo(mm(6), 6);
   });
+
+  it('defaults to horizontal direction (words side-by-side as columns)', () => {
+    expect(Config.BINARY_DIRECTION_DEFAULT).toBe('horizontal');
+  });
 });

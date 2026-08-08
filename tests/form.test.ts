@@ -55,6 +55,7 @@ describe('toGeneratorParameters', () => {
       cardPaddingMm: 1.5,
       copies: 1,
       encoding: EncodingType.Alphabet,
+      binaryDirection: 'horizontal',
     });
     expect(params.seedLength).toBe(24);
     expect(params.cardCount).toBe(2);
@@ -71,11 +72,12 @@ describe('toGeneratorParameters', () => {
       cardPaddingMm: 2,
       copies: 1,
       encoding: EncodingType.Alphabet,
+      binaryDirection: 'horizontal',
     });
     expect(params.cardPadding).toBeCloseTo(mm(2), 6);
   });
 
-  it('does not forward cardSplit for Binary encoding, leaving GeneratorParameters to auto-derive it', () => {
+  it('does not forward cardSplit for vertical Binary encoding, leaving GeneratorParameters to auto-derive it', () => {
     const params = toGeneratorParameters({
       seedLength: 12,
       cardCount: 2,
@@ -85,6 +87,7 @@ describe('toGeneratorParameters', () => {
       cardPaddingMm: 1.5,
       copies: 1,
       encoding: EncodingType.Binary,
+      binaryDirection: 'vertical',
     });
     // Auto-derived: ceil(seedLength / cardCount) = ceil(12/2) = 6, not the stale 99.
     expect(params.cardSplit).toBe(6);
@@ -100,7 +103,23 @@ describe('toGeneratorParameters', () => {
       cardPaddingMm: 1.5,
       copies: 1,
       encoding: EncodingType.Alphabet,
+      binaryDirection: 'horizontal',
     });
     expect(params.cardSplit).toBe(3);
+  });
+
+  it('defaults to horizontal Binary (cardSplit forced to 1, not seed-length-derived)', () => {
+    const params = toGeneratorParameters({
+      seedLength: 12,
+      cardCount: 2,
+      cardWidthMm: 85.6,
+      cardHeightMm: 54,
+      cardSplit: 1,
+      cardPaddingMm: 1.5,
+      copies: 1,
+      encoding: EncodingType.Binary,
+      binaryDirection: 'horizontal',
+    });
+    expect(params.cardSplit).toBe(1);
   });
 });

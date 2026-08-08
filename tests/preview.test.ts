@@ -169,4 +169,27 @@ describe('computePreviewLayout — Binary encoding', () => {
     expect(layout.isBinary).toBe(false);
     expect(layout.binaryColumnLabels).toEqual([]);
   });
+
+  it('defaults binaryDirection to horizontal when not specified', () => {
+    const params = new GeneratorParameters({
+      cardSize: { width: mm(85.6), height: mm(54) },
+      cardCount: 2,
+      seedLength: 12,
+      encoding: EncodingType.Binary,
+    });
+    const layout = computePreviewLayout(params);
+    expect(layout.binaryDirection).toBe('horizontal');
+  });
+
+  it('carries an explicit vertical binaryDirection through to the layout', () => {
+    const params = new GeneratorParameters({
+      cardSize: { width: mm(85.6), height: mm(54) },
+      cardCount: 2,
+      seedLength: 12,
+      encoding: EncodingType.Binary,
+      binaryDirection: 'vertical',
+    });
+    const layout = computePreviewLayout(params);
+    expect(layout.binaryDirection).toBe('vertical');
+  });
 });
