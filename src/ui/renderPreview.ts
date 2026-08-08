@@ -1,15 +1,16 @@
-import type { PreviewCard, PreviewLayout, PreviewWord } from './preview';
+import type { PreviewCard, PreviewLayout, PreviewWord, PassphrasePreviewLayout, PassphraseCard } from './preview';
 import type { BinaryDirection } from '../generator/encoding';
 
 const BINARY_BIT_COUNT = 11;
+const PASSPHRASE_BIT_COUNT = 7;
 
 const SMALL_CARD_PX_PER_MM = 1.5;
 const SMALL_CARD_MAX_WIDTH_PX = 160;
 
-export function renderPreview(container: HTMLElement, layout: PreviewLayout | null): void {
+export function renderPreview(container: HTMLElement, layout: PreviewLayout | null, passphraseLayout: PassphrasePreviewLayout | null = null): void {
   container.innerHTML = '';
 
-  if (!layout) {
+  if (!layout && !passphraseLayout) {
     const placeholder = document.createElement('p');
     placeholder.className = 'preview-placeholder';
     placeholder.textContent = 'Fill in valid values above to see a preview.';
@@ -17,55 +18,64 @@ export function renderPreview(container: HTMLElement, layout: PreviewLayout | nu
     return;
   }
 
-  const warningsEl = document.createElement('div');
-  warningsEl.className = 'preview-warnings';
-  warningsEl.setAttribute('aria-live', 'polite');
+  if (layout) {
+    const warningsEl = document.createElement('div');
+    warningsEl.className = 'preview-warnings';
+    warningsEl.setAttribute('aria-live', 'polite');
 
-  if (layout.warnings.cellSizeInvalid) {
-    warningsEl.appendChild(
-      warningBanner('error', 'Something went wrong computing the cell size for this configuration.'),
-    );
-  } else {
-    if (layout.warnings.cellTooSmall) {
+    if (layout.warnings.cellSizeInvalid) {
       warningsEl.appendChild(
-        warningBanner(
-          'warning',
-          `Cells are ${layout.cellWidthMm.toFixed(1)}×${layout.cellHeightMm.toFixed(1)}mm — smaller than 1.5mm may be hard to punch by hand. Try a bigger card, fewer words per card, or more cards.`,
-        ),
+        warningBanner('error', 'Something went wrong computing the cell size for this configuration.'),
+      );
+    } else {
+      if (layout.warnings.cellTooSmall) {
+        warningsEl.appendChild(
+          warningBanner(
+            'warning',
+            `Cells are ${layout.cellWidthMm.toFixed(1)}×${layout.cellHeightMm.toFixed(1)}mm — smaller than 1.5mm may be hard to punch by hand. Try a bigger card, fewer words per card, or more cards.`,
+          ),
+        );
+      }
+      if (layout.warnings.cellNotSquare) {
+        warningsEl.appendChild(
+          warningBanner(
+            'warning',
+            layout.isBinary
+              ? 'Cells are noticeably stretched — consider adjusting card count or card proportions for a more even grid.'
+              : 'Cells are noticeably stretched — consider adjusting card split or card proportions for a more even grid.',
+          ),
+        );
+      }
+    }
+    container.appendChild(warningsEl);
+
+    if (layout.cards.length > 0) {
+      const bigSection = document.createElement('div');
+      bigSection.className = 'preview-big';
+      bigSection.appendChild(
+        layout.isBinary
+          ? renderBinaryBigCard(layout.cards[0], layout.binaryColumnLabels, layout.binaryDirection)
+          : renderBigCard(layout.cards[0], layout.cellRowLabels),
+      );
+      container.appendChild(bigSection);
+    }
+
+    const cardsEl = document.createElement('div');
+    cardsEl.className = 'preview-cards';
+    for (let set = 0; set < layout.copies; set++) {
+      cardsEl.appendChild(
+        renderCardSet(layout.cards, set, layout.copies, layout.isBinary, layout.binaryDirection),
       );
     }
-    if (layout.warnings.cellNotSquare) {
-      warningsEl.appendChild(
-        warningBanner(
-          'warning',
-          layout.isBinary
-            ? 'Cells are noticeably stretched — consider adjusting card count or card proportions for a more even grid.'
-            : 'Cells are noticeably stretched — consider adjusting card split or card proportions for a more even grid.',
-        ),
-      );
-    }
-  }
-  container.appendChild(warningsEl);
-
-  if (layout.cards.length > 0) {
-    const bigSection = document.createElement('div');
-    bigSection.className = 'preview-big';
-    bigSection.appendChild(
-      layout.isBinary
-        ? renderBinaryBigCard(layout.cards[0], layout.binaryColumnLabels, layout.binaryDirection)
-        : renderBigCard(layout.cards[0], layout.cellRowLabels),
-    );
-    container.appendChild(bigSection);
+    container.appendChild(cardsEl);
   }
 
-  const cardsEl = document.createElement('div');
-  cardsEl.className = 'preview-cards';
-  for (let set = 0; set < layout.copies; set++) {
-    cardsEl.appendChild(
-      renderCardSet(layout.cards, set, layout.copies, layout.isBinary, layout.binaryDirection),
-    );
+  if (passphraseLayout) {
+    const passphraseSection = document.createElement('div');
+    passphraseSection.className = 'preview-passphrase';
+    renderPassphrasePreview(passphraseSection, passphraseLayout);
+    container.appendChild(passphraseSection);
   }
-  container.appendChild(cardsEl);
 }
 
 function warningBanner(kind: 'error' | 'warning', message: string): HTMLElement {
@@ -73,6 +83,116 @@ function warningBanner(kind: 'error' | 'warning', message: string): HTMLElement 
   el.className = `preview-warning preview-warning--${kind}`;
   el.textContent = message;
   return el;
+}
+
+function renderPassphrasePreview(container: HTMLElement, layout: PassphrasePreviewLayout): void {
+  if (layout.warnings.noCapacity) {
+    container.appendChild(warningBanner('error', 'No characters fit at this cell size — try a bigger card, smaller cells, or less padding.'));
+  } else if (layout.warnings.cellTooSmall) {
+    container.appendChild(
+      warningBanner('warning', `Cells are ${layout.cellWidthMm.toFixed(1)}×${layout.cellHeightMm.toFixed(1)}mm — smaller than 1.5mm may be hard to punch by hand.`),
+    );
+  }
+
+  if (layout.cards.length === 0) return;
+
+  const bigSection = document.createElement('div');
+  bigSection.className = 'preview-big';
+  bigSection.appendChild(renderPassphraseBigCard(layout.cards[0], layout.columnLabels, layout.binaryDirection));
+  container.appendChild(bigSection);
+
+  const cardsEl = document.createElement('div');
+  cardsEl.className = 'preview-cards';
+  for (let set = 0; set < layout.copies; set++) {
+    const setEl = document.createElement('div');
+    setEl.className = 'preview-set';
+    if (layout.copies > 1) {
+      const label = document.createElement('div');
+      label.className = 'preview-set__label';
+      label.textContent = `Set ${set + 1}`;
+      setEl.appendChild(label);
+    }
+    const cardsRow = document.createElement('div');
+    cardsRow.className = 'preview-set__cards';
+    for (const card of layout.cards) {
+      cardsRow.appendChild(renderPassphraseThumbnail(card, layout.binaryDirection));
+    }
+    setEl.appendChild(cardsRow);
+    cardsEl.appendChild(setEl);
+  }
+  container.appendChild(cardsEl);
+}
+
+function passphraseWordsOf(block: number[]): PreviewWord[] {
+  return block.map((position) => ({ wordNumber: position, shaded: position % 2 === 0 }));
+}
+
+function renderPassphraseMeshArea(blocks: number[][], direction: BinaryDirection, showNumbers: boolean): HTMLElement[] {
+  const meshes = blocks.map((block) => renderBinaryMesh(passphraseWordsOf(block), direction, showNumbers, PASSPHRASE_BIT_COUNT));
+  if (direction === 'horizontal') return meshes;
+
+  const row = document.createElement('div');
+  row.className = 'preview-binary-blocks-row';
+  meshes.forEach((mesh) => row.appendChild(mesh));
+  return [row];
+}
+
+function renderPassphraseBigCard(card: PassphraseCard, columnLabels: string[], direction: BinaryDirection): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'preview-card-wrapper';
+
+  const box = document.createElement('div');
+  box.className = 'preview-card preview-card--large';
+  box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
+  for (const el of renderPassphraseMeshArea(card.blocks, direction, true)) {
+    box.appendChild(el);
+  }
+  renderCornerMarks(box, card.cardNumber);
+
+  if (direction === 'horizontal') {
+    const header = renderBinaryHeader(columnLabels, 'top');
+    wrapper.appendChild(header.labels);
+    wrapper.appendChild(header.arrows);
+    wrapper.appendChild(box);
+  } else {
+    const header = renderBinaryHeader(columnLabels, 'left');
+    const row = document.createElement('div');
+    row.className = 'preview-binary-horizontal-row';
+    row.appendChild(header.labels);
+    row.appendChild(header.arrows);
+    row.appendChild(box);
+    wrapper.appendChild(row);
+  }
+
+  const label = document.createElement('div');
+  label.className = 'preview-card__label';
+  label.textContent = 'Full detail';
+  wrapper.appendChild(label);
+
+  return wrapper;
+}
+
+function renderPassphraseThumbnail(card: PassphraseCard, direction: BinaryDirection): HTMLElement {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'preview-card-wrapper';
+
+  const box = document.createElement('div');
+  box.className = 'preview-card preview-card--small';
+  const widthPx = Math.min(card.cardWidthMm * SMALL_CARD_PX_PER_MM, SMALL_CARD_MAX_WIDTH_PX);
+  box.style.width = `${widthPx}px`;
+  box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
+  for (const el of renderPassphraseMeshArea(card.blocks, direction, false)) {
+    box.appendChild(el);
+  }
+  renderCornerMarks(box, card.cardNumber);
+
+  wrapper.appendChild(box);
+  const label = document.createElement('div');
+  label.className = 'preview-card__label';
+  label.textContent = `Card ${card.cardNumber}`;
+  wrapper.appendChild(label);
+
+  return wrapper;
 }
 
 function renderCardSet(
@@ -143,7 +263,7 @@ function makeBinaryCell(wordShaded: boolean, bitShaded: boolean): HTMLElement {
   return cell;
 }
 
-function renderBinaryMesh(words: PreviewWord[], direction: BinaryDirection, showNumbers: boolean): HTMLElement {
+function renderBinaryMesh(words: PreviewWord[], direction: BinaryDirection, showNumbers: boolean, bitCount: number = BINARY_BIT_COUNT): HTMLElement {
   const mesh = document.createElement('div');
   mesh.className = 'preview-binary-mesh';
 
@@ -151,17 +271,17 @@ function renderBinaryMesh(words: PreviewWord[], direction: BinaryDirection, show
   grid.className = 'preview-binary-mesh__grid';
 
   if (direction === 'vertical') {
-    grid.style.gridTemplateColumns = `repeat(${BINARY_BIT_COUNT}, 1fr)`;
+    grid.style.gridTemplateColumns = `repeat(${bitCount}, 1fr)`;
     grid.style.gridTemplateRows = `repeat(${words.length}, 1fr)`;
     words.forEach((word) => {
-      for (let bit = 0; bit < BINARY_BIT_COUNT; bit++) {
+      for (let bit = 0; bit < bitCount; bit++) {
         grid.appendChild(makeBinaryCell(word.shaded, bit % 2 === 1));
       }
     });
   } else {
     grid.style.gridTemplateColumns = `repeat(${words.length}, 1fr)`;
-    grid.style.gridTemplateRows = `repeat(${BINARY_BIT_COUNT}, 1fr)`;
-    for (let bit = 0; bit < BINARY_BIT_COUNT; bit++) {
+    grid.style.gridTemplateRows = `repeat(${bitCount}, 1fr)`;
+    for (let bit = 0; bit < bitCount; bit++) {
       words.forEach((word) => {
         grid.appendChild(makeBinaryCell(word.shaded, bit % 2 === 1));
       });

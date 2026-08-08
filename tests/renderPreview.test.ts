@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderPreview } from '../src/ui/renderPreview';
-import type { PreviewLayout, PreviewCard } from '../src/ui/preview';
+import type { PreviewLayout, PreviewCard, PassphrasePreviewLayout } from '../src/ui/preview';
 
 function makeCard(overrides: Partial<PreviewCard> = {}): PreviewCard {
   return {
@@ -554,5 +554,86 @@ describe('renderPreview', () => {
     renderPreview(container, makeLayout({ warnings: { cellTooSmall: false, cellNotSquare: true, cellSizeInvalid: false } }));
     const banner = container.querySelector('.preview-warning--warning');
     expect(banner?.textContent).toContain('card split');
+  });
+});
+
+function makePassphraseLayout(overrides: Partial<PassphrasePreviewLayout> = {}): PassphrasePreviewLayout {
+  return {
+    cards: [{ cardNumber: 1, cardWidthMm: 85.6, cardHeightMm: 54, blocks: [[1, 2, 3, 4, 5]] }],
+    columnLabels: ['64', '32', '16', '8', '4', '2', '1'],
+    binaryDirection: 'horizontal',
+    cellWidthMm: 2,
+    cellHeightMm: 2,
+    copies: 1,
+    warnings: { cellTooSmall: false, noCapacity: false },
+    ...overrides,
+  };
+}
+
+describe('renderPreview — passphrase', () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+  });
+
+  it('renders nothing extra when passphraseLayout is omitted (backward compatible)', () => {
+    renderPreview(container, null);
+    expect(container.querySelector('.preview-passphrase')).toBeNull();
+  });
+
+  it('renders nothing extra when passphraseLayout is explicitly null', () => {
+    renderPreview(container, null, null);
+    expect(container.querySelector('.preview-passphrase')).toBeNull();
+  });
+
+  it('renders a passphrase big card and thumbnail row when a layout is provided', () => {
+    renderPreview(container, null, makePassphraseLayout());
+    expect(container.querySelectorAll('.preview-passphrase .preview-big .preview-card--large')).toHaveLength(1);
+    expect(container.querySelectorAll('.preview-passphrase .preview-cards .preview-card--small')).toHaveLength(1);
+  });
+
+  it('renders the 7-column header with ASCII place values', () => {
+    renderPreview(container, null, makePassphraseLayout());
+    const cells = container.querySelectorAll('.preview-passphrase .preview-binary-header__cell');
+    expect(cells).toHaveLength(7);
+    expect(cells[0].textContent).toBe('64');
+    expect(cells[6].textContent).toBe('1');
+  });
+
+  it('renders one mesh block per entry in blocks, with 7-bit-tall cells', () => {
+    const layout = makePassphraseLayout({
+      cards: [{ cardNumber: 1, cardWidthMm: 85.6, cardHeightMm: 54, blocks: [[1, 2, 3], [4, 5, 6]] }],
+    });
+    renderPreview(container, null, layout);
+    const bigBox = container.querySelector('.preview-passphrase .preview-big .preview-card--large') as HTMLElement;
+    const meshes = bigBox.querySelectorAll('.preview-binary-mesh');
+    expect(meshes).toHaveLength(2);
+    meshes.forEach((mesh) => {
+      expect(mesh.querySelectorAll('.preview-cell')).toHaveLength(3 * 7); // 3 characters x 7 bits
+    });
+  });
+
+  it('shows position numbers as column headers in horizontal direction', () => {
+    renderPreview(container, null, makePassphraseLayout());
+    const bigBox = container.querySelector('.preview-passphrase .preview-big .preview-card--large') as HTMLElement;
+    const numbers = bigBox.querySelectorAll('.preview-binary-word-number--column');
+    expect(numbers).toHaveLength(5);
+    expect(numbers[0].textContent).toBe('1');
+    expect(numbers[4].textContent).toBe('5');
+  });
+
+  it('shows position numbers as row labels in vertical direction', () => {
+    const layout = makePassphraseLayout({ binaryDirection: 'vertical' });
+    renderPreview(container, null, layout);
+    const bigBox = container.querySelector('.preview-passphrase .preview-big .preview-card--large') as HTMLElement;
+    expect(bigBox.querySelectorAll('.preview-binary-word-number--row')).toHaveLength(5);
+    expect(bigBox.querySelectorAll('.preview-binary-word-number--column')).toHaveLength(0);
+  });
+
+  it('renders a warning banner when noCapacity is true', () => {
+    const layout = makePassphraseLayout({ warnings: { cellTooSmall: false, noCapacity: true } });
+    renderPreview(container, null, layout);
+    expect(container.querySelectorAll('.preview-passphrase .preview-warning--error')).toHaveLength(1);
   });
 });
