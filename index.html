@@ -12,15 +12,51 @@
         <h1>HoboHodl</h1>
         <p>Generate a punching stencil to back up your crypto-wallet seed on metal.</p>
         <form id="generator-form">
-          <label>Seed length (words)
-            <input type="number" id="seedLength" value="12" min="10" max="39" step="1" required aria-describedby="seedLength-hint" />
-          </label>
-          <p class="field-hint" id="seedLength-hint">Number of words in your seed phrase (usually 12 or 24).</p>
+          <div class="section-toggles">
+            <label class="checkbox-label">
+              <input type="checkbox" id="includeSeed" checked />
+              Seed
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="includePassphrase" />
+              Passphrase
+            </label>
+          </div>
 
-          <label>Card count
-            <input type="number" id="cardCount" value="1" min="1" max="13" step="1" required aria-describedby="cardCount-hint" />
-          </label>
-          <p class="field-hint" id="cardCount-hint">How many physical cards to split your seed across.</p>
+          <div id="seed-fields">
+            <label>Seed length (words)
+              <input type="number" id="seedLength" value="12" min="10" max="39" step="1" required aria-describedby="seedLength-hint" />
+            </label>
+            <p class="field-hint" id="seedLength-hint">Number of words in your seed phrase (usually 12 or 24).</p>
+
+            <label>Card count
+              <input type="number" id="cardCount" value="1" min="1" max="13" step="1" required aria-describedby="cardCount-hint" />
+            </label>
+            <p class="field-hint" id="cardCount-hint">How many physical cards to split your seed across.</p>
+          </div>
+
+          <div id="passphrase-fields" class="is-hidden">
+            <label>Passphrase card count
+              <input type="number" id="passphraseCardCount" value="1" min="1" max="13" step="1" aria-describedby="passphraseCardCount-hint" />
+            </label>
+            <p class="field-hint" id="passphraseCardCount-hint">How many physical cards for the passphrase stencil.</p>
+
+            <label class="checkbox-label">
+              <input type="checkbox" id="passphraseDirectionVertical" />
+              Stack characters vertically (rows) instead of side-by-side (columns)
+            </label>
+
+            <p class="field-hint">Passphrase cells match the seed's cell size — for one consistent punch tool, generate both together.</p>
+
+            <label class="checkbox-label">
+              <input type="checkbox" id="passphraseOverrideCellSize" />
+              Override cell size
+            </label>
+            <label id="passphraseCellSizeMmLabel" class="is-hidden">Passphrase cell size (mm)
+              <input type="number" id="passphraseCellSizeMm" value="2" min="1" max="10" step="0.1" aria-describedby="passphraseCellSizeMm-hint" />
+            </label>
+            <p class="field-hint is-hidden" id="passphraseCellSizeMm-hint">Only used when overriding — otherwise this matches the seed automatically (or 2mm if Seed is off).</p>
+          </div>
 
           <label>Card size (mm)
             <span class="field-row">
@@ -39,25 +75,27 @@
           <details class="advanced-options">
             <summary>Advanced options</summary>
 
-            <label>Card split (rows per card)
-              <input type="number" id="cardSplit" value="1" min="1" max="5" step="1" aria-describedby="cardSplit-hint" />
-            </label>
-            <p class="field-hint" id="cardSplit-hint">Rows of words per card — useful for taller cards.</p>
+            <div id="seed-advanced-fields">
+              <label>Card split (rows per card)
+                <input type="number" id="cardSplit" value="1" min="1" max="5" step="1" aria-describedby="cardSplit-hint" />
+              </label>
+              <p class="field-hint" id="cardSplit-hint">Rows of words per card — useful for taller cards.</p>
 
-            <label>Encoding
-              <select id="encoding" aria-describedby="encoding-hint">
-                <option value="26">Alphabet</option>
-                <option value="10">Number</option>
-                <option value="11">Binary</option>
-              </select>
-            </label>
-            <p class="field-hint" id="encoding-hint">Store each word as its 4-letter prefix, its BIP-39 index digits (0–9), or as an 11-column binary punch pattern — binary needs the fewest punches and fits best on very small metal plates.</p>
+              <label>Encoding
+                <select id="encoding" aria-describedby="encoding-hint">
+                  <option value="26">Alphabet</option>
+                  <option value="10">Number</option>
+                  <option value="11">Binary</option>
+                </select>
+              </label>
+              <p class="field-hint" id="encoding-hint">Store each word as its 4-letter prefix, its BIP-39 index digits (0–9), or as an 11-column binary punch pattern — binary needs the fewest punches and fits best on very small metal plates.</p>
 
-            <label class="checkbox-label">
-              <input type="checkbox" id="binaryDirectionVertical" />
-              Stack words vertically (rows) instead of side-by-side (columns)
-            </label>
-            <p class="field-hint" id="binaryDirection-hint">Only applies to Binary encoding. Side-by-side (columns) is the default.</p>
+              <label class="checkbox-label">
+                <input type="checkbox" id="binaryDirectionVertical" />
+                Stack words vertically (rows) instead of side-by-side (columns)
+              </label>
+              <p class="field-hint" id="binaryDirection-hint">Only applies to Binary encoding. Side-by-side (columns) is the default.</p>
+            </div>
 
             <label>Card padding (mm)
               <input type="number" id="cardPaddingMm" value="1.5" min="1" max="5" step="0.1" aria-describedby="cardPaddingMm-hint" />

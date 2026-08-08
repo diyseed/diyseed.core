@@ -115,6 +115,17 @@ form select {
   margin: 0;
 }
 
+.section-toggles {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.section-toggles .checkbox-label {
+  margin-top: 0;
+  font-weight: 600;
+}
+
 form input[aria-invalid="true"] {
   border-color: var(--color-error-text);
 }
