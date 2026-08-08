@@ -1,4 +1,4 @@
-import { GeneratorParameters } from '../generator/params';
+import { GeneratorParameters, PassphraseParameters } from '../generator/params';
 import { EncodingType, encodingLayout, BinaryDirection } from '../generator/encoding';
 import * as Config from '../generator/config';
 import { toMm } from '../units';
@@ -91,5 +91,54 @@ export function computePreviewLayout(parameters: GeneratorParameters): PreviewLa
     binaryDirection: parameters.binaryDirection,
     copies: parameters.copies,
     warnings: { cellTooSmall, cellNotSquare, cellSizeInvalid },
+  };
+}
+
+export interface PassphraseCard {
+  cardNumber: number;
+  cardWidthMm: number;
+  cardHeightMm: number;
+  blocks: number[][];
+}
+
+export interface PassphraseWarnings {
+  cellTooSmall: boolean;
+  noCapacity: boolean;
+}
+
+export interface PassphrasePreviewLayout {
+  cards: PassphraseCard[];
+  columnLabels: string[];
+  binaryDirection: BinaryDirection;
+  cellWidthMm: number;
+  cellHeightMm: number;
+  copies: number;
+  warnings: PassphraseWarnings;
+}
+
+export function computePassphrasePreviewLayout(parameters: PassphraseParameters): PassphrasePreviewLayout {
+  const cards: PassphraseCard[] = [];
+  for (let cardNumber = 1; cardNumber <= parameters.cardCount; cardNumber++) {
+    cards.push({
+      cardNumber,
+      cardWidthMm: toMm(parameters.cardSize.width),
+      cardHeightMm: toMm(parameters.cardSize.height),
+      blocks: parameters.getCardCharacters(cardNumber),
+    });
+  }
+
+  const cellWidthMm = toMm(parameters.cellSize.width);
+  const cellHeightMm = toMm(parameters.cellSize.height);
+  const cellTooSmall = parameters.cellSize.width < Config.MIN_CELL_SIZE_MM || parameters.cellSize.height < Config.MIN_CELL_SIZE_MM;
+  const noCapacity = parameters.charsPerBlock <= 0;
+
+  return {
+    cards,
+    columnLabels: Config.PASSPHRASE_COLUMN_VALUES.map(String),
+    binaryDirection: parameters.binaryDirection,
+    cellWidthMm,
+    cellHeightMm,
+    copies: parameters.copies,
+    warnings: { cellTooSmall, noCapacity },
   };
 }

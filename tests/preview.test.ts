@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { computePreviewLayout } from '../src/ui/preview';
-import { GeneratorParameters } from '../src/generator/params';
+import { computePreviewLayout, computePassphrasePreviewLayout } from '../src/ui/preview';
+import { GeneratorParameters, PassphraseParameters } from '../src/generator/params';
 import { EncodingType } from '../src/generator/encoding';
 import { mm } from '../src/units';
 
@@ -191,5 +191,67 @@ describe('computePreviewLayout — Binary encoding', () => {
     });
     const layout = computePreviewLayout(params);
     expect(layout.binaryDirection).toBe('vertical');
+  });
+});
+
+describe('computePassphrasePreviewLayout', () => {
+  const params = new PassphraseParameters({
+    cardSize: { width: mm(85.6), height: mm(54) },
+    cardPadding: mm(1.5),
+    cardCornerRadius: mm(1.5),
+    cardCount: 2,
+    binaryDirection: 'horizontal',
+    copies: 1,
+    cellSize: { width: mm(2), height: mm(2) },
+  });
+
+  it('reports the 7 ASCII place-value column labels and the resolved direction', () => {
+    const layout = computePassphrasePreviewLayout(params);
+    expect(layout.columnLabels).toEqual(['64', '32', '16', '8', '4', '2', '1']);
+    expect(layout.binaryDirection).toBe('horizontal');
+  });
+
+  it('builds one card entry per cardCount, each with the geometry-derived blocks', () => {
+    const layout = computePassphrasePreviewLayout(params);
+    expect(layout.cards).toHaveLength(2);
+    expect(layout.cards[0].cardNumber).toBe(1);
+    expect(layout.cards[0].blocks).toEqual(params.getCardCharacters(1));
+    expect(layout.cards[1].blocks).toEqual(params.getCardCharacters(2));
+    expect(layout.cards[0].cardWidthMm).toBeCloseTo(85.6, 6);
+    expect(layout.cards[0].cardHeightMm).toBeCloseTo(54, 6);
+  });
+
+  it('reports the resolved cell size in mm', () => {
+    const layout = computePassphrasePreviewLayout(params);
+    expect(layout.cellWidthMm).toBeCloseTo(2, 6);
+    expect(layout.cellHeightMm).toBeCloseTo(2, 6);
+  });
+
+  it('flags cellTooSmall when the resolved cell size is below the shared minimum', () => {
+    const tiny = new PassphraseParameters({
+      cardSize: { width: mm(85.6), height: mm(54) },
+      cardPadding: mm(1.5),
+      cardCornerRadius: mm(1.5),
+      cardCount: 1,
+      binaryDirection: 'horizontal',
+      copies: 1,
+      cellSize: { width: mm(1), height: mm(1) },
+    });
+    const layout = computePassphrasePreviewLayout(tiny);
+    expect(layout.warnings.cellTooSmall).toBe(true);
+  });
+
+  it('flags noCapacity when no characters fit at all', () => {
+    const none = new PassphraseParameters({
+      cardSize: { width: mm(20), height: mm(20) },
+      cardPadding: mm(5),
+      cardCornerRadius: mm(1.5),
+      cardCount: 1,
+      binaryDirection: 'horizontal',
+      copies: 1,
+      cellSize: { width: mm(20), height: mm(20) },
+    });
+    const layout = computePassphrasePreviewLayout(none);
+    expect(layout.warnings.noCapacity).toBe(true);
   });
 });
