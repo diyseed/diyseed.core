@@ -32,6 +32,16 @@ describe('validate', () => {
     const errors = validate({ ...DEFAULT_FORM_VALUES, cardPaddingMm: 0.5 });
     expect(errors.map((e) => e.field)).toContain('cardPaddingMm');
   });
+
+  it('does not flag an out-of-range cardSplit when encoding is Binary, since the field is hidden and ignored', () => {
+    const errors = validate({ ...DEFAULT_FORM_VALUES, encoding: EncodingType.Binary, cardSplit: 99 });
+    expect(errors.map((e) => e.field)).not.toContain('cardSplit');
+  });
+
+  it('still flags an out-of-range cardSplit for non-Binary encodings', () => {
+    const errors = validate({ ...DEFAULT_FORM_VALUES, encoding: EncodingType.Alphabet, cardSplit: 99 });
+    expect(errors.map((e) => e.field)).toContain('cardSplit');
+  });
 });
 
 describe('toGeneratorParameters', () => {
@@ -63,5 +73,34 @@ describe('toGeneratorParameters', () => {
       encoding: EncodingType.Alphabet,
     });
     expect(params.cardPadding).toBeCloseTo(mm(2), 6);
+  });
+
+  it('does not forward cardSplit for Binary encoding, leaving GeneratorParameters to auto-derive it', () => {
+    const params = toGeneratorParameters({
+      seedLength: 12,
+      cardCount: 2,
+      cardWidthMm: 85.6,
+      cardHeightMm: 54,
+      cardSplit: 99, // stale/irrelevant hidden-field value; must be ignored
+      cardPaddingMm: 1.5,
+      copies: 1,
+      encoding: EncodingType.Binary,
+    });
+    // Auto-derived: ceil(seedLength / cardCount) = ceil(12/2) = 6, not the stale 99.
+    expect(params.cardSplit).toBe(6);
+  });
+
+  it('still forwards cardSplit as-is for non-Binary encodings', () => {
+    const params = toGeneratorParameters({
+      seedLength: 24,
+      cardCount: 2,
+      cardWidthMm: 100,
+      cardHeightMm: 60,
+      cardSplit: 3,
+      cardPaddingMm: 1.5,
+      copies: 1,
+      encoding: EncodingType.Alphabet,
+    });
+    expect(params.cardSplit).toBe(3);
   });
 });

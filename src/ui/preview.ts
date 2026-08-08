@@ -84,7 +84,7 @@ export function computePreviewLayout(parameters: GeneratorParameters): PreviewLa
     cards,
     cellWidthMm,
     cellHeightMm,
-    cellRowLabels: encodingLayout(parameters.seedEncoding)?.cellLabels ?? [],
+    cellRowLabels: encodingLayout(parameters.seedEncoding).cellLabels ?? [],
     isBinary,
     binaryColumnLabels: isBinary ? Config.BINARY_COLUMN_VALUES.map(String) : [],
     copies: parameters.copies,

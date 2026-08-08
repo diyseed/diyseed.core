@@ -35,7 +35,9 @@ export function renderPreview(container: HTMLElement, layout: PreviewLayout | nu
       warningsEl.appendChild(
         warningBanner(
           'warning',
-          'Cells are noticeably stretched — consider adjusting card split or card proportions for a more even grid.',
+          layout.isBinary
+            ? 'Cells are noticeably stretched — consider adjusting card count or card proportions for a more even grid.'
+            : 'Cells are noticeably stretched — consider adjusting card split or card proportions for a more even grid.',
         ),
       );
     }
@@ -131,9 +133,10 @@ function renderBinaryCard(card: PreviewCard, columnCount: number): HTMLElement {
   box.style.width = `${widthPx}px`;
   box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
 
-  card.sections.forEach((_section, index) => {
+  card.sections.filter((section) => section.words.length > 0).forEach((section) => {
+    const shaded = section.words[0]?.shaded ?? false;
     const row = document.createElement('div');
-    row.className = 'preview-binary-row' + (index % 2 === 1 ? ' preview-binary-row--shaded' : '');
+    row.className = 'preview-binary-row' + (shaded ? ' preview-binary-row--shaded' : '');
     row.style.gridTemplateColumns = `repeat(${columnCount}, 1fr)`;
     for (let i = 0; i < columnCount; i++) {
       const cell = document.createElement('div');
@@ -169,7 +172,7 @@ function renderBinaryBigCard(card: PreviewCard, columnLabels: string[]): HTMLEle
   box.className = 'preview-card preview-card--large';
   box.style.aspectRatio = `${card.cardWidthMm} / ${card.cardHeightMm}`;
 
-  for (const section of card.sections) {
+  for (const section of card.sections.filter((s) => s.words.length > 0)) {
     const word = section.words[0];
     const row = document.createElement('div');
     row.className = 'preview-binary-row' + (word.shaded ? ' preview-binary-row--shaded' : '');

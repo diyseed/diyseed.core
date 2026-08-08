@@ -89,6 +89,7 @@ describe('computePreviewLayout — degenerate cell size guard', () => {
       effectiveCardCount: 1,
       cellSize: { width: 0, height: -1 },
       cardSize: { width: mm(100), height: mm(60) },
+      seedEncoding: EncodingType.Alphabet,
       getCardParameters: () => ({
         sections: [{ number: 1, wordNumbers: [1] }],
       }),

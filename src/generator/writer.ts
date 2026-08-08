@@ -162,6 +162,23 @@ function drawWordNumber(
   wordNumber: number,
   encoding: EncodingType,
 ): void {
+  if (encoding === EncodingType.Binary) {
+    // Binary's "word block" is the full 11-column row, not a narrow per-word
+    // block like Alphabet/Number - fit the number to one cell's footprint
+    // (using the smaller cell-scale font range) so it doesn't overprint
+    // neighboring punch columns or rows.
+    const cols = encodingLayout(encoding).cols;
+    const labelBox = size(wordSize.width / cols, wordSize.height);
+    const fontSize = getFontSizeForBox({
+      font: boldFont,
+      fontSizeRange: Config.CELL_FONT_SIZE_RANGE,
+      increaseStep: 0.2,
+      sampleText: '42.',
+      maxSize: labelBox,
+    });
+    drawTextInBoxTL(page, `${wordNumber}`, boldFont, fontSize, origin, wordSize, { horizontal: 'left', vertical: 'center' }, WORD_NR_TEXT);
+    return;
+  }
   const fontSize = getFontSizeForBox({
     font: boldFont,
     fontSizeRange: Config.WORD_NR_FONT_SIZE_RANGE,
@@ -169,11 +186,7 @@ function drawWordNumber(
     sampleText: '42.',
     maxSize: wordSize,
   });
-  if (encoding === EncodingType.Binary) {
-    drawTextInBoxTL(page, `${wordNumber}`, boldFont, fontSize, origin, wordSize, { horizontal: 'left', vertical: 'center' }, WORD_NR_TEXT);
-  } else {
-    drawTextInBoxTL(page, `${wordNumber}`, boldFont, fontSize, origin, wordSize, { horizontal: 'center', vertical: 'top' }, WORD_NR_TEXT);
-  }
+  drawTextInBoxTL(page, `${wordNumber}`, boldFont, fontSize, origin, wordSize, { horizontal: 'center', vertical: 'top' }, WORD_NR_TEXT);
 }
 
 function drawWordGridLines(

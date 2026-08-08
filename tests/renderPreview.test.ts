@@ -349,4 +349,68 @@ describe('renderPreview', () => {
     expect(container.querySelector('.preview-binary-header')).toBeNull();
     expect(container.querySelector('.preview-binary-row')).toBeNull();
   });
+
+  it('shades binary thumbnail rows using each section\'s own model-computed shaded flag, not row index parity', () => {
+    // Sections deliberately have shaded flags that do NOT alternate in lockstep
+    // with their position (index 1 is shaded even though index%2===1 would also
+    // say shaded here by coincidence, so use a genuinely non-alternating pattern:
+    // false, true, true).
+    const layout = makeLayout({
+      isBinary: true,
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      cards: [
+        makeCard({
+          sections: [
+            { sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] },
+            { sectionNumber: 2, words: [{ wordNumber: 2, shaded: true }] },
+            { sectionNumber: 3, words: [{ wordNumber: 3, shaded: true }] },
+          ],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+
+    const rows = container.querySelectorAll('.preview-cards .preview-binary-row');
+    expect(rows).toHaveLength(3);
+    expect(rows[0].classList.contains('preview-binary-row--shaded')).toBe(false);
+    expect(rows[1].classList.contains('preview-binary-row--shaded')).toBe(true);
+    expect(rows[2].classList.contains('preview-binary-row--shaded')).toBe(true);
+  });
+
+  it('omits a thumbnail row for a binary section with zero words', () => {
+    const layout = makeLayout({
+      isBinary: true,
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      cards: [
+        makeCard({
+          sections: [
+            { sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] },
+            { sectionNumber: 2, words: [] },
+          ],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+
+    const rows = container.querySelectorAll('.preview-cards .preview-binary-row');
+    expect(rows).toHaveLength(1);
+  });
+
+  it('uses binary-specific wording ("card count") for the cellNotSquare warning when isBinary is true', () => {
+    const layout = makeLayout({
+      isBinary: true,
+      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
+      warnings: { cellTooSmall: false, cellNotSquare: true, cellSizeInvalid: false },
+    });
+    renderPreview(container, layout);
+    const banner = container.querySelector('.preview-warning--warning');
+    expect(banner?.textContent).toContain('card count');
+    expect(banner?.textContent).not.toContain('card split');
+  });
+
+  it('keeps the non-binary wording ("card split") for the cellNotSquare warning when isBinary is false', () => {
+    renderPreview(container, makeLayout({ warnings: { cellTooSmall: false, cellNotSquare: true, cellSizeInvalid: false } }));
+    const banner = container.querySelector('.preview-warning--warning');
+    expect(banner?.textContent).toContain('card split');
+  });
 });

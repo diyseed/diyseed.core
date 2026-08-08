@@ -64,4 +64,24 @@ describe('generateWriterPdf', () => {
     const loaded = await PDFDocument.load(bytes);
     expect(loaded.getPageCount()).toBeGreaterThanOrEqual(1);
   });
+
+  // Regression guard for the word-number-overprints-the-grid bug: drawWordNumber
+  // used to fit the number to the WHOLE row (all 11 Binary columns) using the
+  // large WORD_NR_FONT_SIZE_RANGE (10-35pt), overflowing into neighboring cells
+  // and rows. It now fits to a single cell's footprint using the smaller
+  // CELL_FONT_SIZE_RANGE (max 12pt) - this is a smoke-level check that the PDF
+  // still generates/loads; the actual size fix is in the fitted-font-size math
+  // itself (verified by hand: the label box is one cell wide, and
+  // CELL_FONT_SIZE_RANGE tops out well below the old 35pt ceiling).
+  it('still produces a loadable Binary PDF with the per-cell word-number font fix', async () => {
+    const params = new GeneratorParameters({
+      cardSize: { width: mm(85.6), height: mm(54) },
+      cardCount: 2,
+      seedLength: 12,
+      encoding: EncodingType.Binary,
+    });
+    const bytes = await generateWriterPdf(params);
+    const loaded = await PDFDocument.load(bytes);
+    expect(loaded.getPageCount()).toBeGreaterThanOrEqual(1);
+  });
 });

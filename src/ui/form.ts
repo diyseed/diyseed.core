@@ -36,7 +36,7 @@ export function validate(values: FormValues): FieldError[] {
   if (!inRange(mm(values.cardHeightMm), Config.CARD_HEIGHT_RANGE)) {
     errors.push({ field: 'cardHeightMm', message: 'Card height must be between 20 and 180 mm.' });
   }
-  if (!inRange(values.cardSplit, Config.CARD_SPLIT_RANGE)) {
+  if (values.encoding !== EncodingType.Binary && !inRange(values.cardSplit, Config.CARD_SPLIT_RANGE)) {
     errors.push({ field: 'cardSplit', message: `Card split must be between ${Config.CARD_SPLIT_RANGE[0]} and ${Config.CARD_SPLIT_RANGE[1]}.` });
   }
   if (!inRange(mm(values.cardPaddingMm), Config.CARDS_PADDING_RANGE)) {
@@ -54,7 +54,7 @@ export function toGeneratorParameters(values: FormValues): GeneratorParameters {
     cardSize: { width: mm(values.cardWidthMm), height: mm(values.cardHeightMm) },
     cardCount: values.cardCount,
     seedLength: values.seedLength,
-    cardSplit: values.cardSplit,
+    cardSplit: values.encoding === EncodingType.Binary ? undefined : values.cardSplit,
     encoding: values.encoding,
     copies: values.copies,
     cardPadding: mm(values.cardPaddingMm),
