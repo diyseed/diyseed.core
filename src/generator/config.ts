@@ -65,3 +65,9 @@ export const CORNER_MARK_INSET = mm(0.5);
 export const BINARY_COLUMN_VALUES: number[] = [1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1];
 export const BINARY_HEADER_HEIGHT = mm(6);
 export const BINARY_DIRECTION_DEFAULT: BinaryDirection = 'horizontal';
+
+// PASSPHRASE
+export const PASSPHRASE_COLUMN_VALUES: number[] = [64, 32, 16, 8, 4, 2, 1];
+export const PASSPHRASE_FALLBACK_CELL_SIZE = mm(2);
+export const PASSPHRASE_OVERRIDE_CELL_SIZE_RANGE: [number, number] = [mm(1), mm(10)];
+export const PASSPHRASE_CARD_COUNT_DEFAULT = 1;

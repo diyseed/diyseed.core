@@ -75,3 +75,18 @@ describe('binary encoding constants', () => {
     expect(Config.BINARY_DIRECTION_DEFAULT).toBe('horizontal');
   });
 });
+
+describe('passphrase encoding constants', () => {
+  it('defines 7 descending place-value columns for 7-bit ASCII', () => {
+    expect(Config.PASSPHRASE_COLUMN_VALUES).toEqual([64, 32, 16, 8, 4, 2, 1]);
+  });
+
+  it('defines a 2mm fallback cell size and a 1-10mm override range', () => {
+    expect(Config.PASSPHRASE_FALLBACK_CELL_SIZE).toBeCloseTo(mm(2), 6);
+    expect(Config.PASSPHRASE_OVERRIDE_CELL_SIZE_RANGE).toEqual([mm(1), mm(10)]);
+  });
+
+  it('defaults passphrase card count to 1', () => {
+    expect(Config.PASSPHRASE_CARD_COUNT_DEFAULT).toBe(1);
+  });
+});
