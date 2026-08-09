@@ -75,10 +75,10 @@ describe('validate', () => {
 
   it('flags an out-of-range passphrase override cell size only when it is set', () => {
     const noOverride = validate({ ...DEFAULT_FORM_VALUES, passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true, overrideCellSizeMm: null } });
-    expect(noOverride.map((e) => e.field)).not.toContain('passphraseOverrideCellSizeMm');
+    expect(noOverride.map((e) => e.field)).not.toContain('passphraseCellSizeMm');
 
     const badOverride = validate({ ...DEFAULT_FORM_VALUES, passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true, overrideCellSizeMm: 50 } });
-    expect(badOverride.map((e) => e.field)).toContain('passphraseOverrideCellSizeMm');
+    expect(badOverride.map((e) => e.field)).toContain('passphraseCellSizeMm');
   });
 });
 

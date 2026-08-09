@@ -68,7 +68,7 @@ export function validate(values: FormValues): FieldError[] {
       errors.push({ field: 'passphraseCardCount', message: `Passphrase card count must be between ${Config.CARD_COUNT_RANGE[0]} and ${Config.CARD_COUNT_RANGE[1]}.` });
     }
     if (values.passphrase.overrideCellSizeMm !== null && !inRange(mm(values.passphrase.overrideCellSizeMm), Config.PASSPHRASE_OVERRIDE_CELL_SIZE_RANGE)) {
-      errors.push({ field: 'passphraseOverrideCellSizeMm', message: 'Passphrase cell size must be between 1 and 10 mm.' });
+      errors.push({ field: 'passphraseCellSizeMm', message: 'Passphrase cell size must be between 1 and 10 mm.' });
     }
   }
 

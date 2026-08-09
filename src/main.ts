@@ -66,7 +66,7 @@ const ALL_FIELD_IDS = [
   'copies',
   'encoding',
   'passphraseCardCount',
-  'passphraseOverrideCellSizeMm',
+  'passphraseCellSizeMm',
 ];
 
 function renderErrors(errors: FieldError[]): void {
@@ -100,9 +100,13 @@ function renderGeneralError(message: string): void {
   list.appendChild(item);
 }
 
-const SEED_REQUIRED_FIELD_IDS = ['seedLength', 'cardCount', 'cardWidthMm', 'cardHeightMm'];
+const SHARED_REQUIRED_FIELD_IDS = ['cardWidthMm', 'cardHeightMm'];
+const SEED_REQUIRED_FIELD_IDS = ['seedLength', 'cardCount'];
 
 function hasEmptyRequiredField(values: FormValues): boolean {
+  if (SHARED_REQUIRED_FIELD_IDS.some((id) => (document.getElementById(id) as HTMLInputElement | null)?.value === '')) {
+    return true;
+  }
   if (values.includeSeed && SEED_REQUIRED_FIELD_IDS.some((id) => (document.getElementById(id) as HTMLInputElement | null)?.value === '')) {
     return true;
   }
@@ -225,9 +229,14 @@ document.getElementById('generator-form')?.addEventListener('submit', async (eve
 
   try {
     const seedParams: GeneratorParameters | null = values.includeSeed ? toGeneratorParameters(values) : null;
+    const passphraseParams = values.passphrase.enabled ? toPassphraseParameters(values, seedParams) : null;
+    if (passphraseParams && passphraseParams.charsPerBlock <= 0) {
+      renderGeneralError('No characters fit on the passphrase card at this cell size — try a bigger card, smaller cells, or less padding.');
+      return;
+    }
     const input: StencilInput = {
       seed: seedParams ?? undefined,
-      passphrase: values.passphrase.enabled ? toPassphraseParameters(values, seedParams) : undefined,
+      passphrase: passphraseParams ?? undefined,
     };
     const bytes = await generateStencilPdf(input);
     downloadPdf(bytes, buildFilename(values));

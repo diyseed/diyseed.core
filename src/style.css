@@ -400,6 +400,33 @@ button[type="submit"]:hover {
   min-height: 0;
 }
 
+.preview-passphrase-header-group--column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+}
+
+.preview-passphrase-header-group--row {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  width: 100%;
+}
+
+.preview-passphrase-header-group--column .preview-passphrase-header-group__item {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.preview-passphrase-header-group--row .preview-passphrase-header-group__item {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
 .preview-binary-row-header {
   display: grid;
   align-items: center;

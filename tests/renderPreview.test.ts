@@ -610,6 +610,18 @@ describe('renderPreview — passphrase', () => {
     expect(cells[6].textContent).toBe('1');
   });
 
+  it('renders one full 7-label header per block when a card has 2 blocks', () => {
+    const layout = makePassphraseLayout({
+      cards: [{ cardNumber: 1, cardWidthMm: 85.6, cardHeightMm: 54, blocks: [[1, 2, 3], [4, 5, 6]] }],
+    });
+    renderPreview(container, null, layout);
+    const bigBox = container.querySelector('.preview-passphrase .preview-big') as HTMLElement;
+    const headerGroups = bigBox.querySelectorAll('.preview-passphrase-header-group--column');
+    expect(headerGroups.length).toBeGreaterThan(0);
+    const allHeaderCells = bigBox.querySelectorAll('.preview-binary-row-header__cell');
+    expect(allHeaderCells).toHaveLength(14); // 2 blocks x 7 labels
+  });
+
   it('renders one mesh block per entry in blocks, with 7-bit-tall cells', () => {
     const layout = makePassphraseLayout({
       cards: [{ cardNumber: 1, cardWidthMm: 85.6, cardHeightMm: 54, blocks: [[1, 2, 3], [4, 5, 6]] }],

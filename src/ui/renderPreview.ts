@@ -149,13 +149,14 @@ function renderPassphraseBigCard(card: PassphraseCard, columnLabels: string[], d
   }
   renderCornerMarks(box, card.cardNumber);
 
+  const blockCount = card.blocks.length;
   if (direction === 'vertical') {
-    const header = renderBinaryHeader(columnLabels, 'top');
+    const header = renderPassphraseHeaderGroup(columnLabels, 'top', blockCount);
     wrapper.appendChild(header.labels);
     wrapper.appendChild(header.arrows);
     wrapper.appendChild(box);
   } else {
-    const header = renderBinaryHeader(columnLabels, 'left');
+    const header = renderPassphraseHeaderGroup(columnLabels, 'left', blockCount);
     const row = document.createElement('div');
     row.className = 'preview-binary-horizontal-row';
     row.appendChild(header.labels);
@@ -351,6 +352,28 @@ function renderBinaryHeader(labels: string[], side: 'top' | 'left'): { labels: H
   }
 
   return { labels: labelsEl, arrows: arrowsEl };
+}
+
+function renderPassphraseHeaderGroup(
+  columnLabels: string[],
+  side: 'top' | 'left',
+  blockCount: number,
+): { labels: HTMLElement; arrows: HTMLElement } {
+  const groupClass = side === 'top' ? 'preview-passphrase-header-group preview-passphrase-header-group--row' : 'preview-passphrase-header-group preview-passphrase-header-group--column';
+  const labelsGroup = document.createElement('div');
+  labelsGroup.className = groupClass;
+  const arrowsGroup = document.createElement('div');
+  arrowsGroup.className = groupClass;
+
+  for (let b = 0; b < blockCount; b++) {
+    const header = renderBinaryHeader(columnLabels, side);
+    header.labels.classList.add('preview-passphrase-header-group__item');
+    header.arrows.classList.add('preview-passphrase-header-group__item');
+    labelsGroup.appendChild(header.labels);
+    arrowsGroup.appendChild(header.arrows);
+  }
+
+  return { labels: labelsGroup, arrows: arrowsGroup };
 }
 
 function renderBinaryBigCard(card: PreviewCard, columnLabels: string[], direction: BinaryDirection): HTMLElement {

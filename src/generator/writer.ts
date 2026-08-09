@@ -132,14 +132,7 @@ export async function generatePassphrasePdf(parameters: PassphraseParameters): P
         Config.DOCUMENT_MARGIN_TOP + origin.point.y + headerHeight,
       );
 
-      if (headerHeight > 0) {
-        drawPassphraseColumnHeader(page, font, cardOrigin, parameters.cardSize.width, parameters.cardPadding, headerHeight);
-      }
-      if (headerWidth > 0) {
-        drawPassphraseRowHeader(page, font, cardOrigin, parameters.cardSize.height, parameters.cardPadding, headerWidth);
-      }
-
-      renderPassphraseCard(page, boldFont, parameters, i, cardOrigin);
+      renderPassphraseCard(page, font, boldFont, parameters, i, cardOrigin, headerHeight, headerWidth);
     }
   }
 
@@ -274,55 +267,51 @@ function drawBinaryRowHeader(
 function drawPassphraseColumnHeader(
   page: PDFPage,
   font: PDFFont,
-  cardOrigin: Point,
-  cardWidth: number,
-  cardPadding: number,
+  cardOriginY: number,
+  blockOriginX: number,
   headerHeight: number,
+  cellWidth: number,
 ): void {
-  const gridWidth = cardWidth - 2 * cardPadding;
-  const colWidth = gridWidth / Config.PASSPHRASE_COLUMN_VALUES.length;
   const fontSize = getFontSizeForBox({
     font,
     fontSizeRange: Config.CELL_FONT_SIZE_RANGE,
     increaseStep: 0.2,
     sampleText: '64',
-    maxSize: size(headerHeight, colWidth),
+    maxSize: size(headerHeight, cellWidth),
   });
 
   Config.PASSPHRASE_COLUMN_VALUES.forEach((value, i) => {
-    const colOrigin = point(cardOrigin.x + cardPadding + colWidth * i, cardOrigin.y - headerHeight);
-    drawRotatedTextInBoxTL(page, `${value}`, font, fontSize, colOrigin, size(colWidth, headerHeight), HEADER_TEXT_COLOR, 'end');
+    const colOrigin = point(blockOriginX + cellWidth * i, cardOriginY - headerHeight);
+    drawRotatedTextInBoxTL(page, `${value}`, font, fontSize, colOrigin, size(cellWidth, headerHeight), HEADER_TEXT_COLOR, 'end');
   });
 }
 
 function drawPassphraseRowHeader(
   page: PDFPage,
   font: PDFFont,
-  cardOrigin: Point,
-  cardHeight: number,
-  cardPadding: number,
+  cardOriginX: number,
+  blockOriginY: number,
   headerWidth: number,
+  cellHeight: number,
 ): void {
-  const gridHeight = cardHeight - 2 * cardPadding;
-  const rowHeight = gridHeight / Config.PASSPHRASE_COLUMN_VALUES.length;
   const fontSize = getFontSizeForBox({
     font,
     fontSizeRange: Config.CELL_FONT_SIZE_RANGE,
     increaseStep: 0.2,
     sampleText: '64',
-    maxSize: size(headerWidth, rowHeight),
+    maxSize: size(headerWidth, cellHeight),
   });
   const gap = fontSize * 0.5;
 
   Config.PASSPHRASE_COLUMN_VALUES.forEach((value, i) => {
-    const rowOrigin = point(cardOrigin.x - headerWidth, cardOrigin.y + cardPadding + rowHeight * i);
+    const rowOrigin = point(cardOriginX - headerWidth, blockOriginY + cellHeight * i);
     drawTextInBoxTL(
       page,
       `${value}`,
       font,
       fontSize,
       rowOrigin,
-      size(headerWidth - gap, rowHeight),
+      size(headerWidth - gap, cellHeight),
       { horizontal: 'right', vertical: 'center' },
       HEADER_TEXT_COLOR,
     );
@@ -331,10 +320,13 @@ function drawPassphraseRowHeader(
 
 function renderPassphraseCard(
   page: PDFPage,
+  font: PDFFont,
   boldFont: PDFFont,
   parameters: PassphraseParameters,
   cardNumber: number,
   cardOrigin: Point,
+  headerHeight: number,
+  headerWidth: number,
 ): void {
   drawRoundedRectTL(page, cardOrigin, parameters.cardSize, parameters.cardCornerRadius, {
     borderColor: CARD_OUTLINE,
@@ -350,6 +342,12 @@ function renderPassphraseCard(
 
   let blockOrigin = point(cardOrigin.x + parameters.cardPadding, cardOrigin.y + parameters.cardPadding);
   blocks.forEach((positions) => {
+    if (headerHeight > 0) {
+      drawPassphraseColumnHeader(page, font, cardOrigin.y, blockOrigin.x, headerHeight, parameters.cellSize.width);
+    }
+    if (headerWidth > 0) {
+      drawPassphraseRowHeader(page, font, cardOrigin.x, blockOrigin.y, headerWidth, parameters.cellSize.height);
+    }
     drawPassphraseBlock(page, boldFont, positions, parameters.binaryDirection, parameters.cellSize, blockOrigin);
     blockOrigin =
       parameters.binaryDirection === 'horizontal'
