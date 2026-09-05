@@ -1,5 +1,5 @@
 import { Size, size } from '../units';
-import { EncodingType, encodingLayout, BinaryDirection } from './encoding';
+import { EncodingType, encodingLayout } from './encoding';
 import * as Config from './config';
 
 export interface GeneratorParametersInput {
@@ -8,7 +8,6 @@ export interface GeneratorParametersInput {
   seedLength: number;
   cardSplit?: number;
   encoding?: EncodingType;
-  binaryDirection?: BinaryDirection;
   copies?: number;
   cardCornerRadius?: number;
   cardPadding?: number;
@@ -28,7 +27,6 @@ export class GeneratorParameters {
   readonly cardPadding: number;
   readonly cardSplit: number;
   readonly seedEncoding: EncodingType;
-  readonly binaryDirection: BinaryDirection;
   readonly copies: number;
 
   constructor(input: GeneratorParametersInput) {
@@ -38,19 +36,13 @@ export class GeneratorParameters {
     checkRange(input.cardSize.height, Config.CARD_HEIGHT_RANGE, 'cardSize.height');
 
     const encoding = input.encoding ?? Config.CARDS_ENCODING_DEFAULT;
-    const binaryDirection = input.binaryDirection ?? Config.BINARY_DIRECTION_DEFAULT;
     const copies = input.copies ?? Config.WRITER_COPIES_DEFAULT;
     checkRange(copies, Config.WRITER_COPIES_RANGE, 'copies');
 
     let cardSplit: number;
-    if (encoding === EncodingType.Binary && binaryDirection === 'vertical') {
-      // Vertical lays out exactly one word per row, so the split is however
-      // many rows are needed to fit the seed across the requested card count -
-      // not a user-configurable value like it is for the other encodings.
-      cardSplit = Math.ceil(input.seedLength / input.cardCount);
-    } else if (encoding === EncodingType.Binary) {
-      // Horizontal lays words out side-by-side as columns spanning the card's
-      // full height in one go, so there's always exactly one section per card.
+    if (encoding === EncodingType.Binary) {
+      // Words lay out side-by-side as columns spanning the card's full
+      // height in one go, so there's always exactly one section per card.
       cardSplit = 1;
     } else {
       cardSplit = input.cardSplit ?? Config.CARD_SPLIT_DEFAULT;
@@ -67,7 +59,6 @@ export class GeneratorParameters {
     this.cardSize = input.cardSize;
     this.cardSplit = cardSplit;
     this.seedEncoding = encoding;
-    this.binaryDirection = binaryDirection;
     this.copies = copies;
     this.cardCornerRadius = cardCornerRadius;
     this.cardPadding = cardPadding;
@@ -78,7 +69,12 @@ export class GeneratorParameters {
   }
 
   get sectionSize(): Size {
-    return size(this.gridSize.width, this.gridSize.height / this.cardSplit);
+    // Leaves a cardPadding-sized gap between each pair of sections, same as
+    // the passphrase card's own block spacing - carved out of the grid
+    // height so sections+gaps still fill it exactly, matching the reader's
+    // own spacing.
+    const gapTotal = (this.cardSplit - 1) * this.cardPadding;
+    return size(this.gridSize.width, (this.gridSize.height - gapTotal) / this.cardSplit);
   }
 
   get wordSize(): Size {
@@ -86,7 +82,7 @@ export class GeneratorParameters {
   }
 
   get cellSize(): Size {
-    const layout = encodingLayout(this.seedEncoding, this.binaryDirection);
+    const layout = encodingLayout(this.seedEncoding);
     return size(this.wordSize.width / layout.cols, this.wordSize.height / layout.rows);
   }
 
@@ -154,6 +150,10 @@ export class CardParameters {
     return this.parent.cardPadding;
   }
 
+  get cellSize(): Size {
+    return this.parent.cellSize;
+  }
+
   get wordsCount(): number {
     return this.sections.reduce((sum, s) => sum + s.wordNumbers.length, 0);
   }
@@ -168,10 +168,6 @@ export class CardSectionParameters {
 
   get encoding(): EncodingType {
     return this.parent.seedEncoding;
-  }
-
-  get binaryDirection(): BinaryDirection {
-    return this.parent.binaryDirection;
   }
 
   get cellSize(): Size {
@@ -192,7 +188,6 @@ export interface PassphraseParametersInput {
   cardPadding: number;
   cardCornerRadius: number;
   cardCount: number;
-  binaryDirection: BinaryDirection;
   copies: number;
   cellSize: Size;
 }
@@ -202,7 +197,6 @@ export class PassphraseParameters {
   readonly cardPadding: number;
   readonly cardCornerRadius: number;
   readonly cardCount: number;
-  readonly binaryDirection: BinaryDirection;
   readonly copies: number;
   readonly cellSize: Size;
 
@@ -221,7 +215,6 @@ export class PassphraseParameters {
     this.cardPadding = input.cardPadding;
     this.cardCornerRadius = input.cardCornerRadius;
     this.cardCount = input.cardCount;
-    this.binaryDirection = input.binaryDirection;
     this.copies = input.copies;
     this.cellSize = input.cellSize;
   }
@@ -231,19 +224,22 @@ export class PassphraseParameters {
   }
 
   get charsPerBlock(): number {
-    return this.binaryDirection === 'horizontal'
-      ? Math.floor(this.gridSize.width / this.cellSize.width)
-      : Math.floor(this.gridSize.height / this.cellSize.height);
+    return Math.floor(this.gridSize.width / this.cellSize.width);
   }
 
   get blockThickness(): number {
     const bitCount = Config.PASSPHRASE_COLUMN_VALUES.length;
-    return this.binaryDirection === 'horizontal' ? bitCount * this.cellSize.height : bitCount * this.cellSize.width;
+    return bitCount * this.cellSize.height;
   }
 
-  get blockCount(): 1 | 2 {
-    const farAxis = this.binaryDirection === 'horizontal' ? this.gridSize.height : this.gridSize.width;
-    return farAxis >= 2 * this.blockThickness + this.cardPadding ? 2 : 1;
+  get blockCount(): number {
+    // n blocks need n*blockThickness + (n-1)*cardPadding of space along the
+    // card's height (a padding-sized gap between each pair of blocks,
+    // matching how renderPassphraseCard actually spaces them) - solve for
+    // the largest n that fits, rather than hard-coding a max of 2.
+    const farAxis = this.gridSize.height;
+    const n = Math.floor((farAxis + this.cardPadding) / (this.blockThickness + this.cardPadding));
+    return Math.max(1, n);
   }
 
   get capacityPerCard(): number {
@@ -254,16 +250,13 @@ export class PassphraseParameters {
     return this.capacityPerCard * this.cardCount;
   }
 
+  // Every block (row) holds a separate passphrase, not a slice of one long
+  // continuous one - so each restarts its own character numbering at 1
+  // rather than continuing from the previous block or card.
   getCardCharacters(cardNumber: number): number[][] {
     if (cardNumber < 1 || cardNumber > this.cardCount) {
       throw new RangeError(`cardNumber ${cardNumber} out of range [1-${this.cardCount}]`);
     }
-    const first = (cardNumber - 1) * this.capacityPerCard + 1;
-    const blocks: number[][] = [];
-    for (let b = 0; b < this.blockCount; b++) {
-      const blockStart = first + b * this.charsPerBlock;
-      blocks.push(Array.from({ length: this.charsPerBlock }, (_, i) => blockStart + i));
-    }
-    return blocks;
+    return Array.from({ length: this.blockCount }, () => Array.from({ length: this.charsPerBlock }, (_, i) => i + 1));
   }
 }

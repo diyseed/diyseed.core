@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PDFDocument, rgb } from 'pdf-lib';
-import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledCircleTL, drawRotatedTextInBoxTL, toPdfY } from '../src/generator/pdfDraw';
+import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledCircleTL, drawRotatedTextInBoxTL, drawFilledTriangleTL, toPdfY } from '../src/generator/pdfDraw';
 import { point, size } from '../src/units';
 
 describe('toPdfY', () => {
@@ -40,6 +40,18 @@ describe('drawing primitives', () => {
     const page = doc.addPage([200, 300]);
 
     expect(() => drawFilledCircleTL(page, point(10, 10), 2, rgb(0, 0, 0))).not.toThrow();
+
+    const bytes = await doc.save();
+    expect(bytes.length).toBeGreaterThan(0);
+  });
+
+  it('draws a filled triangle without throwing', async () => {
+    const doc = await PDFDocument.create();
+    const page = doc.addPage([200, 300]);
+
+    expect(() =>
+      drawFilledTriangleTL(page, point(10, 10), point(14, 10), point(12, 14), rgb(0, 0, 0)),
+    ).not.toThrow();
 
     const bytes = await doc.save();
     expect(bytes.length).toBeGreaterThan(0);

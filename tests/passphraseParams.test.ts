@@ -8,7 +8,6 @@ describe('PassphraseParameters — horizontal direction (85.6x54mm, 1.5mm paddin
     cardPadding: mm(1.5),
     cardCornerRadius: mm(1.5),
     cardCount: 2,
-    binaryDirection: 'horizontal',
     copies: 1,
     cellSize: { width: mm(2), height: mm(2) },
   });
@@ -27,28 +26,31 @@ describe('PassphraseParameters — horizontal direction (85.6x54mm, 1.5mm paddin
     expect(params.blockThickness).toBeCloseTo(mm(2) * 7, 6);
   });
 
-  it('fits only 1 block when the card is not tall enough for a second', () => {
-    // gridHeight = 51mm; 2 blocks need 2*14mm + 1.5mm padding = 29.5mm - actually fits;
-    // recompute: blockThickness = 14mm, 2*14+1.5=29.5 <= 51 -> should be 2.
-    expect(params.blockCount).toBe(2);
+  it('fits 3 blocks in the available height, not a hard-coded max of 2', () => {
+    // gridHeight = 51mm; blockThickness = 14mm, padding = 1.5mm.
+    // n blocks need n*14 + (n-1)*1.5 <= 51 -> n=3 needs 42+3=45 <= 51 (fits);
+    // n=4 needs 56+4.5=60.5 > 51 (doesn't fit) -> blockCount = 3.
+    expect(params.blockCount).toBe(3);
   });
 
   it('computes capacityPerCard and totalCapacity from charsPerBlock and blockCount', () => {
-    expect(params.capacityPerCard).toBe(41 * 2);
-    expect(params.totalCapacity).toBe(41 * 2 * 2); // cardCount = 2
+    expect(params.capacityPerCard).toBe(41 * 3);
+    expect(params.totalCapacity).toBe(41 * 3 * 2); // cardCount = 2
   });
 
-  it('assigns sequential position numbers per card, split into blocks of charsPerBlock', () => {
+  it('numbers every block 1..charsPerBlock - each block is a separate passphrase, not a slice of one long one', () => {
     const card1 = params.getCardCharacters(1);
-    expect(card1).toHaveLength(2);
+    expect(card1).toHaveLength(3);
     expect(card1[0]).toHaveLength(41);
     expect(card1[0][0]).toBe(1);
     expect(card1[0][40]).toBe(41);
-    expect(card1[1][0]).toBe(42);
-    expect(card1[1][40]).toBe(82);
+    expect(card1[1][0]).toBe(1);
+    expect(card1[1][40]).toBe(41);
+    expect(card1[2][0]).toBe(1);
+    expect(card1[2][40]).toBe(41);
 
     const card2 = params.getCardCharacters(2);
-    expect(card2[0][0]).toBe(83);
+    expect(card2[0][0]).toBe(1);
   });
 
   it('throws for a card number out of range', () => {
@@ -63,7 +65,6 @@ describe('PassphraseParameters — forces exactly 1 block when the card is too s
     cardPadding: mm(1.5),
     cardCornerRadius: mm(1.5),
     cardCount: 1,
-    binaryDirection: 'horizontal',
     copies: 1,
     cellSize: { width: mm(2), height: mm(2) },
   });
@@ -76,24 +77,6 @@ describe('PassphraseParameters — forces exactly 1 block when the card is too s
   });
 });
 
-describe('PassphraseParameters — vertical direction transposes the axes', () => {
-  const params = new PassphraseParameters({
-    cardSize: { width: mm(85.6), height: mm(54) },
-    cardPadding: mm(1.5),
-    cardCornerRadius: mm(1.5),
-    cardCount: 1,
-    binaryDirection: 'vertical',
-    copies: 1,
-    cellSize: { width: mm(2), height: mm(2) },
-  });
-
-  it('fits characters down the height, and sizes blocks 7 cells wide', () => {
-    // gridHeight = 51mm, cellHeight = 2mm -> floor(51/2) = 25
-    expect(params.charsPerBlock).toBe(25);
-    expect(params.blockThickness).toBeCloseTo(mm(2) * 7, 6);
-  });
-});
-
 describe('PassphraseParameters validation', () => {
   it('throws when cardCount is out of range', () => {
     expect(
@@ -103,7 +86,6 @@ describe('PassphraseParameters validation', () => {
           cardPadding: mm(1.5),
           cardCornerRadius: mm(1.5),
           cardCount: 0,
-          binaryDirection: 'horizontal',
           copies: 1,
           cellSize: { width: mm(2), height: mm(2) },
         }),
@@ -118,7 +100,6 @@ describe('PassphraseParameters validation', () => {
           cardPadding: mm(1.5),
           cardCornerRadius: mm(1.5),
           cardCount: 1,
-          binaryDirection: 'horizontal',
           copies: 1,
           cellSize: { width: 0, height: mm(2) },
         }),

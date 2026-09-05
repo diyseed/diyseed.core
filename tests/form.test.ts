@@ -1,7 +1,68 @@
 import { describe, it, expect } from 'vitest';
-import { validate, toGeneratorParameters, toPassphraseParameters, resolvePassphraseCellSize, DEFAULT_FORM_VALUES } from '../src/ui/form';
+import {
+  validate,
+  toGeneratorParameters,
+  toPassphraseParameters,
+  resolvePassphraseCellSize,
+  isSeedSectionActive,
+  isPassphraseSectionActive,
+  hasAnyOutputSelected,
+  DEFAULT_FORM_VALUES,
+} from '../src/ui/form';
 import { EncodingType } from '../src/generator/encoding';
 import { mm } from '../src/units';
+
+describe('isSeedSectionActive / isPassphraseSectionActive', () => {
+  it('is driven solely by the top-level checkbox - the nested reader no longer activates the section on its own', () => {
+    expect(isSeedSectionActive({ includeSeed: false })).toBe(false);
+    expect(isSeedSectionActive({ includeSeed: true })).toBe(true);
+    expect(isPassphraseSectionActive({ passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: false, includeReader: true } })).toBe(false);
+    expect(isPassphraseSectionActive({ passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true } })).toBe(true);
+  });
+});
+
+describe('hasAnyOutputSelected', () => {
+  it('is true for the default form values (Seed stencil + reader + wordlist all checked)', () => {
+    expect(hasAnyOutputSelected(DEFAULT_FORM_VALUES)).toBe(true);
+  });
+
+  it('is false when a section is open but all three of its nested checkboxes are unchecked', () => {
+    expect(
+      hasAnyOutputSelected({
+        ...DEFAULT_FORM_VALUES,
+        includeSeedStencil: false,
+        includeSeedReader: false,
+        includeSeedWordTable: false,
+        passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: false },
+      }),
+    ).toBe(false);
+  });
+
+  it('ignores a closed section\'s nested checkboxes even if their raw state is still true', () => {
+    expect(
+      hasAnyOutputSelected({
+        ...DEFAULT_FORM_VALUES,
+        includeSeed: false, // section closed, but leaf flags left at their default (true)
+        includeSeedStencil: true,
+        includeSeedReader: true,
+        includeSeedWordTable: true,
+        passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: false },
+      }),
+    ).toBe(false);
+  });
+
+  it('is true once any one of Passphrase\'s nested checkboxes is checked with the section open', () => {
+    expect(
+      hasAnyOutputSelected({
+        ...DEFAULT_FORM_VALUES,
+        includeSeedStencil: false,
+        includeSeedReader: false,
+        includeSeedWordTable: false,
+        passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true, includeStencil: false, includeReader: true },
+      }),
+    ).toBe(true);
+  });
+});
 
 describe('validate', () => {
   it('accepts the default form values', () => {
@@ -43,7 +104,7 @@ describe('validate', () => {
     expect(errors.map((e) => e.field)).toContain('cardSplit');
   });
 
-  it('skips seed-specific validation entirely when includeSeed is false', () => {
+  it('skips seed-specific validation entirely when Seed is unchecked', () => {
     const errors = validate({
       ...DEFAULT_FORM_VALUES,
       includeSeed: false,
@@ -55,13 +116,21 @@ describe('validate', () => {
     expect(errors.map((e) => e.field)).not.toContain('cardSplit');
   });
 
-  it('rejects when both Seed and Passphrase are disabled', () => {
-    const errors = validate({ ...DEFAULT_FORM_VALUES, includeSeed: false, passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: false } });
+  it('rejects when both Seed and Passphrase are unchecked - their reader/reference sub-checkboxes are unreachable without them', () => {
+    const errors = validate({
+      ...DEFAULT_FORM_VALUES,
+      includeSeed: false,
+      passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: false },
+    });
     expect(errors.map((e) => e.field)).toContain('includeSeed');
   });
 
   it('accepts passphrase-only (Seed off, Passphrase on)', () => {
-    const errors = validate({ ...DEFAULT_FORM_VALUES, includeSeed: false, passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true } });
+    const errors = validate({
+      ...DEFAULT_FORM_VALUES,
+      includeSeed: false,
+      passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true },
+    });
     expect(errors).toEqual([]);
   });
 
@@ -73,12 +142,22 @@ describe('validate', () => {
     expect(enabledErrors.map((e) => e.field)).toContain('passphraseCardCount');
   });
 
-  it('flags an out-of-range passphrase override cell size only when it is set', () => {
-    const noOverride = validate({ ...DEFAULT_FORM_VALUES, passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true, overrideCellSizeMm: null } });
-    expect(noOverride.map((e) => e.field)).not.toContain('passphraseCellSizeMm');
+  it('flags an out-of-range passphrase copies independently of the seed copies', () => {
+    const seedOnlyBad = validate({ ...DEFAULT_FORM_VALUES, copies: 99, passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true, copies: 1 } });
+    expect(seedOnlyBad.map((e) => e.field)).toContain('copies');
+    expect(seedOnlyBad.map((e) => e.field)).not.toContain('passphraseCopies');
 
-    const badOverride = validate({ ...DEFAULT_FORM_VALUES, passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true, overrideCellSizeMm: 50 } });
-    expect(badOverride.map((e) => e.field)).toContain('passphraseCellSizeMm');
+    const passphraseOnlyBad = validate({ ...DEFAULT_FORM_VALUES, copies: 1, passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true, copies: 99 } });
+    expect(passphraseOnlyBad.map((e) => e.field)).toContain('passphraseCopies');
+    expect(passphraseOnlyBad.map((e) => e.field)).not.toContain('copies');
+  });
+
+  it('flags an out-of-range passphrase cell size', () => {
+    const inRange = validate({ ...DEFAULT_FORM_VALUES, passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true, cellSizeMm: 2 } });
+    expect(inRange.map((e) => e.field)).not.toContain('passphraseCellSizeMm');
+
+    const outOfRange = validate({ ...DEFAULT_FORM_VALUES, passphrase: { ...DEFAULT_FORM_VALUES.passphrase, enabled: true, cellSizeMm: 50 } });
+    expect(outOfRange.map((e) => e.field)).toContain('passphraseCellSizeMm');
   });
 });
 
@@ -93,9 +172,12 @@ describe('toGeneratorParameters', () => {
       cardPaddingMm: 1.5,
       copies: 1,
       encoding: EncodingType.Alphabet,
-      binaryDirection: 'horizontal',
       includeSeed: true,
-      passphrase: { enabled: false, cardCount: 1, binaryDirection: 'horizontal', overrideCellSizeMm: null },
+      includeSeedStencil: true,
+      includeSeedReader: false,
+      includeAsciiTable: false,
+      includeSeedWordTable: false,
+      passphrase: { enabled: false, includeStencil: true, includeReader: false, cardCount: 1, copies: 1, cellSizeMm: 2 },
     });
     expect(params.seedLength).toBe(24);
     expect(params.cardCount).toBe(2);
@@ -112,28 +194,14 @@ describe('toGeneratorParameters', () => {
       cardPaddingMm: 2,
       copies: 1,
       encoding: EncodingType.Alphabet,
-      binaryDirection: 'horizontal',
       includeSeed: true,
-      passphrase: { enabled: false, cardCount: 1, binaryDirection: 'horizontal', overrideCellSizeMm: null },
+      includeSeedStencil: true,
+      includeSeedReader: false,
+      includeAsciiTable: false,
+      includeSeedWordTable: false,
+      passphrase: { enabled: false, includeStencil: true, includeReader: false, cardCount: 1, copies: 1, cellSizeMm: 2 },
     });
     expect(params.cardPadding).toBeCloseTo(mm(2), 6);
-  });
-
-  it('does not forward cardSplit for vertical Binary encoding, leaving GeneratorParameters to auto-derive it', () => {
-    const params = toGeneratorParameters({
-      seedLength: 12,
-      cardCount: 2,
-      cardWidthMm: 85.6,
-      cardHeightMm: 54,
-      cardSplit: 99,
-      cardPaddingMm: 1.5,
-      copies: 1,
-      encoding: EncodingType.Binary,
-      binaryDirection: 'vertical',
-      includeSeed: true,
-      passphrase: { enabled: false, cardCount: 1, binaryDirection: 'horizontal', overrideCellSizeMm: null },
-    });
-    expect(params.cardSplit).toBe(6);
   });
 
   it('still forwards cardSplit as-is for non-Binary encodings', () => {
@@ -146,79 +214,79 @@ describe('toGeneratorParameters', () => {
       cardPaddingMm: 1.5,
       copies: 1,
       encoding: EncodingType.Alphabet,
-      binaryDirection: 'horizontal',
       includeSeed: true,
-      passphrase: { enabled: false, cardCount: 1, binaryDirection: 'horizontal', overrideCellSizeMm: null },
+      includeSeedStencil: true,
+      includeSeedReader: false,
+      includeAsciiTable: false,
+      includeSeedWordTable: false,
+      passphrase: { enabled: false, includeStencil: true, includeReader: false, cardCount: 1, copies: 1, cellSizeMm: 2 },
     });
     expect(params.cardSplit).toBe(3);
   });
 
-  it('defaults to horizontal Binary (cardSplit forced to 1, not seed-length-derived)', () => {
+  it('forces cardSplit to 1 for Binary encoding, ignoring any explicit cardSplit', () => {
     const params = toGeneratorParameters({
       seedLength: 12,
       cardCount: 2,
       cardWidthMm: 85.6,
       cardHeightMm: 54,
-      cardSplit: 1,
+      cardSplit: 99,
       cardPaddingMm: 1.5,
       copies: 1,
       encoding: EncodingType.Binary,
-      binaryDirection: 'horizontal',
       includeSeed: true,
-      passphrase: { enabled: false, cardCount: 1, binaryDirection: 'horizontal', overrideCellSizeMm: null },
+      includeSeedStencil: true,
+      includeSeedReader: false,
+      includeAsciiTable: false,
+      includeSeedWordTable: false,
+      passphrase: { enabled: false, includeStencil: true, includeReader: false, cardCount: 1, copies: 1, cellSizeMm: 2 },
     });
     expect(params.cardSplit).toBe(1);
   });
 });
 
 describe('resolvePassphraseCellSize', () => {
-  it('uses the override when provided, as a square cell', () => {
-    const result = resolvePassphraseCellSize({ overrideCellSizeMm: 3, seedCellSize: { width: mm(2.5), height: mm(1.8) } });
+  it('converts the mm value straight into a square cell', () => {
+    const result = resolvePassphraseCellSize({ cellSizeMm: 3 });
     expect(result.width).toBeCloseTo(mm(3), 6);
     expect(result.height).toBeCloseTo(mm(3), 6);
   });
 
-  it('matches the seed cell size (possibly non-square) when no override and seed is present', () => {
-    const result = resolvePassphraseCellSize({ overrideCellSizeMm: null, seedCellSize: { width: mm(2.5), height: mm(1.8) } });
-    expect(result.width).toBeCloseTo(mm(2.5), 6);
-    expect(result.height).toBeCloseTo(mm(1.8), 6);
-  });
-
-  it('falls back to the fixed default square cell when no override and no seed', () => {
-    const result = resolvePassphraseCellSize({ overrideCellSizeMm: null, seedCellSize: null });
+  it('reflects the default 2mm value', () => {
+    const result = resolvePassphraseCellSize({ cellSizeMm: DEFAULT_FORM_VALUES.passphrase.cellSizeMm });
     expect(result.width).toBeCloseTo(mm(2), 6);
     expect(result.height).toBeCloseTo(mm(2), 6);
   });
 });
 
 describe('toPassphraseParameters', () => {
-  it('builds a PassphraseParameters sharing card size/padding/radius/copies with the seed form values', () => {
+  it('builds a PassphraseParameters sharing card size/padding/radius with the seed form values, using its own copies and cell size', () => {
     const values = {
       ...DEFAULT_FORM_VALUES,
       cardWidthMm: 85.6,
       cardHeightMm: 54,
       cardPaddingMm: 1.5,
-      copies: 2,
-      passphrase: { enabled: true, cardCount: 3, binaryDirection: 'vertical' as const, overrideCellSizeMm: null },
+      copies: 5, // seed's own copies - must NOT leak into the passphrase's
+      passphrase: { enabled: true, includeStencil: true, includeReader: false, cardCount: 3, copies: 2, cellSizeMm: 4 },
     };
-    const params = toPassphraseParameters(values, null);
+    const params = toPassphraseParameters(values);
     expect(params.cardSize).toEqual({ width: mm(85.6), height: mm(54) });
     expect(params.cardPadding).toBeCloseTo(mm(1.5), 6);
     expect(params.copies).toBe(2);
     expect(params.cardCount).toBe(3);
-    expect(params.binaryDirection).toBe('vertical');
-    // no seed provided, no override -> fallback cell size
-    expect(params.cellSize.width).toBeCloseTo(mm(2), 6);
+    expect(params.cellSize.width).toBeCloseTo(mm(4), 6);
+    expect(params.cellSize.height).toBeCloseTo(mm(4), 6);
   });
 
-  it('matches the seed cellSize when a seed GeneratorParameters is passed and no override is set', () => {
+  it('ignores the seed cell size entirely, independent of the seed section', () => {
     const values = {
       ...DEFAULT_FORM_VALUES,
-      passphrase: { enabled: true, cardCount: 1, binaryDirection: 'horizontal' as const, overrideCellSizeMm: null },
+      passphrase: { enabled: true, includeStencil: true, includeReader: false, cardCount: 1, copies: 1, cellSizeMm: 2 },
     };
     const seedParams = toGeneratorParameters(values);
-    const params = toPassphraseParameters(values, seedParams);
-    expect(params.cellSize.width).toBeCloseTo(seedParams.cellSize.width, 6);
-    expect(params.cellSize.height).toBeCloseTo(seedParams.cellSize.height, 6);
+    const params = toPassphraseParameters(values);
+    expect(seedParams.cellSize.width).not.toBeCloseTo(mm(2), 3);
+    expect(params.cellSize.width).toBeCloseTo(mm(2), 6);
+    expect(params.cellSize.height).toBeCloseTo(mm(2), 6);
   });
 });

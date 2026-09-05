@@ -1,5 +1,5 @@
 import { GeneratorParameters, PassphraseParameters } from '../generator/params';
-import { EncodingType, encodingLayout, BinaryDirection } from '../generator/encoding';
+import { EncodingType, encodingLayout } from '../generator/encoding';
 import * as Config from '../generator/config';
 import { toMm } from '../units';
 import { physicalCardNumberOf, sideOf } from '../generator/cornerMarks';
@@ -37,7 +37,6 @@ export interface PreviewLayout {
   cellRowLabels: string[];
   isBinary: boolean;
   binaryColumnLabels: string[];
-  binaryDirection: BinaryDirection;
   copies: number;
   warnings: PreviewWarnings;
 }
@@ -85,10 +84,9 @@ export function computePreviewLayout(parameters: GeneratorParameters): PreviewLa
     cards,
     cellWidthMm,
     cellHeightMm,
-    cellRowLabels: encodingLayout(parameters.seedEncoding, parameters.binaryDirection).cellLabels ?? [],
+    cellRowLabels: encodingLayout(parameters.seedEncoding).cellLabels ?? [],
     isBinary,
     binaryColumnLabels: isBinary ? Config.BINARY_COLUMN_VALUES.map(String) : [],
-    binaryDirection: parameters.binaryDirection,
     copies: parameters.copies,
     warnings: { cellTooSmall, cellNotSquare, cellSizeInvalid },
   };
@@ -99,6 +97,11 @@ export interface PassphraseCard {
   cardWidthMm: number;
   cardHeightMm: number;
   blocks: number[][];
+  // First row-mark number for this card's blocks (see renderPassphraseCard in
+  // writer.ts) - row marks count rows, not cards, continuing across every
+  // card in a copy, so card 2's first block picks up where card 1's last
+  // block left off rather than restarting at 1.
+  startRowNumber: number;
 }
 
 export interface PassphraseWarnings {
@@ -109,7 +112,6 @@ export interface PassphraseWarnings {
 export interface PassphrasePreviewLayout {
   cards: PassphraseCard[];
   columnLabels: string[];
-  binaryDirection: BinaryDirection;
   cellWidthMm: number;
   cellHeightMm: number;
   copies: number;
@@ -124,6 +126,7 @@ export function computePassphrasePreviewLayout(parameters: PassphraseParameters)
       cardWidthMm: toMm(parameters.cardSize.width),
       cardHeightMm: toMm(parameters.cardSize.height),
       blocks: parameters.getCardCharacters(cardNumber),
+      startRowNumber: (cardNumber - 1) * parameters.blockCount + 1,
     });
   }
 
@@ -135,7 +138,6 @@ export function computePassphrasePreviewLayout(parameters: PassphraseParameters)
   return {
     cards,
     columnLabels: Config.PASSPHRASE_COLUMN_VALUES.map(String),
-    binaryDirection: parameters.binaryDirection,
     cellWidthMm,
     cellHeightMm,
     copies: parameters.copies,

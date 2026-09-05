@@ -170,28 +170,6 @@ describe('computePreviewLayout — Binary encoding', () => {
     expect(layout.binaryColumnLabels).toEqual([]);
   });
 
-  it('defaults binaryDirection to horizontal when not specified', () => {
-    const params = new GeneratorParameters({
-      cardSize: { width: mm(85.6), height: mm(54) },
-      cardCount: 2,
-      seedLength: 12,
-      encoding: EncodingType.Binary,
-    });
-    const layout = computePreviewLayout(params);
-    expect(layout.binaryDirection).toBe('horizontal');
-  });
-
-  it('carries an explicit vertical binaryDirection through to the layout', () => {
-    const params = new GeneratorParameters({
-      cardSize: { width: mm(85.6), height: mm(54) },
-      cardCount: 2,
-      seedLength: 12,
-      encoding: EncodingType.Binary,
-      binaryDirection: 'vertical',
-    });
-    const layout = computePreviewLayout(params);
-    expect(layout.binaryDirection).toBe('vertical');
-  });
 });
 
 describe('computePassphrasePreviewLayout', () => {
@@ -200,15 +178,13 @@ describe('computePassphrasePreviewLayout', () => {
     cardPadding: mm(1.5),
     cardCornerRadius: mm(1.5),
     cardCount: 2,
-    binaryDirection: 'horizontal',
     copies: 1,
     cellSize: { width: mm(2), height: mm(2) },
   });
 
-  it('reports the 7 ASCII place-value column labels and the resolved direction', () => {
+  it('reports the 7 ASCII place-value column labels', () => {
     const layout = computePassphrasePreviewLayout(params);
     expect(layout.columnLabels).toEqual(['64', '32', '16', '8', '4', '2', '1']);
-    expect(layout.binaryDirection).toBe('horizontal');
   });
 
   it('builds one card entry per cardCount, each with the geometry-derived blocks', () => {
@@ -233,7 +209,6 @@ describe('computePassphrasePreviewLayout', () => {
       cardPadding: mm(1.5),
       cardCornerRadius: mm(1.5),
       cardCount: 1,
-      binaryDirection: 'horizontal',
       copies: 1,
       cellSize: { width: mm(1), height: mm(1) },
     });
@@ -247,7 +222,6 @@ describe('computePassphrasePreviewLayout', () => {
       cardPadding: mm(5),
       cardCornerRadius: mm(1.5),
       cardCount: 1,
-      binaryDirection: 'horizontal',
       copies: 1,
       cellSize: { width: mm(20), height: mm(20) },
     });

@@ -48,12 +48,11 @@ describe('preview warning thresholds', () => {
 });
 
 describe('corner mark geometry', () => {
-  it('defines a slightly larger radius and a 1mm pitch, in points', () => {
+  it('defines a slightly larger radius, in points', () => {
     expect(Config.CORNER_MARK_RADIUS).toBeCloseTo(mm(0.35), 6);
-    expect(Config.CORNER_MARK_PITCH).toBeCloseTo(mm(1), 6);
   });
 
-  it('defines a fixed 0.5mm inset from the card corner, independent of card padding', () => {
+  it('defines a fixed 0.5mm inset from the mesh edge, into the card border strip', () => {
     expect(Config.CORNER_MARK_INSET).toBeCloseTo(mm(0.5), 6);
   });
 });
@@ -70,10 +69,6 @@ describe('binary encoding constants', () => {
     expect(Config.BINARY_COLUMN_VALUES).toEqual([1024, 512, 256, 128, 64, 32, 16, 8, 4, 2, 1]);
     expect(Config.BINARY_HEADER_HEIGHT).toBeCloseTo(mm(6), 6);
   });
-
-  it('defaults to horizontal direction (words side-by-side as columns)', () => {
-    expect(Config.BINARY_DIRECTION_DEFAULT).toBe('horizontal');
-  });
 });
 
 describe('passphrase encoding constants', () => {
@@ -81,9 +76,9 @@ describe('passphrase encoding constants', () => {
     expect(Config.PASSPHRASE_COLUMN_VALUES).toEqual([64, 32, 16, 8, 4, 2, 1]);
   });
 
-  it('defines a 2mm fallback cell size and a 1-10mm override range', () => {
-    expect(Config.PASSPHRASE_FALLBACK_CELL_SIZE).toBeCloseTo(mm(2), 6);
-    expect(Config.PASSPHRASE_OVERRIDE_CELL_SIZE_RANGE).toEqual([mm(1), mm(10)]);
+  it('defines a 2mm default cell size and a 1-10mm valid range', () => {
+    expect(Config.PASSPHRASE_CELL_SIZE_DEFAULT).toBeCloseTo(mm(2), 6);
+    expect(Config.PASSPHRASE_CELL_SIZE_RANGE).toEqual([mm(1), mm(10)]);
   });
 
   it('defaults passphrase card count to 1', () => {

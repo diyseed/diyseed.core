@@ -11,6 +11,7 @@
   --color-warning-bg: rgba(230, 160, 40, 0.12);
   --color-warning-border: rgba(230, 160, 40, 0.4);
   --color-warning-text: #a9720f;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 * {
@@ -33,8 +34,7 @@ body {
   padding: 16px;
 }
 
-.form-panel,
-.preview-panel {
+.form-panel {
   min-width: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -42,21 +42,50 @@ body {
   padding: 14px;
 }
 
-
-.preview-panel {
-  min-height: 200px;
-}
-
 h1 {
   margin-top: 0;
   font-size: 1.5rem;
+}
+
+/* One bordered card per field group (Card properties / Seed / Passphrase) -
+   each already reads as its own subject (own heading, own Advanced options),
+   so a full box separates them more clearly than a rule between stacked
+   fields did. */
+.form-section-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.form-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--color-text);
+}
+
+/* Seed/Passphrase's own title doubles as their section checkbox - the
+   checkbox sits right before the text, both inside one clickable label,
+   rather than a separate top-level toggle row. */
+.section-toggle-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.section-toggle-heading input[type="checkbox"] {
+  width: auto;
+  margin: 0;
 }
 
 form label {
   display: block;
   margin-bottom: 6px;
   font-size: 0.9rem;
-  color: var(--color-muted);
+  color: var(--color-text);
 }
 
 form input,
@@ -88,12 +117,26 @@ form select {
 }
 
 .field-row__sep {
-  color: var(--color-muted);
+  color: var(--color-text);
   font-size: 0.9rem;
 }
 
 .field-row .field-error {
   flex-basis: 100%;
+}
+
+/* Two independently labeled fields side by side (each keeps its own label
+   text above its input) - unlike .field-row, which is one label shared by
+   several inputs (e.g. Card size's width × height). */
+.field-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.field-pair label {
+  flex: 1 1 140px;
+  min-width: 0;
 }
 
 .is-hidden {
@@ -115,15 +158,36 @@ form select {
   margin: 0;
 }
 
+/* Grays the label text along with its checkbox once disabled (Seed/
+   Passphrase's own three nested toggles, while their section is off) -
+   otherwise only the checkbox itself looked inert. */
+.checkbox-label:has(input:disabled) {
+  color: var(--color-muted);
+}
+
 .section-toggles {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 8px 16px;
   margin-bottom: 12px;
 }
 
 .section-toggles .checkbox-label {
   margin-top: 0;
   font-weight: 600;
+}
+
+/* Second row of toggles (reference tables) - supplementary to the main
+   Seed/Passphrase/Reader row above, so lighter weight and a little tighter
+   to read as a sub-group rather than a peer set of primary sections. */
+.section-toggles--secondary {
+  margin-top: -6px;
+}
+
+.section-toggles--secondary .checkbox-label {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, var(--color-text));
 }
 
 form input[aria-invalid="true"] {
@@ -138,6 +202,8 @@ form input[aria-invalid="true"] {
 }
 
 button[type="submit"] {
+  display: block;
+  margin-left: auto;
   background: var(--color-accent);
   color: #ffffff;
   border: none;
@@ -212,6 +278,11 @@ button[type="submit"]:hover {
   color: var(--color-muted);
 }
 
+#seed-inactive-notice,
+#passphrase-inactive-notice {
+  color: var(--color-muted);
+}
+
 .advanced-options {
   margin: 12px 0 16px;
   border-top: 1px solid var(--color-border);
@@ -221,7 +292,7 @@ button[type="submit"]:hover {
 .advanced-options summary {
   cursor: pointer;
   font-size: 0.9rem;
-  color: var(--color-muted);
+  color: var(--color-text);
   margin-bottom: 8px;
 }
 
@@ -262,9 +333,23 @@ button[type="submit"]:hover {
 }
 
 .preview-section {
+  position: relative;
   display: flex;
   border: 1px solid var(--color-border);
   border-radius: 3px;
+}
+
+/* Row-mark dots (see renderRowCornerMarks) for one Card-split row - same
+   treatment as .preview-passphrase-block below: sits in the 4px gap between
+   sections (or the box's own padding, for the first section) rather than
+   the box's whole border+padding inset used by .corner-mark's default top:2px. */
+.preview-section .corner-mark--top-left,
+.preview-section .corner-mark--top-right {
+  top: -4px;
+}
+
+.preview-section .corner-mark--bottom-left {
+  bottom: -4px;
 }
 
 .preview-section--mesh {
@@ -320,6 +405,7 @@ button[type="submit"]:hover {
   left: 0;
   right: 0;
   text-align: center;
+  font-family: var(--font-mono);
   font-size: 1.3rem;
   font-weight: 700;
   line-height: 1;
@@ -352,6 +438,7 @@ button[type="submit"]:hover {
   height: 40px;
   margin-bottom: 2px;
   width: 100%;
+  min-width: 0;
   /* matches .preview-card's 2px border + 6px padding, so columns line up with the mesh below */
   padding: 0 8px;
 }
@@ -359,16 +446,19 @@ button[type="submit"]:hover {
 .preview-binary-header__cell {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  font-size: var(--header-cell-font-size, 0.85rem);
   color: var(--color-muted);
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .preview-binary-header-arrows {
   display: grid;
   width: 100%;
   padding: 0 8px;
-  margin-bottom: 4px;
+  margin-bottom: 1px;
 }
 
 .preview-binary-header-arrow {
@@ -377,8 +467,8 @@ button[type="submit"]:hover {
   margin: 0 auto;
   border-left: 3px solid transparent;
   border-right: 3px solid transparent;
-  border-top: 4px solid var(--color-muted);
-  opacity: 0.5;
+  border-top: 4px solid var(--color-text);
+  opacity: 0.9;
 }
 
 .preview-binary-horizontal-row {
@@ -393,26 +483,54 @@ button[type="submit"]:hover {
   min-width: 0;
 }
 
-.preview-binary-blocks-row {
-  display: flex;
-  gap: 4px;
+/* Wraps one passphrase block's mesh so its row-mark dots (see
+   renderPassphraseBlockCornerMarks) can be positioned relative to *that
+   block*, not the whole card - flex:1 so it takes the same share of the
+   column/row as its sibling blocks. */
+.preview-passphrase-block {
+  position: relative;
   flex: 1;
+  min-width: 0;
   min-height: 0;
+  display: flex;
 }
 
+.preview-passphrase-block .corner-mark--top-left,
+.preview-passphrase-block .corner-mark--top-right {
+  /* Sits in the 4px gap between blocks (or the box's own padding, for the
+     first block) rather than the box's whole border+padding inset used by
+     .corner-mark's default top:2px - a block has neither. */
+  top: -4px;
+}
+
+.preview-passphrase-block .corner-mark--bottom-left {
+  bottom: -4px;
+}
+
+/* Thumbnail-only variant: a plain marked box instead of the per-cell mesh -
+   same treatment as .preview-section on the non-binary seed thumbnail
+   (renderCard), for the same reason: illegible at this scale, just noise. */
+.preview-passphrase-block--plain {
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+}
+
+/* The alignment padding (8px, matching .preview-card's 2px border + 6px
+   padding) belongs once on the whole group, not on every repeated item -
+   applied per item (as plain .preview-binary-row-header/-header is, for the
+   single-header case) it compounds with each block added, so headers drift
+   further out of alignment with the mesh rows/columns they label the more
+   blocks a card has. */
 .preview-passphrase-header-group--column {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
+  /* Sized to its own content (the fixed-width row-header items inside) -
+     not flex:1, which would fight .preview-passphrase-right-col for the
+     row's width and squeeze the mesh into a fraction of the available space. */
+  flex: 0 0 auto;
   min-height: 0;
-}
-
-.preview-passphrase-header-group--row {
-  display: flex;
-  flex-direction: row;
-  gap: 4px;
-  width: 100%;
+  padding: 8px 0;
 }
 
 .preview-passphrase-header-group--column .preview-passphrase-header-group__item {
@@ -421,10 +539,59 @@ button[type="submit"]:hover {
   height: auto;
 }
 
-.preview-passphrase-header-group--row .preview-passphrase-header-group__item {
-  flex: 1;
-  min-width: 0;
-  width: auto;
+.preview-passphrase-header-group__item.preview-binary-row-header,
+.preview-passphrase-header-group__item.preview-binary-header,
+.preview-passphrase-header-group__item.preview-binary-row-header-arrows,
+.preview-passphrase-header-group__item.preview-binary-header-arrows {
+  padding: 0;
+}
+
+/* Corner-header layout for the passphrase full-detail card: box is the only
+   normal-flow child, so it alone determines figure's size (from its own
+   aspect-ratio); both header bands are pulled out of flow and pinned against
+   *that* size via 100%, so neither can inflate it in turn - the problem a
+   shared-row/column CSS Grid had here (see renderPassphraseBigCard). The
+   header bands only occupy the top/left edges, but the margin reserving room
+   for them is applied symmetrically (equal on the right/bottom, where
+   nothing is drawn) so the visible card+headers shape sits centered in its
+   container instead of hugging the left/top and reading as pushed off to
+   one side. */
+.preview-passphrase-figure {
+  position: relative;
+  width: calc(100% - 2 * 48px);
+  margin: 50px 48px 0 48px;
+}
+
+.preview-passphrase-header-band {
+  position: absolute;
+  overflow: hidden;
+}
+
+.preview-passphrase-header-band--top {
+  left: 0;
+  bottom: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-passphrase-header-band--left {
+  top: 0;
+  right: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.preview-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 16px 0 8px;
+  color: var(--color-text);
+}
+
+.preview-section-title:first-child {
+  margin-top: 0;
 }
 
 .preview-binary-row-header {
@@ -434,23 +601,36 @@ button[type="submit"]:hover {
   gap: 1px;
   width: 34px;
   flex-shrink: 0;
+  min-height: 0;
   /* matches .preview-card's 2px border + 6px padding, so rows line up with the mesh alongside it */
   padding: 8px 0;
 }
 
 .preview-binary-row-header__cell {
-  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  /* A bit smaller than the top header's cells - these numbers run down the
+     card's full height rather than across its width, so there's less risk
+     of crowding, but a smaller size still reads more comfortably alongside
+     the narrower row pitch. */
+  font-size: calc(var(--header-cell-font-size, 0.85rem) * 0.85);
   color: var(--color-muted);
   white-space: nowrap;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .preview-binary-row-header-arrows {
   display: grid;
   align-items: center;
-  justify-items: center;
-  width: 10px;
+  /* end, not center: the arrow is the pointer to the card's own edge, so its
+     tip belongs flush against that edge, not floating with empty column
+     width on both sides of it. */
+  justify-items: end;
+  /* Half of the old 10px - that width *was* the visible gap between the
+     number (right-aligned against this column's left edge) and the arrow
+     (right-aligned against this column's right edge, touching the card). */
+  width: 5px;
   flex-shrink: 0;
-  margin-right: 4px;
   padding: 8px 0;
 }
 
@@ -459,8 +639,8 @@ button[type="submit"]:hover {
   height: 0;
   border-top: 3px solid transparent;
   border-bottom: 3px solid transparent;
-  border-left: 4px solid var(--color-muted);
-  opacity: 0.5;
+  border-left: 4px solid var(--color-text);
+  opacity: 0.9;
 }
 
 .preview-binary-mesh {
@@ -493,16 +673,12 @@ button[type="submit"]:hover {
 .preview-binary-word-number {
   position: absolute;
   display: flex;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 700;
   color: rgba(26, 26, 26, 0.6);
   pointer-events: none;
   z-index: 1;
-}
-
-.preview-binary-word-number--row {
-  left: 2px;
-  align-items: center;
 }
 
 .preview-binary-word-number--column {

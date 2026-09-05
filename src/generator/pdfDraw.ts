@@ -1,6 +1,7 @@
 import type { PDFFont, PDFPage, RGB } from 'pdf-lib';
 import { degrees } from 'pdf-lib';
 import type { Point, Size } from '../units';
+import { point } from '../units';
 
 export function toPdfY(page: PDFPage, origin: Point, elementHeight: number): number {
   return page.getHeight() - origin.y - elementHeight;
@@ -64,13 +65,14 @@ export function drawLineTL(
   page: PDFPage,
   from: Point,
   to: Point,
-  opts: { color?: RGB; thickness?: number },
+  opts: { color?: RGB; thickness?: number; dashArray?: number[] },
 ): void {
   page.drawLine({
     start: { x: from.x, y: page.getHeight() - from.y },
     end: { x: to.x, y: page.getHeight() - to.y },
     color: opts.color,
     thickness: opts.thickness,
+    dashArray: opts.dashArray,
   });
 }
 
@@ -82,6 +84,22 @@ export function drawFilledCircleTL(page: PDFPage, center: Point, radius: number,
     yScale: radius,
     color,
   });
+}
+
+/**
+ * Draws a small filled triangle given three top-left-origin points. Used for
+ * the small directional arrows pointing from an outside-the-card header
+ * label toward the punch cells it labels.
+ */
+export function drawFilledTriangleTL(page: PDFPage, p1: Point, p2: Point, p3: Point, color: RGB): void {
+  // drawSvgPath flips the y axis itself (SVG is y-down, pdf-lib is y-up), so
+  // the path must stay in raw top-left/y-down coordinates here - pre-flipping
+  // them (as the other draw* helpers do manually) would flip twice and push
+  // the shape off the page. Anchoring the translate at (0, page height) lets
+  // that built-in flip do the same top-left -> pdf-space conversion the rest
+  // of this file does by hand.
+  const path = `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y} Z`;
+  page.drawSvgPath(path, { x: 0, y: page.getHeight(), color });
 }
 
 export interface TextAlign {
@@ -98,6 +116,7 @@ export function drawTextInBoxTL(
   boxSize: Size,
   align: TextAlign,
   color: RGB,
+  opacity?: number,
 ): void {
   const textWidth = font.widthOfTextAtSize(text, fontSize);
   const ascent = font.heightAtSize(fontSize, { descender: false });
@@ -110,7 +129,7 @@ export function drawTextInBoxTL(
   const topY = align.vertical === 'center' ? origin.y + (boxSize.height - fullHeight) / 2 : origin.y;
   const baselineY = page.getHeight() - topY - ascent;
 
-  page.drawText(text, { x, y: baselineY, size: fontSize, font, color });
+  page.drawText(text, { x, y: baselineY, size: fontSize, font, color, opacity });
 }
 
 /**

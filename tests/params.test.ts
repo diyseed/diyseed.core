@@ -105,83 +105,12 @@ describe('GeneratorParameters computed properties — trailing all-empty cards d
   });
 });
 
-describe('GeneratorParameters computed properties — Vertical Binary encoding (12 words, 2 cards, 85.6x54mm)', () => {
+describe('GeneratorParameters computed properties — Binary encoding (12 words, 2 cards, 85.6x54mm)', () => {
   const params = new GeneratorParameters({
     cardSize: { width: mm(85.6), height: mm(54) },
     cardCount: 2,
     seedLength: 12,
     encoding: EncodingType.Binary,
-    binaryDirection: 'vertical',
-  });
-
-  it('auto-derives cardSplit as ceil(seedLength / cardCount), ignoring any explicit cardSplit input', () => {
-    expect(params.cardSplit).toBe(6); // ceil(12 / 2) = 6
-  });
-
-  it('gives every card exactly one word per section (row-per-word)', () => {
-    expect(params.maxWordsPerSection).toBe(1);
-    expect(params.maxWordsPerCard).toBe(6);
-    expect(params.effectiveCardCount).toBe(2);
-
-    const card1 = params.getCardParameters(1);
-    expect(card1.sections).toHaveLength(6);
-    expect(card1.sections.map((s) => s.wordNumbers)).toEqual([[1], [2], [3], [4], [5], [6]]);
-  });
-
-  it('ignores an explicit cardSplit input for vertical Binary', () => {
-    const withExplicitSplit = new GeneratorParameters({
-      cardSize: { width: mm(85.6), height: mm(54) },
-      cardCount: 2,
-      seedLength: 12,
-      encoding: EncodingType.Binary,
-      binaryDirection: 'vertical',
-      cardSplit: 1, // would be invalid/misleading if honored - vertical Binary always needs 6 here
-    });
-    expect(withExplicitSplit.cardSplit).toBe(6);
-  });
-
-  it('sizes cells as 11 columns x 1 row per word block', () => {
-    const wordSize = params.wordSize;
-    const cellSize = params.cellSize;
-    expect(cellSize.width).toBeCloseTo(wordSize.width / 11, 6);
-    expect(cellSize.height).toBeCloseTo(wordSize.height, 6); // 1 row -> full word height
-  });
-});
-
-describe('GeneratorParameters computed properties — Vertical Binary encoding uneven split (10 words, 3 cards)', () => {
-  it('derives a cardSplit large enough for the seed even though it exceeds the non-Binary [1,5] range', () => {
-    const params = new GeneratorParameters({
-      cardSize: { width: mm(100), height: mm(150) },
-      cardCount: 3,
-      seedLength: 10,
-      encoding: EncodingType.Binary,
-      binaryDirection: 'vertical',
-    });
-    expect(params.cardSplit).toBe(4); // ceil(10 / 3) = 4, within [1,5] here but proves the derivation path
-  });
-
-  it('does not throw for a derived cardSplit above 5, unlike the non-Binary range check', () => {
-    expect(
-      () =>
-        new GeneratorParameters({
-          cardSize: { width: mm(100), height: mm(150) },
-          cardCount: 1,
-          seedLength: 10,
-          encoding: EncodingType.Binary,
-          binaryDirection: 'vertical',
-        }),
-    ).not.toThrow(); // derived cardSplit = ceil(10/1) = 10, well above the [1,5] range that applies to other encodings
-    // (height kept within the pre-existing CARD_HEIGHT_RANGE max of ~180mm - unrelated to this test's cardSplit assertion)
-  });
-});
-
-describe('GeneratorParameters computed properties — Horizontal Binary encoding (default direction, 12 words, 2 cards, 85.6x54mm)', () => {
-  const params = new GeneratorParameters({
-    cardSize: { width: mm(85.6), height: mm(54) },
-    cardCount: 2,
-    seedLength: 12,
-    encoding: EncodingType.Binary,
-    // binaryDirection omitted - horizontal is the default.
   });
 
   it('forces cardSplit to 1 regardless of seed length or an explicit cardSplit input', () => {
@@ -192,7 +121,7 @@ describe('GeneratorParameters computed properties — Horizontal Binary encoding
       cardCount: 2,
       seedLength: 12,
       encoding: EncodingType.Binary,
-      cardSplit: 5, // would be invalid/misleading if honored - horizontal Binary always needs 1
+      cardSplit: 5, // would be invalid/misleading if honored - Binary always needs 1
     });
     expect(withExplicitSplit.cardSplit).toBe(1);
   });
@@ -206,7 +135,7 @@ describe('GeneratorParameters computed properties — Horizontal Binary encoding
     expect(card1.sections[0].wordNumbers).toEqual([1, 2, 3, 4, 5, 6]);
   });
 
-  it('sizes cells as 1 column x 11 rows per word block (transposed from vertical)', () => {
+  it('sizes cells as 1 column x 11 rows per word block', () => {
     const wordSize = params.wordSize;
     const cellSize = params.cellSize;
     expect(cellSize.width).toBeCloseTo(wordSize.width, 6); // 1 column -> full word width

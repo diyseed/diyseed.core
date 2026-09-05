@@ -3,6 +3,9 @@ import {
   validate,
   toGeneratorParameters,
   toPassphraseParameters,
+  isSeedSectionActive,
+  isPassphraseSectionActive,
+  hasAnyOutputSelected,
   DEFAULT_FORM_VALUES,
   FormValues,
   FieldError,
@@ -10,7 +13,7 @@ import {
 import { EncodingType } from './generator/encoding';
 import { GeneratorParameters } from './generator/params';
 import { computePreviewLayout, computePassphrasePreviewLayout } from './ui/preview';
-import { renderPreview } from './ui/renderPreview';
+import { renderSeedPreview, renderPassphrasePreview, STENCIL_UNCHECKED_PLACEHOLDER_TEXT } from './ui/renderPreview';
 
 function readForm(): FormValues {
   const num = (id: string, fallback: number) => {
@@ -23,13 +26,18 @@ function readForm(): FormValues {
     return el ? el.checked : fallback;
   };
   const encodingEl = document.getElementById('encoding') as HTMLSelectElement;
-  const binaryDirectionEl = document.getElementById('binaryDirectionVertical') as HTMLInputElement | null;
-  const passphraseDirectionEl = document.getElementById('passphraseDirectionVertical') as HTMLInputElement | null;
-  const overrideEl = document.getElementById('passphraseOverrideCellSize') as HTMLInputElement | null;
-  const overrideValueEl = document.getElementById('passphraseCellSizeMm') as HTMLInputElement | null;
+
+  // Stencil/reader/wordlist and Passphrase's own equivalents live nested
+  // inside their own section now, hidden (but not reset) once that
+  // section's own checkbox is off - so their stale DOM state must not leak
+  // through as "chosen" while the user has no way to see or toggle them.
+  const includeSeed = checked('includeSeed', true);
+  const includePassphrase = checked('includePassphrase', DEFAULT_FORM_VALUES.passphrase.enabled);
 
   return {
-    includeSeed: checked('includeSeed', true),
+    includeSeed,
+    includeSeedStencil: includeSeed && checked('includeSeedStencil', DEFAULT_FORM_VALUES.includeSeedStencil),
+    includeSeedReader: includeSeed && checked('includeSeedReader', DEFAULT_FORM_VALUES.includeSeedReader),
     seedLength: num('seedLength', DEFAULT_FORM_VALUES.seedLength),
     cardCount: num('cardCount', DEFAULT_FORM_VALUES.cardCount),
     cardWidthMm: num('cardWidthMm', DEFAULT_FORM_VALUES.cardWidthMm),
@@ -38,13 +46,19 @@ function readForm(): FormValues {
     cardPaddingMm: num('cardPaddingMm', DEFAULT_FORM_VALUES.cardPaddingMm),
     copies: num('copies', DEFAULT_FORM_VALUES.copies),
     encoding: Number(encodingEl.value) as EncodingType,
-    binaryDirection: binaryDirectionEl?.checked ? 'vertical' : 'horizontal',
     passphrase: {
-      enabled: checked('includePassphrase', false),
-      cardCount: num('passphraseCardCount', DEFAULT_FORM_VALUES.passphrase.cardCount),
-      binaryDirection: passphraseDirectionEl?.checked ? 'vertical' : 'horizontal',
-      overrideCellSizeMm: overrideEl?.checked && overrideValueEl && overrideValueEl.value !== '' ? Number(overrideValueEl.value) : null,
+      enabled: includePassphrase,
+      includeStencil: includePassphrase && checked('includePassphraseStencil', DEFAULT_FORM_VALUES.passphrase.includeStencil),
+      includeReader: includePassphrase && checked('includePassphraseReader', DEFAULT_FORM_VALUES.passphrase.includeReader),
+      // No UI control for this - always a single card. The underlying model
+      // still supports more (see PassphraseFormValues/toPassphraseParameters),
+      // just nothing here exposes it.
+      cardCount: 1,
+      copies: num('passphraseCopies', DEFAULT_FORM_VALUES.passphrase.copies),
+      cellSizeMm: num('passphraseCellSizeMm', DEFAULT_FORM_VALUES.passphrase.cellSizeMm),
     },
+    includeAsciiTable: includePassphrase && checked('includeAsciiTable', DEFAULT_FORM_VALUES.includeAsciiTable),
+    includeSeedWordTable: includeSeed && checked('includeSeedWordTable', DEFAULT_FORM_VALUES.includeSeedWordTable),
   };
 }
 
@@ -65,7 +79,7 @@ const ALL_FIELD_IDS = [
   'cardPaddingMm',
   'copies',
   'encoding',
-  'passphraseCardCount',
+  'passphraseCopies',
   'passphraseCellSizeMm',
 ];
 
@@ -104,13 +118,12 @@ const SHARED_REQUIRED_FIELD_IDS = ['cardWidthMm', 'cardHeightMm'];
 const SEED_REQUIRED_FIELD_IDS = ['seedLength', 'cardCount'];
 
 function hasEmptyRequiredField(values: FormValues): boolean {
-  if (SHARED_REQUIRED_FIELD_IDS.some((id) => (document.getElementById(id) as HTMLInputElement | null)?.value === '')) {
+  const isEmpty = (id: string) => (document.getElementById(id) as HTMLInputElement | null)?.value === '';
+  // Card properties are always visible, so always required.
+  if (SHARED_REQUIRED_FIELD_IDS.some(isEmpty)) {
     return true;
   }
-  if (values.includeSeed && SEED_REQUIRED_FIELD_IDS.some((id) => (document.getElementById(id) as HTMLInputElement | null)?.value === '')) {
-    return true;
-  }
-  if (values.passphrase.enabled && (document.getElementById('passphraseCardCount') as HTMLInputElement | null)?.value === '') {
+  if (isSeedSectionActive(values) && SEED_REQUIRED_FIELD_IDS.some(isEmpty)) {
     return true;
   }
   return false;
@@ -128,71 +141,78 @@ function updateCardSplitVisibility(): void {
   hint?.classList.toggle('is-hidden', isBinary);
 }
 
-function updateBinaryDirectionVisibility(): void {
-  const encodingEl = document.getElementById('encoding') as HTMLSelectElement | null;
-  const directionInput = document.getElementById('binaryDirectionVertical');
-  const directionLabel = directionInput?.closest('label');
-  const hint = document.getElementById('binaryDirection-hint');
-  if (!encodingEl || !directionLabel) return;
-
-  const isBinary = Number(encodingEl.value) === EncodingType.Binary;
-  directionLabel.classList.toggle('is-hidden', !isBinary);
-  hint?.classList.toggle('is-hidden', !isBinary);
+function setDisabled(id: string, disabled: boolean): void {
+  const el = document.getElementById(id) as HTMLInputElement | null;
+  if (el) el.disabled = disabled;
 }
 
-function updateSectionVisibility(): void {
-  const includeSeedEl = document.getElementById('includeSeed') as HTMLInputElement | null;
-  const includePassphraseEl = document.getElementById('includePassphrase') as HTMLInputElement | null;
-  const seedFields = document.getElementById('seed-fields');
-  const seedAdvancedFields = document.getElementById('seed-advanced-fields');
-  const passphraseFields = document.getElementById('passphrase-fields');
-  if (!includeSeedEl || !includePassphraseEl) return;
+// The Seed/Passphrase boxes themselves stay visible always now (their own
+// checkbox lives in their title, not a separate top-level toggle) - only
+// their body (fields, Advanced options, Preview) hides when unchecked. The
+// three nested Stencil/reader/reference checkboxes stay visible either way,
+// just disabled while their section is off, since they mean nothing without
+// it (matches how readForm() already zeroes them out).
+function updateSectionVisibility(values: FormValues): void {
+  const seedActive = isSeedSectionActive(values);
+  const passphraseActive = isPassphraseSectionActive(values);
 
-  seedFields?.classList.toggle('is-hidden', !includeSeedEl.checked);
-  seedAdvancedFields?.classList.toggle('is-hidden', !includeSeedEl.checked);
-  passphraseFields?.classList.toggle('is-hidden', !includePassphraseEl.checked);
+  document.getElementById('seed-fields-body')?.classList.toggle('is-hidden', !seedActive);
+  document.getElementById('passphrase-fields-body')?.classList.toggle('is-hidden', !passphraseActive);
+  document.getElementById('seed-inactive-notice')?.classList.toggle('is-hidden', seedActive);
+  document.getElementById('passphrase-inactive-notice')?.classList.toggle('is-hidden', passphraseActive);
+
+  setDisabled('includeSeedStencil', !seedActive);
+  setDisabled('includeSeedReader', !seedActive);
+  setDisabled('includeSeedWordTable', !seedActive);
+  setDisabled('includePassphraseStencil', !passphraseActive);
+  setDisabled('includePassphraseReader', !passphraseActive);
+  setDisabled('includeAsciiTable', !passphraseActive);
 }
 
-function updatePassphraseOverrideVisibility(): void {
-  const overrideEl = document.getElementById('passphraseOverrideCellSize') as HTMLInputElement | null;
-  const label = document.getElementById('passphraseCellSizeMmLabel');
-  const hint = document.getElementById('passphraseCellSizeMm-hint');
-  if (!overrideEl) return;
-
-  label?.classList.toggle('is-hidden', !overrideEl.checked);
-  hint?.classList.toggle('is-hidden', !overrideEl.checked);
+// The Generate button only appears once at least one of the six nested
+// checkboxes (Stencil/reader/reference table, per section) is actually
+// checked - opening a section alone doesn't yet select anything to produce.
+function updateGenerateButtonVisibility(values: FormValues): void {
+  const button = document.querySelector('#generator-form button[type="submit"]');
+  button?.classList.toggle('is-hidden', !hasAnyOutputSelected(values));
 }
 
 function updatePreview(): void {
-  const previewEl = document.getElementById('preview-panel');
-  if (!previewEl) return;
-
-  updateCardSplitVisibility();
-  updateBinaryDirectionVisibility();
-  updateSectionVisibility();
-  updatePassphraseOverrideVisibility();
+  const seedPreviewEl = document.getElementById('seed-preview');
+  const passphrasePreviewEl = document.getElementById('passphrase-preview');
+  if (!seedPreviewEl || !passphrasePreviewEl) return;
 
   const values = readForm();
 
+  updateCardSplitVisibility();
+  updateSectionVisibility(values);
+  updateGenerateButtonVisibility(values);
+
   if (hasEmptyRequiredField(values)) {
-    renderPreview(previewEl, null, null);
+    renderSeedPreview(seedPreviewEl, null);
+    renderPassphrasePreview(passphrasePreviewEl, null);
     return;
   }
 
   const errors = validate(values);
   if (errors.length > 0) {
-    renderPreview(previewEl, null, null);
+    renderSeedPreview(seedPreviewEl, null);
+    renderPassphrasePreview(passphrasePreviewEl, null);
     return;
   }
 
   try {
-    const seedParams = values.includeSeed ? toGeneratorParameters(values) : null;
-    const seedLayout = seedParams ? computePreviewLayout(seedParams) : null;
-    const passphraseParams = values.passphrase.enabled ? toPassphraseParameters(values, seedParams) : null;
-    const passphraseLayout = passphraseParams ? computePassphrasePreviewLayout(passphraseParams) : null;
-    renderPreview(previewEl, seedLayout, passphraseLayout);
+    // seedParams is only needed for the seed's own preview now - Passphrase's
+    // cell size no longer derives from it.
+    const seedParams = isSeedSectionActive(values) ? toGeneratorParameters(values) : null;
+    const seedLayout = seedParams && values.includeSeedStencil ? computePreviewLayout(seedParams) : null;
+    const passphraseParams = isPassphraseSectionActive(values) ? toPassphraseParameters(values) : null;
+    const passphraseLayout = passphraseParams && values.passphrase.includeStencil ? computePassphrasePreviewLayout(passphraseParams) : null;
+    renderSeedPreview(seedPreviewEl, seedLayout, values.includeSeedStencil ? undefined : STENCIL_UNCHECKED_PLACEHOLDER_TEXT);
+    renderPassphrasePreview(passphrasePreviewEl, passphraseLayout, values.passphrase.includeStencil ? undefined : STENCIL_UNCHECKED_PLACEHOLDER_TEXT);
   } catch {
-    renderPreview(previewEl, null, null);
+    renderSeedPreview(seedPreviewEl, null);
+    renderPassphrasePreview(passphrasePreviewEl, null);
   }
 }
 
@@ -210,13 +230,22 @@ function downloadPdf(bytes: Uint8Array, filename: string): void {
 
 function buildFilename(values: FormValues): string {
   const parts: string[] = ['hobohodl'];
-  if (values.includeSeed) {
+  if (isSeedSectionActive(values)) {
     parts.push(`${values.seedLength}words-${values.cardCount}cards`);
   }
-  if (values.passphrase.enabled) {
+  if (isPassphraseSectionActive(values)) {
     parts.push(`passphrase-${values.passphrase.cardCount}cards`);
   }
   parts.push(`${values.cardWidthMm}x${values.cardHeightMm}mm`);
+  if (values.includeSeedReader || values.passphrase.includeReader) {
+    parts.push('with-reader');
+  }
+  if (values.includeAsciiTable) {
+    parts.push('with-ascii-table');
+  }
+  if (values.includeSeedWordTable) {
+    parts.push('with-seed-word-table');
+  }
   return `${parts.join('-')}.pdf`;
 }
 
@@ -228,15 +257,21 @@ document.getElementById('generator-form')?.addEventListener('submit', async (eve
   if (errors.length > 0) return;
 
   try {
-    const seedParams: GeneratorParameters | null = values.includeSeed ? toGeneratorParameters(values) : null;
-    const passphraseParams = values.passphrase.enabled ? toPassphraseParameters(values, seedParams) : null;
+    const seedParams: GeneratorParameters | null = isSeedSectionActive(values) ? toGeneratorParameters(values) : null;
+    const passphraseParams = isPassphraseSectionActive(values) ? toPassphraseParameters(values) : null;
     if (passphraseParams && passphraseParams.charsPerBlock <= 0) {
       renderGeneralError('No characters fit on the passphrase card at this cell size — try a bigger card, smaller cells, or less padding.');
       return;
     }
     const input: StencilInput = {
       seed: seedParams ?? undefined,
+      includeSeedStencil: values.includeSeedStencil,
+      includeSeedReader: values.includeSeedReader,
       passphrase: passphraseParams ?? undefined,
+      includePassphraseStencil: values.passphrase.includeStencil,
+      includePassphraseReader: values.passphrase.includeReader,
+      includeAsciiTable: values.includeAsciiTable,
+      includeSeedWordTable: values.includeSeedWordTable,
     };
     const bytes = await generateStencilPdf(input);
     downloadPdf(bytes, buildFilename(values));

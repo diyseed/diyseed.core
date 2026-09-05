@@ -48,7 +48,6 @@ function makeLayout(overrides: Partial<PreviewLayout> = {}): PreviewLayout {
     cellRowLabels: ['a', 'b', 'c'],
     isBinary: false,
     binaryColumnLabels: [],
-    binaryDirection: 'horizontal',
     copies: 1,
     warnings: { cellTooSmall: false, cellNotSquare: false, cellSizeInvalid: false },
     ...overrides,
@@ -196,13 +195,55 @@ describe('renderPreview', () => {
     expect(cardsEl?.hasAttribute('aria-live')).toBe(false);
   });
 
-  it('renders corner marks by the raw card number, not the physical-card pairing', () => {
+  it('renders corner marks on the big card by the section number, not the card number or physical-card pairing', () => {
+    const layout = makeLayout({
+      cards: [
+        makeCard({
+          cardNumber: 3,
+          physicalCardNumber: 2,
+          sections: [{ sectionNumber: 5, words: [{ wordNumber: 1, shaded: false }] }],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+    const box = container.querySelector('.preview-big .preview-card') as HTMLElement;
+    expect(box.querySelectorAll('.corner-mark--top-left')).toHaveLength(5);
+    expect(box.querySelectorAll('.corner-mark--top-right')).toHaveLength(1);
+    expect(box.querySelectorAll('.corner-mark--bottom-left')).toHaveLength(1);
+  });
+
+  it('numbers each row of a Card-split card with its own dot cluster, closing off with one bottom-left dot', () => {
+    const layout = makeLayout({
+      cards: [
+        makeCard({
+          sections: [
+            { sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] },
+            { sectionNumber: 2, words: [{ wordNumber: 2, shaded: true }] },
+            { sectionNumber: 3, words: [{ wordNumber: 3, shaded: false }] },
+          ],
+        }),
+      ],
+    });
+    renderPreview(container, layout);
+    const box = container.querySelector('.preview-big .preview-card') as HTMLElement;
+    const sections = box.querySelectorAll('.preview-section');
+    expect(sections).toHaveLength(3);
+    expect(sections[0].querySelectorAll('.corner-mark--top-left')).toHaveLength(1);
+    expect(sections[1].querySelectorAll('.corner-mark--top-left')).toHaveLength(2);
+    expect(sections[2].querySelectorAll('.corner-mark--top-left')).toHaveLength(3);
+    // Every row gets its own top-right dot...
+    expect(box.querySelectorAll('.corner-mark--top-right')).toHaveLength(3);
+    // ...but only the last row gets the closing bottom-left dot.
+    expect(sections[0].querySelectorAll('.corner-mark--bottom-left')).toHaveLength(0);
+    expect(sections[1].querySelectorAll('.corner-mark--bottom-left')).toHaveLength(0);
+    expect(sections[2].querySelectorAll('.corner-mark--bottom-left')).toHaveLength(1);
+  });
+
+  it('renders no corner marks on thumbnail cards - too small to read the dots meaningfully', () => {
     const layout = makeLayout({ cards: [makeCard({ cardNumber: 3, physicalCardNumber: 2 })] });
     renderPreview(container, layout);
     const box = container.querySelector('.preview-cards .preview-card') as HTMLElement;
-    expect(box.querySelectorAll('.corner-mark--top-left')).toHaveLength(3);
-    expect(box.querySelectorAll('.corner-mark--top-right')).toHaveLength(1);
-    expect(box.querySelectorAll('.corner-mark--bottom-left')).toHaveLength(1);
+    expect(box.querySelectorAll('.corner-mark')).toHaveLength(0);
   });
 
   it('renders the big card mesh as empty frames (no letters), just the word-number overlay', () => {
@@ -280,92 +321,15 @@ describe('renderPreview', () => {
     expect(bigLabel?.textContent).toBe('Full detail');
   });
 
-  it('renders a rotated column-value header above the big card when the layout is binary', () => {
-    const layout = makeLayout({
-      isBinary: true,
-      binaryDirection: 'vertical',
-      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
-      cards: [
-        makeCard({
-          sections: [
-            { sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] },
-            { sectionNumber: 2, words: [{ wordNumber: 2, shaded: true }] },
-          ],
-        }),
-      ],
-    });
-    renderPreview(container, layout);
-
-    const header = container.querySelector('.preview-big .preview-binary-header');
-    const headerCells = header?.querySelectorAll('.preview-binary-header__cell');
-    expect(headerCells).toHaveLength(11);
-    expect(headerCells?.[0].textContent).toBe('1024');
-    expect(headerCells?.[10].textContent).toBe('1');
-
-    // the header sits above the card outline, matching the PDF's placement -
-    // not nested inside the card box.
-    const bigBox = container.querySelector('.preview-big .preview-card--large') as HTMLElement;
-    expect(bigBox.contains(header)).toBe(false);
-  });
-
-  it('renders one row per word in the big binary card, each with 11 blank cells and a word-number label', () => {
-    const layout = makeLayout({
-      isBinary: true,
-      binaryDirection: 'vertical',
-      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
-      cards: [
-        makeCard({
-          sections: [
-            { sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] },
-            { sectionNumber: 2, words: [{ wordNumber: 2, shaded: true }] },
-          ],
-        }),
-      ],
-    });
-    renderPreview(container, layout);
-
-    const mesh = container.querySelector('.preview-big .preview-binary-mesh');
-    const cells = mesh?.querySelectorAll('.preview-cell');
-    expect(cells).toHaveLength(22); // 2 rows x 11 columns
-    expect(Array.from(cells ?? []).every((el) => el.textContent === '')).toBe(true);
-    // second row (indices 11-21) is shaded, first row (indices 0-10) is not
-    expect(Array.from(cells ?? []).slice(0, 11).every((el) => !el.classList.contains('preview-cell--shaded'))).toBe(true);
-    expect(Array.from(cells ?? []).slice(11, 22).every((el) => el.classList.contains('preview-cell--shaded'))).toBe(true);
-
-    const numbers = mesh?.querySelectorAll('.preview-binary-word-number');
-    expect(numbers?.[0].textContent).toBe('1');
-    expect(numbers?.[1].textContent).toBe('2');
-  });
-
-  it('renders binary thumbnails as blank 11-column meshes with no header and no word numbers', () => {
-    const layout = makeLayout({
-      isBinary: true,
-      binaryDirection: 'vertical',
-      binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
-      cards: [
-        makeCard({
-          sections: [{ sectionNumber: 1, words: [{ wordNumber: 1, shaded: false }] }],
-        }),
-      ],
-    });
-    renderPreview(container, layout);
-
-    expect(container.querySelector('.preview-cards .preview-binary-header')).toBeNull();
-    const mesh = container.querySelector('.preview-cards .preview-binary-mesh');
-    expect(mesh?.querySelectorAll('.preview-cell')).toHaveLength(11);
-    expect(mesh?.querySelectorAll('.preview-binary-word-number')).toHaveLength(0);
-  });
-
   it('does not render binary markup for a non-binary layout', () => {
     renderPreview(container, makeLayout());
     expect(container.querySelector('.preview-binary-header')).toBeNull();
     expect(container.querySelector('.preview-binary-mesh')).toBeNull();
   });
 
-  it('renders horizontal binary (default direction) with a left-side row header, right-pointing arrows, and word numbers as column headers', () => {
+  it('renders binary with a left-side row header, right-pointing arrows, and word numbers as column headers', () => {
     const layout = makeLayout({
       isBinary: true,
-      binaryDirection: 'horizontal',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -412,10 +376,9 @@ describe('renderPreview', () => {
     expect(bigBox.querySelectorAll('.preview-binary-word-number--row')).toHaveLength(0);
   });
 
-  it('renders horizontal binary thumbnails as a blank transposed mesh with no header', () => {
+  it('renders binary thumbnails as a blank transposed mesh with no header', () => {
     const layout = makeLayout({
       isBinary: true,
-      binaryDirection: 'horizontal',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -431,14 +394,13 @@ describe('renderPreview', () => {
     expect(cells).toHaveLength(22); // 2 words x 11 bit-rows
   });
 
-  it('shades binary thumbnail cells using each section\'s own model-computed shaded flag, not row index parity', () => {
+  it('shades binary thumbnail cells using each section\'s own model-computed shaded flag, not column index parity', () => {
     // Sections deliberately have shaded flags that do NOT alternate in lockstep
     // with their position (index 1 is shaded even though index%2===1 would also
     // say shaded here by coincidence, so use a genuinely non-alternating pattern:
     // false, true, true).
     const layout = makeLayout({
       isBinary: true,
-      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -453,17 +415,20 @@ describe('renderPreview', () => {
     renderPreview(container, layout);
 
     const cells = container.querySelectorAll('.preview-cards .preview-binary-mesh .preview-cell');
-    expect(cells).toHaveLength(33); // 3 rows x 11 columns
-    const rowShaded = (row: number) => Array.from(cells).slice(row * 11, row * 11 + 11).every((el) => el.classList.contains('preview-cell--shaded'));
-    expect(rowShaded(0)).toBe(false);
-    expect(rowShaded(1)).toBe(true);
-    expect(rowShaded(2)).toBe(true);
+    const numWords = 3;
+    expect(cells).toHaveLength(numWords * 11); // 11 bit-rows x 3 word-columns
+    // Cells are laid out row-major (bit 0's 3 cells, then bit 1's 3 cells, ...);
+    // column c's shading is the same across every bit-row for that word.
+    const colShaded = (col: number) =>
+      Array.from({ length: 11 }, (_, bit) => cells[bit * numWords + col]).every((el) => el.classList.contains('preview-cell--shaded'));
+    expect(colShaded(0)).toBe(false);
+    expect(colShaded(1)).toBe(true);
+    expect(colShaded(2)).toBe(true);
   });
 
-  it('omits a mesh row for a binary section with zero words', () => {
+  it('omits a mesh column for a binary section with zero words', () => {
     const layout = makeLayout({
       isBinary: true,
-      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -483,7 +448,6 @@ describe('renderPreview', () => {
   it('shades every second binary column, independent of row shading', () => {
     const layout = makeLayout({
       isBinary: true,
-      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -500,10 +464,9 @@ describe('renderPreview', () => {
     });
   });
 
-  it('renders one down-arrow per column, not a single centered one', () => {
+  it('renders one arrow per row, not a single centered one', () => {
     const layout = makeLayout({
       isBinary: true,
-      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -513,14 +476,13 @@ describe('renderPreview', () => {
     });
     renderPreview(container, layout);
 
-    const arrows = container.querySelectorAll('.preview-big .preview-binary-header-arrow');
+    const arrows = container.querySelectorAll('.preview-big .preview-binary-row-header-arrow');
     expect(arrows).toHaveLength(11);
   });
 
   it('marks row/column shading intersections with both classes, so CSS can darken them further', () => {
     const layout = makeLayout({
       isBinary: true,
-      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       cards: [
         makeCard({
@@ -540,7 +502,6 @@ describe('renderPreview', () => {
   it('uses binary-specific wording ("card count") for the cellNotSquare warning when isBinary is true', () => {
     const layout = makeLayout({
       isBinary: true,
-      binaryDirection: 'vertical',
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
       warnings: { cellTooSmall: false, cellNotSquare: true, cellSizeInvalid: false },
     });
@@ -559,9 +520,8 @@ describe('renderPreview', () => {
 
 function makePassphraseLayout(overrides: Partial<PassphrasePreviewLayout> = {}): PassphrasePreviewLayout {
   return {
-    cards: [{ cardNumber: 1, cardWidthMm: 85.6, cardHeightMm: 54, blocks: [[1, 2, 3, 4, 5]] }],
+    cards: [{ cardNumber: 1, cardWidthMm: 85.6, cardHeightMm: 54, blocks: [[1, 2, 3, 4, 5]], startRowNumber: 1 }],
     columnLabels: ['64', '32', '16', '8', '4', '2', '1'],
-    binaryDirection: 'horizontal',
     cellWidthMm: 2,
     cellHeightMm: 2,
     copies: 1,
@@ -601,18 +561,9 @@ describe('renderPreview — passphrase', () => {
     expect(cells[6].textContent).toBe('1');
   });
 
-  it('renders the top header for vertical passphrase direction', () => {
-    const layout = makePassphraseLayout({ binaryDirection: 'vertical' });
-    renderPreview(container, null, layout);
-    const cells = container.querySelectorAll('.preview-passphrase .preview-binary-header__cell');
-    expect(cells).toHaveLength(7);
-    expect(cells[0].textContent).toBe('64');
-    expect(cells[6].textContent).toBe('1');
-  });
-
   it('renders one full 7-label header per block when a card has 2 blocks', () => {
     const layout = makePassphraseLayout({
-      cards: [{ cardNumber: 1, cardWidthMm: 85.6, cardHeightMm: 54, blocks: [[1, 2, 3], [4, 5, 6]] }],
+      cards: [{ cardNumber: 1, cardWidthMm: 85.6, cardHeightMm: 54, blocks: [[1, 2, 3], [4, 5, 6]], startRowNumber: 1 }],
     });
     renderPreview(container, null, layout);
     const bigBox = container.querySelector('.preview-passphrase .preview-big') as HTMLElement;
@@ -624,7 +575,7 @@ describe('renderPreview — passphrase', () => {
 
   it('renders one mesh block per entry in blocks, with 7-bit-tall cells', () => {
     const layout = makePassphraseLayout({
-      cards: [{ cardNumber: 1, cardWidthMm: 85.6, cardHeightMm: 54, blocks: [[1, 2, 3], [4, 5, 6]] }],
+      cards: [{ cardNumber: 1, cardWidthMm: 85.6, cardHeightMm: 54, blocks: [[1, 2, 3], [4, 5, 6]], startRowNumber: 1 }],
     });
     renderPreview(container, null, layout);
     const bigBox = container.querySelector('.preview-passphrase .preview-big .preview-card--large') as HTMLElement;
@@ -635,21 +586,20 @@ describe('renderPreview — passphrase', () => {
     });
   });
 
-  it('shows position numbers as column headers in horizontal direction', () => {
+  it('shows position numbers as a header above each character-column in horizontal direction (not an overlay on the mesh)', () => {
     renderPreview(container, null, makePassphraseLayout());
-    const bigBox = container.querySelector('.preview-passphrase .preview-big .preview-card--large') as HTMLElement;
-    const numbers = bigBox.querySelectorAll('.preview-binary-word-number--column');
-    expect(numbers).toHaveLength(5);
-    expect(numbers[0].textContent).toBe('1');
-    expect(numbers[4].textContent).toBe('5');
-  });
+    const bigBox = container.querySelector('.preview-passphrase .preview-big') as HTMLElement;
 
-  it('shows position numbers as row labels in vertical direction', () => {
-    const layout = makePassphraseLayout({ binaryDirection: 'vertical' });
-    renderPreview(container, null, layout);
-    const bigBox = container.querySelector('.preview-passphrase .preview-big .preview-card--large') as HTMLElement;
-    expect(bigBox.querySelectorAll('.preview-binary-word-number--row')).toHaveLength(5);
+    // no overlay numbers on the mesh cells anymore - they'd overlap into an
+    // unreadable smear with dozens of narrow character columns
     expect(bigBox.querySelectorAll('.preview-binary-word-number--column')).toHaveLength(0);
+
+    const grid = bigBox.querySelector('.preview-passphrase-figure') as HTMLElement;
+    const positionLabelsGroup = grid.querySelector('.preview-binary-header') as HTMLElement;
+    const positionCells = positionLabelsGroup.querySelectorAll('.preview-binary-header__cell');
+    expect(positionCells).toHaveLength(5);
+    expect(positionCells[0].textContent).toBe('1');
+    expect(positionCells[4].textContent).toBe('5');
   });
 
   it('renders a warning banner when noCapacity is true', () => {

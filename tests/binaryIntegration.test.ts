@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { GeneratorParameters } from '../src/generator/params';
-import { EncodingType, BinaryDirection } from '../src/generator/encoding';
+import { EncodingType } from '../src/generator/encoding';
 import { generateWriterPdf } from '../src/generator/writer';
 import { computePreviewLayout } from '../src/ui/preview';
 import { renderPreview } from '../src/ui/renderPreview';
@@ -12,7 +12,7 @@ function wordCountOnCard(params: GeneratorParameters, cardNumber: number): numbe
   return params.getCardParameters(cardNumber).sections.reduce((sum, s) => sum + s.wordNumbers.length, 0);
 }
 
-describe.each<BinaryDirection>(['horizontal', 'vertical'])('Binary encoding end-to-end integration (%s)', (binaryDirection) => {
+describe('Binary encoding end-to-end integration', () => {
   const cases = [
     { seedLength: 10, cardCount: 1 },
     { seedLength: 12, cardCount: 2 },
@@ -28,13 +28,11 @@ describe.each<BinaryDirection>(['horizontal', 'vertical'])('Binary encoding end-
         cardCount,
         seedLength,
         encoding: EncodingType.Binary,
-        binaryDirection,
       });
 
       const layout = computePreviewLayout(params);
       expect(layout.isBinary).toBe(true);
       expect(layout.binaryColumnLabels).toHaveLength(11);
-      expect(layout.binaryDirection).toBe(binaryDirection);
 
       const container = document.createElement('div');
       renderPreview(container, layout);
@@ -59,48 +57,15 @@ describe.each<BinaryDirection>(['horizontal', 'vertical'])('Binary encoding end-
   }
 });
 
-describe('Binary encoding shading agreement (vertical, odd cardSplit)', () => {
-  it('big-card and thumbnail shading agree with the model for an odd derived cardSplit', async () => {
-    // 10 words / 4 cards -> cardSplit = ceil(10/4) = 3 (odd) - exercises the
-    // shading fix (word-block shading alternates by global section number,
-    // not by position within the card).
-    const params = new GeneratorParameters({
-      cardSize: { width: mm(85.6), height: mm(54) },
-      cardCount: 4,
-      seedLength: 10,
-      encoding: EncodingType.Binary,
-      binaryDirection: 'vertical',
-    });
-    expect(params.cardSplit).toBe(3);
-
-    const layout = computePreviewLayout(params);
-    const container = document.createElement('div');
-    renderPreview(container, layout);
-
-    const card2Thumb = container.querySelectorAll('.preview-cards .preview-card--small')[1];
-    const cells = card2Thumb.querySelectorAll('.preview-binary-mesh .preview-cell');
-    const modelCard2 = params.getCardParameters(2).sections.filter((s) => s.wordNumbers.length > 0);
-    expect(cells).toHaveLength(modelCard2.length * 11);
-
-    modelCard2.forEach((section, rowIndex) => {
-      const wordIndexInSection = 0; // vertical Binary always has exactly one word per non-empty section
-      const expectedShaded = (section.number + wordIndexInSection) % 2 === 0;
-      const rowCells = Array.from(cells).slice(rowIndex * 11, rowIndex * 11 + 11);
-      expect(rowCells.every((cell) => cell.classList.contains('preview-cell--shaded'))).toBe(expectedShaded);
-    });
-  });
-});
-
-describe('Binary encoding shading agreement (horizontal, odd word count)', () => {
+describe('Binary encoding shading agreement (odd word count)', () => {
   it('big-card word shading agrees with the model for an odd word count on the card', async () => {
-    // 11 words on 1 card (horizontal: cardSplit forced to 1, all 11 words as columns
+    // 11 words on 1 card (cardSplit forced to 1, all 11 words as columns
     // in a single section) - word 0 shaded=(1+0)%2===0=false, word 1=(1+1)%2===0=true, etc.
     const params = new GeneratorParameters({
       cardSize: { width: mm(85.6), height: mm(54) },
       cardCount: 1,
       seedLength: 11,
       encoding: EncodingType.Binary,
-      binaryDirection: 'horizontal',
     });
     expect(params.cardSplit).toBe(1);
 
