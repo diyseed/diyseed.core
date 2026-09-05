@@ -1,0 +1,712 @@
+:root {
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-text: #1a1a1a;
+  --color-muted: #666666;
+  --color-border: #d8d8d8;
+  --color-accent: #1a6b4f;
+  --color-error-bg: rgba(220, 80, 60, 0.12);
+  --color-error-border: rgba(220, 80, 60, 0.4);
+  --color-error-text: #c0392b;
+  --color-warning-bg: rgba(230, 160, 40, 0.12);
+  --color-warning-border: rgba(230, 160, 40, 0.4);
+  --color-warning-text: #a9720f;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.form-panel {
+  min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+h1 {
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+/* One bordered card per field group (Card properties / Seed / Passphrase) -
+   each already reads as its own subject (own heading, own Advanced options),
+   so a full box separates them more clearly than a rule between stacked
+   fields did. */
+.form-section-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.form-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--color-text);
+}
+
+/* Seed/Passphrase's own title doubles as their section checkbox - the
+   checkbox sits right before the text, both inside one clickable label,
+   rather than a separate top-level toggle row. */
+.section-toggle-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.section-toggle-heading input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+form label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+form input,
+form select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 1rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.field-row input {
+  width: auto;
+  flex: 1 1 0;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.field-row__sep {
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.field-row .field-error {
+  flex-basis: 100%;
+}
+
+/* Two independently labeled fields side by side (each keeps its own label
+   text above its input) - unlike .field-row, which is one label shared by
+   several inputs (e.g. Card size's width × height). */
+.field-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.field-pair label {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+.is-hidden {
+  display: none;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.checkbox-label input[type='checkbox'] {
+  display: inline-block;
+  width: auto;
+  margin: 0;
+}
+
+/* Grays the label text along with its checkbox once disabled (Seed/
+   Passphrase's own three nested toggles, while their section is off) -
+   otherwise only the checkbox itself looked inert. */
+.checkbox-label:has(input:disabled) {
+  color: var(--color-muted);
+}
+
+.section-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+
+.section-toggles .checkbox-label {
+  margin-top: 0;
+  font-weight: 600;
+}
+
+/* Second row of toggles (reference tables) - supplementary to the main
+   Seed/Passphrase/Reader row above, so lighter weight and a little tighter
+   to read as a sub-group rather than a peer set of primary sections. */
+.section-toggles--secondary {
+  margin-top: -6px;
+}
+
+.section-toggles--secondary .checkbox-label {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, var(--color-text));
+}
+
+form input[aria-invalid="true"] {
+  border-color: var(--color-error-text);
+}
+
+.field-error {
+  display: block;
+  color: var(--color-error-text);
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+button[type="submit"] {
+  display: block;
+  margin-left: auto;
+  background: var(--color-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover {
+  opacity: 0.9;
+}
+
+#form-errors {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  color: var(--color-error-text);
+  font-size: 0.85rem;
+}
+
+.preview-placeholder {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.preview-warning {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+}
+
+.preview-warning--error {
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  color: var(--color-error-text);
+}
+
+.preview-warning--warning {
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  color: var(--color-warning-text);
+}
+
+.preview-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.preview-set + .preview-set {
+  border-top: 1px dashed var(--color-border);
+  padding-top: 12px;
+}
+
+.preview-set__label {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+
+.preview-set__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.field-hint {
+  margin: -4px 0 8px;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+}
+
+#seed-inactive-notice,
+#passphrase-inactive-notice {
+  color: var(--color-muted);
+}
+
+.advanced-options {
+  margin: 12px 0 16px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+}
+
+.advanced-options summary {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.preview-big {
+  margin-bottom: 12px;
+}
+
+.preview-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.preview-card {
+  position: relative;
+  border: 2px solid var(--color-border);
+  border-radius: 6px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.preview-card--large {
+  width: 100%;
+}
+
+.preview-card--small {
+  min-width: 60px;
+}
+
+.preview-card__label {
+  font-size: 0.7rem;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.preview-section {
+  position: relative;
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+}
+
+/* Row-mark dots (see renderRowCornerMarks) for one Card-split row - same
+   treatment as .preview-passphrase-block below: sits in the 4px gap between
+   sections (or the box's own padding, for the first section) rather than
+   the box's whole border+padding inset used by .corner-mark's default top:2px. */
+.preview-section .corner-mark--top-left,
+.preview-section .corner-mark--top-right {
+  top: -4px;
+}
+
+.preview-section .corner-mark--bottom-left {
+  bottom: -4px;
+}
+
+.preview-section--mesh {
+  display: grid;
+}
+
+.preview-section--shaded {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.preview-card--small .preview-section {
+  flex: 1;
+  min-height: 0;
+}
+
+.preview-card--large .preview-section {
+  flex: 1;
+  min-height: 0;
+}
+
+.preview-word {
+  flex: 1;
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  font-size: 0.7rem;
+  padding-top: 3px;
+  color: var(--color-muted);
+}
+
+.preview-word:last-child {
+  border-right: none;
+}
+
+.preview-word-mesh {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  padding: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.preview-word-mesh--shaded {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.preview-word-mesh__number {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(26, 26, 26, 0.3);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.preview-word-mesh__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.preview-cell {
+  border: 1px solid var(--color-border);
+  margin: -1px 0 0 -1px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.preview-binary-header {
+  display: grid;
+  justify-items: center;
+  align-items: end;
+  gap: 1px;
+  height: 40px;
+  margin-bottom: 2px;
+  width: 100%;
+  min-width: 0;
+  /* matches .preview-card's 2px border + 6px padding, so columns line up with the mesh below */
+  padding: 0 8px;
+}
+
+.preview-binary-header__cell {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--font-mono);
+  font-size: var(--header-cell-font-size, 0.85rem);
+  color: var(--color-muted);
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.preview-binary-header-arrows {
+  display: grid;
+  width: 100%;
+  padding: 0 8px;
+  margin-bottom: 1px;
+}
+
+.preview-binary-header-arrow {
+  width: 0;
+  height: 0;
+  margin: 0 auto;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 4px solid var(--color-text);
+  opacity: 0.9;
+}
+
+.preview-binary-horizontal-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.preview-binary-horizontal-row .preview-card--large {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Wraps one passphrase block's mesh so its row-mark dots (see
+   renderPassphraseBlockCornerMarks) can be positioned relative to *that
+   block*, not the whole card - flex:1 so it takes the same share of the
+   column/row as its sibling blocks. */
+.preview-passphrase-block {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+}
+
+.preview-passphrase-block .corner-mark--top-left,
+.preview-passphrase-block .corner-mark--top-right {
+  /* Sits in the 4px gap between blocks (or the box's own padding, for the
+     first block) rather than the box's whole border+padding inset used by
+     .corner-mark's default top:2px - a block has neither. */
+  top: -4px;
+}
+
+.preview-passphrase-block .corner-mark--bottom-left {
+  bottom: -4px;
+}
+
+/* Thumbnail-only variant: a plain marked box instead of the per-cell mesh -
+   same treatment as .preview-section on the non-binary seed thumbnail
+   (renderCard), for the same reason: illegible at this scale, just noise. */
+.preview-passphrase-block--plain {
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+}
+
+/* The alignment padding (8px, matching .preview-card's 2px border + 6px
+   padding) belongs once on the whole group, not on every repeated item -
+   applied per item (as plain .preview-binary-row-header/-header is, for the
+   single-header case) it compounds with each block added, so headers drift
+   further out of alignment with the mesh rows/columns they label the more
+   blocks a card has. */
+.preview-passphrase-header-group--column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* Sized to its own content (the fixed-width row-header items inside) -
+     not flex:1, which would fight .preview-passphrase-right-col for the
+     row's width and squeeze the mesh into a fraction of the available space. */
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 8px 0;
+}
+
+.preview-passphrase-header-group--column .preview-passphrase-header-group__item {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+
+.preview-passphrase-header-group__item.preview-binary-row-header,
+.preview-passphrase-header-group__item.preview-binary-header,
+.preview-passphrase-header-group__item.preview-binary-row-header-arrows,
+.preview-passphrase-header-group__item.preview-binary-header-arrows {
+  padding: 0;
+}
+
+/* Corner-header layout for the passphrase full-detail card: box is the only
+   normal-flow child, so it alone determines figure's size (from its own
+   aspect-ratio); both header bands are pulled out of flow and pinned against
+   *that* size via 100%, so neither can inflate it in turn - the problem a
+   shared-row/column CSS Grid had here (see renderPassphraseBigCard). The
+   header bands only occupy the top/left edges, but the margin reserving room
+   for them is applied symmetrically (equal on the right/bottom, where
+   nothing is drawn) so the visible card+headers shape sits centered in its
+   container instead of hugging the left/top and reading as pushed off to
+   one side. */
+.preview-passphrase-figure {
+  position: relative;
+  width: calc(100% - 2 * 48px);
+  margin: 50px 48px 0 48px;
+}
+
+.preview-passphrase-header-band {
+  position: absolute;
+  overflow: hidden;
+}
+
+.preview-passphrase-header-band--top {
+  left: 0;
+  bottom: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-passphrase-header-band--left {
+  top: 0;
+  right: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.preview-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 16px 0 8px;
+  color: var(--color-text);
+}
+
+.preview-section-title:first-child {
+  margin-top: 0;
+}
+
+.preview-binary-row-header {
+  display: grid;
+  align-items: center;
+  justify-items: end;
+  gap: 1px;
+  width: 34px;
+  flex-shrink: 0;
+  min-height: 0;
+  /* matches .preview-card's 2px border + 6px padding, so rows line up with the mesh alongside it */
+  padding: 8px 0;
+}
+
+.preview-binary-row-header__cell {
+  font-family: var(--font-mono);
+  /* A bit smaller than the top header's cells - these numbers run down the
+     card's full height rather than across its width, so there's less risk
+     of crowding, but a smaller size still reads more comfortably alongside
+     the narrower row pitch. */
+  font-size: calc(var(--header-cell-font-size, 0.85rem) * 0.85);
+  color: var(--color-muted);
+  white-space: nowrap;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.preview-binary-row-header-arrows {
+  display: grid;
+  align-items: center;
+  /* end, not center: the arrow is the pointer to the card's own edge, so its
+     tip belongs flush against that edge, not floating with empty column
+     width on both sides of it. */
+  justify-items: end;
+  /* Half of the old 10px - that width *was* the visible gap between the
+     number (right-aligned against this column's left edge) and the arrow
+     (right-aligned against this column's right edge, touching the card). */
+  width: 5px;
+  flex-shrink: 0;
+  padding: 8px 0;
+}
+
+.preview-binary-row-header-arrow {
+  width: 0;
+  height: 0;
+  border-top: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-left: 4px solid var(--color-text);
+  opacity: 0.9;
+}
+
+.preview-binary-mesh {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.preview-binary-mesh__grid {
+  display: grid;
+  gap: 0;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.preview-cell--shaded,
+.preview-cell--col-shaded {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.preview-cell--shaded.preview-cell--col-shaded {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.preview-binary-word-number {
+  position: absolute;
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(26, 26, 26, 0.6);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.preview-binary-word-number--column {
+  top: 2px;
+  justify-content: center;
+}
+
+.corner-mark {
+  position: absolute;
+  top: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-text);
+}
+
+.corner-mark--top-right {
+  right: 4px;
+}
+
+.corner-mark--bottom-left {
+  top: auto;
+  bottom: 2px;
+  left: 3px;
+}
+
+.preview-passphrase {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
