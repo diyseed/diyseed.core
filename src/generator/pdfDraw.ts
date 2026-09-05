@@ -1,7 +1,6 @@
 import type { PDFFont, PDFPage, RGB } from 'pdf-lib';
 import { degrees } from 'pdf-lib';
 import type { Point, Size } from '../units';
-import { point } from '../units';
 
 export function toPdfY(page: PDFPage, origin: Point, elementHeight: number): number {
   return page.getHeight() - origin.y - elementHeight;
