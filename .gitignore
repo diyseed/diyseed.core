@@ -7,3 +7,7 @@ dist/
 .claude/settings.local.json
 .superpowers/
 docs/superpowers/
+.claude/
+CLAUDE.md
+.github/copilot-instructions.md
+.github/instructions/
