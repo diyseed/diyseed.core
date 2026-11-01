@@ -2,9 +2,9 @@
 
 A web tool to generate stencils for BIP-39 cryptocurrency-wallet seed backup.
 
-Online version at [HoboHodl.com](https://hobohodl.com/) (formerly diyseed.net).
+Online version at [DIYseed.net](https://diyseed.net/).
 
-![HoboHodl PDF stencil generator](docs/images/product-photo.jpg)
+![DIYseed PDF stencil generator](docs/images/product-photo.jpg)
 
 The solution is inspired by commercial seed backup solutions (Seedplate, Steelplate, and many others...).
 
@@ -32,11 +32,11 @@ Buying a commercial backup plate also means giving a company your name and shipp
 
 The tool generates a PDF containing a "mesh" to store your seed. You just print it and check off your seed's characters as shown in the animation below.
 
-![HoboHodl PDF stencil generator](docs/images/writer-animation.gif)
+![DIYseed PDF stencil generator](docs/images/writer-animation.gif)
 
 The best way to explain the rest is by example. Imagine you have a metal card (plate, sheet) of size 100x60mm and want to create a seed backup:
 
-1. Use the generator at [HoboHodl.com](https://hobohodl.com/) and fill in the properties of the card and seed. You will get a PDF with a stencil the same size as your card, prepared to store your seed.
+1. Use the generator at [DIYseed.net](https://diyseed.net/) and fill in the properties of the card and seed. You will get a PDF with a stencil the same size as your card, prepared to store your seed.
 
 2. Mark your seed words onto the writing stencil. The writing stencil is a simple mesh. The **Y-axis** represents alphabet characters. The **X-axis** represents words of the seed. Each word is marked by its first 4 characters ([read theory about a seed](#theory-what-is-a-seed)). Other encodings and orientations are available too, under **Advanced options** in the form. See [Parameters](#parameters) for the full list.
 
@@ -48,7 +48,7 @@ That's it, the backup is complete. In the end, you can remove the stencil and de
 
 In the picture below, you can see how to store a seed with leading words **bike**, **acid**, **key**, **satoshi**, and what it looks like after the stencil is removed.
 
-![Example of HoboHodl solution](docs/images/card-animation.gif)
+![Example of DIYseed solution](docs/images/card-animation.gif)
 
 ### Reading a backup
 
@@ -56,7 +56,7 @@ To read a backup card, print the writing stencil onto transparent paper and over
 
 If you can't print on transparent paper, check **Include reader** under Advanced options when generating your stencil. It adds a printable, non-transparent reader page: cut along the red dashed line, align the guidelines flush with your card's mesh, and slide it to read off letters/digits (or bit place-values, for Binary and Passphrase) one word or character at a time, using the fill-in boxes to build up the recovered seed/passphrase as you go. The principle is shown below.
 
-![HoboHodl PDF stencil reader](docs/images/reader-animation.gif)
+![DIYseed PDF stencil reader](docs/images/reader-animation.gif)
 
 ## Theory: what is a seed
 
@@ -203,4 +203,3 @@ Every stencil already includes corner marks for this. Punch them along with the 
 - Added more ways to encode the seed, useful for smaller backups: a Binary encoding option alongside the existing Alphabet encoding.
 - Added an option to generate a backup stencil for a passphrase, in addition to the seed.
 - Switched from a .NET console app to a JavaScript app that runs in any browser. Rendering happens entirely client-side, so you can save the page and use it offline.
-- Renamed the project from diyseed.net to HoboHodl.com.

@@ -229,7 +229,7 @@ function downloadPdf(bytes: Uint8Array, filename: string): void {
 }
 
 function buildFilename(values: FormValues): string {
-  const parts: string[] = ['hobohodl'];
+  const parts: string[] = ['diyseed'];
   if (isSeedSectionActive(values)) {
     parts.push(`${values.seedLength}words-${values.cardCount}cards`);
   }

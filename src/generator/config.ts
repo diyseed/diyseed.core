@@ -3,7 +3,7 @@ import type { Size } from '../units';
 import { EncodingType } from './encoding';
 
 // DOCUMENT STRINGS
-export const DOCUMENT_TITLE = 'Protect your crypto-wallet seed backup - HoboHodl.com';
+export const DOCUMENT_TITLE = 'Protect your crypto-wallet seed backup - DIYseed.net';
 // Printed bottom-right on every page (drawPageChrome, writer.ts) - a single
 // override point for anyone building/forking this generator to put their own
 // URL here instead.
