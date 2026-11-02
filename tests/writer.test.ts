@@ -37,7 +37,8 @@ describe('generateWriterPdf', () => {
 
   it('produces one page per copy when a single card already fills a page', async () => {
     // 150x140mm cards: safe area 154x144mm. EFFECTIVE_PAGE_SIZE is 180x267mm, so
-    // cardsPerLine = floor((180+4)/154) = 1 and linesPerPage = floor((267+4)/144) = 1 -> 1 card/page.
+    // cardsPerLine = floor((180+4)/154) = 1 and linesPerPage = floor((253+4)/144) = 1 -> 1 card/page
+    // (253mm = 267mm page height minus the 14mm reserved for the stencil code).
     // With cardCount=1 (effectiveCardCount=1), each of the 3 copies lands on its own page.
     const params = new GeneratorParameters(
       { cardSize: { width: mm(150), height: mm(140) }, cardCount: 1, seedLength: 10, copies: 3 },

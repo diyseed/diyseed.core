@@ -49,6 +49,7 @@ function makeLayout(overrides: Partial<PreviewLayout> = {}): PreviewLayout {
     isBinary: false,
     binaryColumnLabels: [],
     copies: 1,
+    code: '1-1000-0600-15-02-01-1-1',
     warnings: { cellTooSmall: false, cellNotSquare: false, cellSizeInvalid: false },
     ...overrides,
   };
@@ -121,6 +122,14 @@ describe('renderPreview', () => {
     renderPreview(container, makeLayout({ warnings: { cellTooSmall: true, cellNotSquare: true, cellSizeInvalid: true } }));
     expect(container.querySelectorAll('.preview-warning--error')).toHaveLength(1);
     expect(container.querySelectorAll('.preview-warning--warning')).toHaveLength(0);
+  });
+
+  it('shows the stencil code once, below the cards', () => {
+    renderPreview(container, makeLayout({ copies: 2 }));
+    const codes = container.querySelectorAll('.preview-code__value');
+    expect(codes).toHaveLength(1);
+    expect(codes[0].textContent).toBe('1-1000-0600-15-02-01-1-1');
+    expect(container.querySelector('.preview-cards ~ .preview-code')).not.toBeNull();
   });
 
   it('clears previous content on re-render', () => {
@@ -525,6 +534,7 @@ function makePassphraseLayout(overrides: Partial<PassphrasePreviewLayout> = {}):
     cellWidthMm: 2,
     cellHeightMm: 2,
     copies: 1,
+    code: '2-0856-0540-15-020',
     warnings: { cellTooSmall: false, noCapacity: false },
     ...overrides,
   };
@@ -551,6 +561,11 @@ describe('renderPreview — passphrase', () => {
     renderPreview(container, null, makePassphraseLayout());
     expect(container.querySelectorAll('.preview-passphrase .preview-big .preview-card--large')).toHaveLength(1);
     expect(container.querySelectorAll('.preview-passphrase .preview-cards .preview-card--small')).toHaveLength(1);
+  });
+
+  it('shows the passphrase stencil code below the cards', () => {
+    renderPreview(container, null, makePassphraseLayout());
+    expect(container.querySelector('.preview-passphrase .preview-code__value')?.textContent).toBe('2-0856-0540-15-020');
   });
 
   it('renders the 7-column header with ASCII place values', () => {

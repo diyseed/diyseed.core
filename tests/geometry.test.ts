@@ -12,8 +12,8 @@ describe('getCardSafeAreaSize', () => {
 });
 
 describe('getOriginForCard — 100x60mm cards (sample #1)', () => {
-  // EFFECTIVE_PAGE_SIZE is 180x267mm; safe area is 104x64mm.
-  // cardsPerLine = floor((180+4)/104) = 1, linesPerPage = floor((267+4)/64) = 4 -> 4 cards/page.
+  // EFFECTIVE_PAGE_SIZE is 180x267mm, minus 14mm reserved for the stencil code -> 253mm; safe area is 104x64mm.
+  // cardsPerLine = floor((180+4)/104) = 1, linesPerPage = floor((253+4)/64) = 4 -> 4 cards/page.
   const safeArea = getCardSafeAreaSize({ width: mm(100), height: mm(60) });
 
   it('places card 1 at the page origin', () => {
@@ -39,7 +39,7 @@ describe('getOriginForCard — 100x60mm cards (sample #1)', () => {
 });
 
 describe('getOriginForCard — 20x20mm cards (sample #3)', () => {
-  // safe area is 24x24mm. cardsPerLine = floor((180+4)/24) = 7, linesPerPage = floor((267+4)/24) = 11 -> 77 cards/page.
+  // safe area is 24x24mm. cardsPerLine = floor((180+4)/24) = 7, linesPerPage = floor((253+4)/24) = 10 -> 70 cards/page.
   const safeArea = getCardSafeAreaSize({ width: mm(20), height: mm(20) });
 
   it('places card 8 at the start of the second line', () => {

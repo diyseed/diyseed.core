@@ -12,7 +12,9 @@ export interface CardOrigin {
 
 export function getOriginForCard(cardNumber: number, safeAreaSize: Size): CardOrigin {
   const cardsPerLine = Math.floor((Config.EFFECTIVE_PAGE_SIZE.width + Config.CARD_MARGIN) / safeAreaSize.width);
-  const linesPerPage = Math.floor((Config.EFFECTIVE_PAGE_SIZE.height + Config.CARD_MARGIN) / safeAreaSize.height);
+  // The bottom strip is kept free for the stencil code drawn below the cards.
+  const availableHeight = Config.EFFECTIVE_PAGE_SIZE.height - Config.STENCIL_CODE_RESERVED_HEIGHT;
+  const linesPerPage = Math.floor((availableHeight + Config.CARD_MARGIN) / safeAreaSize.height);
   const cardsPerPage = cardsPerLine * linesPerPage;
 
   const page = Math.floor((cardNumber - 1) / cardsPerPage) + 1;

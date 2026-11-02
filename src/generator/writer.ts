@@ -7,6 +7,7 @@ import { getCardSafeAreaSize, getOriginForCard } from './geometry';
 import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledCircleTL, drawRotatedTextInBoxTL, drawFilledTriangleTL } from './pdfDraw';
 import { getTopLeftCornerMarkOffsets, getTopRightCornerMarkOffset, getBottomLeftCornerMarkOffset, getCutterGuideSegments } from './cornerMarks';
 import { buildSeedParamsSummary, buildPassphraseParamsSummary } from './summary';
+import { encodeSeedConfigCode, encodePassphraseConfigCode } from './configCode';
 import { Point, Size, point, size, mm } from '../units';
 
 const BLACK = rgb(0, 0, 0);
@@ -43,6 +44,7 @@ export async function generateWriterPdf(parameters: GeneratorParameters): Promis
 
   const isBinary = parameters.seedEncoding === EncodingType.Binary;
   const headerWidth = isBinary ? Config.BINARY_HEADER_HEIGHT : 0;
+  const cardsBottom: number[] = [];
 
   for (let set = 1; set <= parameters.copies; set++) {
     for (let i = 1; i <= parameters.effectiveCardCount; i++) {
@@ -62,9 +64,11 @@ export async function generateWriterPdf(parameters: GeneratorParameters): Promis
       }
 
       renderCard(page, font, boldFont, parameters.getCardParameters(i), cardOrigin);
+      cardsBottom[origin.page - 1] = Math.max(cardsBottom[origin.page - 1] ?? 0, cardOrigin.y + parameters.cardSize.height);
     }
   }
 
+  drawStencilCode(pages, cardsBottom, chromeFont, boldFont, encodeSeedConfigCode(parameters));
   drawPageChrome(pages, chromeFont, chromeBoldFont, Config.DOCUMENT_SEED_HEADER_TEXT, buildSeedParamsSummary(parameters));
 
   return doc.save();
@@ -118,6 +122,7 @@ export async function generatePassphrasePdf(parameters: PassphraseParameters): P
   doc.setTitle(Config.DOCUMENT_TITLE);
   // Monospace for everything above/inside the card - see generateWriterPdf.
   const font = await doc.embedFont(StandardFonts.Courier);
+  const boldFont = await doc.embedFont(StandardFonts.CourierBold);
   const chromeFont = await doc.embedFont(StandardFonts.Helvetica);
   const chromeBoldFont = await doc.embedFont(StandardFonts.HelveticaBold);
 
@@ -134,6 +139,7 @@ export async function generatePassphrasePdf(parameters: PassphraseParameters): P
   // (character axis, top) are needed, on opposite sides of the card.
   const headerHeight = Config.BINARY_HEADER_HEIGHT;
   const headerWidth = Config.BINARY_HEADER_HEIGHT;
+  const cardsBottom: number[] = [];
 
   for (let set = 1; set <= parameters.copies; set++) {
     // Top corner marks count rows, not cards - row 1 gets one dot, row 2 two,
@@ -158,10 +164,12 @@ export async function generatePassphrasePdf(parameters: PassphraseParameters): P
       );
 
       renderPassphraseCard(page, font, parameters, i, cardOrigin, headerHeight, headerWidth, nextRowNumber);
+      cardsBottom[origin.page - 1] = Math.max(cardsBottom[origin.page - 1] ?? 0, cardOrigin.y + parameters.cardSize.height);
       nextRowNumber += parameters.blockCount;
     }
   }
 
+  drawStencilCode(pages, cardsBottom, chromeFont, boldFont, encodePassphraseConfigCode(parameters));
   drawPageChrome(pages, chromeFont, chromeBoldFont, Config.DOCUMENT_PASSPHRASE_HEADER_TEXT, buildPassphraseParamsSummary(parameters));
 
   return doc.save();
@@ -268,6 +276,39 @@ function renderCard(page: PDFPage, font: PDFFont, boldFont: PDFFont, card: CardP
     // passphrase card's block spacing).
     sectionOrigin = point(sectionOrigin.x, sectionOrigin.y + section.size.height + card.padding);
   }
+}
+
+// Once per page, under that page's lowest card - every card of a set shares
+// the same code, so repeating it per card would only add noise.
+function drawStencilCode(pages: PDFPage[], cardsBottom: number[], labelFont: PDFFont, codeFont: PDFFont, code: string): void {
+  const labelHeight = labelFont.heightAtSize(Config.STENCIL_CODE_LABEL_FONT_SIZE);
+  const codeHeight = codeFont.heightAtSize(Config.STENCIL_CODE_FONT_SIZE);
+  const width = Config.EFFECTIVE_PAGE_SIZE.width;
+
+  pages.forEach((page, i) => {
+    const labelTop = cardsBottom[i] + Config.STENCIL_CODE_TOP_GAP;
+    const codeTop = labelTop + labelHeight + Config.STENCIL_CODE_LABEL_GAP;
+    drawTextInBoxTL(
+      page,
+      Config.STENCIL_CODE_LABEL_TEXT,
+      labelFont,
+      Config.STENCIL_CODE_LABEL_FONT_SIZE,
+      point(Config.DOCUMENT_MARGIN_H, labelTop),
+      size(width, labelHeight),
+      { horizontal: 'left', vertical: 'top' },
+      FOOTER_TEXT_COLOR,
+    );
+    drawTextInBoxTL(
+      page,
+      code,
+      codeFont,
+      Config.STENCIL_CODE_FONT_SIZE,
+      point(Config.DOCUMENT_MARGIN_H, codeTop),
+      size(width, codeHeight),
+      { horizontal: 'left', vertical: 'top' },
+      HEADER_TEXT_COLOR,
+    );
+  });
 }
 
 // Single bottom-left dot for the whole card, 0.5mm below the card's own

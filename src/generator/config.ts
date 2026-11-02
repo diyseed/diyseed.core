@@ -75,6 +75,17 @@ export const CORNER_MARK_RADIUS = mm(0.35);
 // Fixed inset from the mesh edge, into the card's border strip.
 export const CORNER_MARK_INSET = mm(0.5);
 
+// STENCIL CODE (the card code, printed once per stencil page below the cards)
+// Space kept free at the bottom of every stencil page so the code always fits
+// under the last row of cards, whatever the card size.
+export const STENCIL_CODE_RESERVED_HEIGHT = mm(14);
+// Clears the paper-cutter guides below the last row of cards.
+export const STENCIL_CODE_TOP_GAP = mm(2.5);
+export const STENCIL_CODE_LABEL_GAP = mm(0.8);
+export const STENCIL_CODE_LABEL_TEXT = 'Code to regenerate these stencils (diyseed.net, "Generate from card code"):';
+export const STENCIL_CODE_LABEL_FONT_SIZE = 9;
+export const STENCIL_CODE_FONT_SIZE = 20;
+
 // PAPER-CUTTER GUIDES (printer's crop marks, drawn just outside each card's
 // corners so a paper cutter can be aligned without the mark itself ending up
 // on the card). Gap + length must fit within CARD_MARGIN, the gutter between

@@ -135,6 +135,7 @@ function renderSeedPreviewContent(container: HTMLElement, layout: PreviewLayout)
     cardsEl.appendChild(renderCardSet(layout.cards, set, layout.copies, layout.isBinary));
   }
   container.appendChild(cardsEl);
+  container.appendChild(renderStencilCode(layout.code));
 }
 
 function renderPassphrasePreviewContent(container: HTMLElement, layout: PassphrasePreviewLayout): void {
@@ -173,6 +174,21 @@ function renderPassphrasePreviewContent(container: HTMLElement, layout: Passphra
     cardsEl.appendChild(setEl);
   }
   container.appendChild(cardsEl);
+  container.appendChild(renderStencilCode(layout.code));
+}
+
+// Mirrors the code block printed under the cards on every stencil page.
+function renderStencilCode(code: string): HTMLElement {
+  const el = document.createElement('div');
+  el.className = 'preview-code';
+  const label = document.createElement('div');
+  label.className = 'preview-code__label';
+  label.textContent = 'Code to regenerate these stencils';
+  const value = document.createElement('div');
+  value.className = 'preview-code__value';
+  value.textContent = code;
+  el.append(label, value);
+  return el;
 }
 
 function passphraseWordsOf(block: number[]): PreviewWord[] {

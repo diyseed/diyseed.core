@@ -11,6 +11,23 @@
       <section class="form-panel">
         <h1>DIYseed</h1>
         <p>Generate a punching stencil to back up your crypto-wallet seed on metal.</p>
+        <p class="code-intro">Already have a punched card? <button type="button" class="link-button" id="open-code-dialog">Generate from card code</button></p>
+
+        <dialog id="code-dialog" aria-labelledby="code-dialog-title">
+          <form id="code-form" novalidate>
+            <h2 class="form-section-title" id="code-dialog-title">Generate from card code</h2>
+            <label>Card code
+              <input type="text" id="configCode" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="1-0856-0540-…" aria-describedby="configCode-hint" />
+            </label>
+            <p class="field-hint" id="configCode-hint">The dashed number printed below the cards on your stencil: seed codes start with 1, passphrase codes with 2. You get the stencil, reader, BIP-39 wordlist and ASCII table for that card's whole set.</p>
+            <p class="field-error is-hidden" id="configCode-error" role="alert"></p>
+            <div class="dialog-actions">
+              <button type="button" class="link-button" id="close-code-dialog">Cancel</button>
+              <button type="submit">Generate PDF</button>
+            </div>
+          </form>
+        </dialog>
+
         <form id="generator-form" novalidate>
           <div id="card-size-fields" class="form-section-box">
             <h2 class="form-section-title">Card properties</h2>

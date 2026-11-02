@@ -1,4 +1,5 @@
 import { generateStencilPdf, StencilInput } from './generator/writer';
+import { decodeConfigCode, ConfigCodeError, DecodedConfigCode } from './generator/configCode';
 import {
   validate,
   toGeneratorParameters,
@@ -277,6 +278,67 @@ document.getElementById('generator-form')?.addEventListener('submit', async (eve
     downloadPdf(bytes, buildFilename(values));
   } catch (error) {
     renderGeneralError(error instanceof Error ? error.message : 'Failed to generate PDF.');
+  }
+});
+
+// Builds straight from the decoded code, never from the form: the code's own
+// version decides the stencil, so later form/default changes can't drift it.
+// Always the full recovery kit - stencil, reader and both reference tables -
+// since whoever has only the card can't know which pieces they'll need.
+function stencilInputFromCode(decoded: DecodedConfigCode): StencilInput {
+  const referenceTables = { includeSeedWordTable: true, includeAsciiTable: true };
+  if (decoded.kind === 'seed') {
+    return { seed: decoded.parameters, includeSeedStencil: true, includeSeedReader: true, ...referenceTables };
+  }
+  return { passphrase: decoded.parameters, includePassphraseStencil: true, includePassphraseReader: true, ...referenceTables };
+}
+
+function showCodeError(message: string | null): void {
+  const input = document.getElementById('configCode') as HTMLInputElement;
+  const error = document.getElementById('configCode-error') as HTMLElement;
+  error.textContent = message ?? '';
+  error.classList.toggle('is-hidden', message === null);
+  if (message === null) input.removeAttribute('aria-invalid');
+  else input.setAttribute('aria-invalid', 'true');
+}
+
+const codeDialog = document.getElementById('code-dialog') as HTMLDialogElement | null;
+
+document.getElementById('open-code-dialog')?.addEventListener('click', () => {
+  showCodeError(null);
+  codeDialog?.showModal();
+  (document.getElementById('configCode') as HTMLInputElement | null)?.focus();
+});
+
+document.getElementById('close-code-dialog')?.addEventListener('click', () => codeDialog?.close());
+
+document.getElementById('code-form')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const code = (document.getElementById('configCode') as HTMLInputElement).value;
+  if (code.trim() === '') {
+    showCodeError('Enter the code printed on your card.');
+    return;
+  }
+
+  let decoded: DecodedConfigCode;
+  try {
+    decoded = decodeConfigCode(code);
+  } catch (error) {
+    showCodeError(error instanceof ConfigCodeError ? error.message : 'Invalid card code.');
+    return;
+  }
+  if (decoded.kind === 'passphrase' && decoded.parameters.charsPerBlock <= 0) {
+    showCodeError('No characters fit on a passphrase card with these settings.');
+    return;
+  }
+
+  try {
+    const bytes = await generateStencilPdf(stencilInputFromCode(decoded));
+    downloadPdf(bytes, `diyseed-from-code-${code.replace(/[^\d]+/g, '-')}.pdf`);
+    showCodeError(null);
+    codeDialog?.close();
+  } catch (error) {
+    showCodeError(error instanceof Error ? error.message : 'Failed to generate PDF.');
   }
 });
 

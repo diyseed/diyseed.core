@@ -58,6 +58,32 @@ If you can't print on transparent paper, check **Include reader** under Advanced
 
 ![DIYseed PDF stencil reader](docs/images/reader-animation.gif)
 
+### Card code
+
+Reading a card back needs a stencil generated with the same settings it was punched from (card size, padding, seed length, card count, rows, encoding). So every stencil page prints a short **card code** in large type below the cards, e.g. `1-0856-0540-15-12-01-1-1`, and the form preview shows it too. Copying it onto the card (scratch it, stamp it, or write it on the card's sleeve) is optional, just a convenience: without it you can still measure the card and try settings until the stencil lines up.
+
+To use it, click **Generate from card code** on the generator page and type the code in. You get the full recovery kit for that card's whole set: the stencil, the reader, the BIP-39 wordlist and the ASCII table, built straight from the code and independent of the rest of the form.
+
+Every card of a set carries the same code (the [corner marks](#creating-a-backup) already tell the cards apart). Every field is plain digits, so the code can be read by a person without the app:
+
+| Stencil | Format | Example |
+|---|---|---|
+| Seed | `F-WWWW-HHHH-PP-LL-SS-R-E` | `1-0856-0540-15-12-01-1-1` |
+| Passphrase | `F-WWWW-HHHH-PP-CCC` | `2-0856-0540-15-020` |
+
+| Field | Meaning |
+|---|---|
+| `F` | Code type and layout: `1` seed, `2` passphrase |
+| `WWWW` / `HHHH` | Card width / height in tenths of a millimeter (`0856` = 85.6 mm) |
+| `PP` | Card padding in tenths of a millimeter (`15` = 1.5 mm) |
+| `LL` | Seed length in words |
+| `SS` | Card count (sides the seed is split over) |
+| `R` | Rows per card (card split) |
+| `E` | Encoding: `1` Alphabet, `2` Number, `3` Binary |
+| `CCC` | Passphrase cell size in tenths of a millimeter (`020` = 2 mm) |
+
+The first digit alone decides how the rest of the code is read. If the layout ever needs to change, it gets a new first digit instead of changing an existing one, so a card punched today will regenerate the same stencil even after the generator changes.
+
 ## Theory: what is a seed
 
 We suppose everyone who is here understands what a seed is. But for our backup, it's important to know these facts:
@@ -202,4 +228,5 @@ Every stencil already includes corner marks for this. Punch them along with the 
 ### v2
 - Added more ways to encode the seed, useful for smaller backups: a Binary encoding option alongside the existing Alphabet encoding.
 - Added an option to generate a backup stencil for a passphrase, in addition to the seed.
+- Added a [card code](#card-code) printed on every stencil card, and **Generate from card code** to regenerate the stencil and reader from it.
 - Switched from a .NET console app to a JavaScript app that runs in any browser. Rendering happens entirely client-side, so you can save the page and use it offline.

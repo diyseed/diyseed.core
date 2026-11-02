@@ -710,3 +710,63 @@ button[type="submit"]:hover {
   padding-top: 16px;
   border-top: 1px solid var(--color-border);
 }
+
+.code-intro {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#code-dialog {
+  width: min(480px, calc(100vw - 32px));
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+#code-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+#configCode {
+  font-family: var(--font-mono);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.dialog-actions button[type="submit"] {
+  margin-left: 0;
+}
+
+.preview-code {
+  margin-top: 12px;
+}
+
+.preview-code__label {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.preview-code__value {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+}

@@ -3,6 +3,7 @@ import { EncodingType, encodingLayout } from '../generator/encoding';
 import * as Config from '../generator/config';
 import { toMm } from '../units';
 import { physicalCardNumberOf, sideOf } from '../generator/cornerMarks';
+import { encodeSeedConfigCode, encodePassphraseConfigCode } from '../generator/configCode';
 
 export interface PreviewWord {
   wordNumber: number;
@@ -38,6 +39,7 @@ export interface PreviewLayout {
   isBinary: boolean;
   binaryColumnLabels: string[];
   copies: number;
+  code: string;
   warnings: PreviewWarnings;
 }
 
@@ -88,6 +90,7 @@ export function computePreviewLayout(parameters: GeneratorParameters): PreviewLa
     isBinary,
     binaryColumnLabels: isBinary ? Config.BINARY_COLUMN_VALUES.map(String) : [],
     copies: parameters.copies,
+    code: encodeSeedConfigCode(parameters),
     warnings: { cellTooSmall, cellNotSquare, cellSizeInvalid },
   };
 }
@@ -115,6 +118,7 @@ export interface PassphrasePreviewLayout {
   cellWidthMm: number;
   cellHeightMm: number;
   copies: number;
+  code: string;
   warnings: PassphraseWarnings;
 }
 
@@ -141,6 +145,7 @@ export function computePassphrasePreviewLayout(parameters: PassphraseParameters)
     cellWidthMm,
     cellHeightMm,
     copies: parameters.copies,
+    code: encodePassphraseConfigCode(parameters),
     warnings: { cellTooSmall, noCapacity },
   };
 }
