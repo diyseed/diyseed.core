@@ -1,0 +1,34 @@
+{
+  "name": "@diyseed/generator",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:library": "vite build --config vite.library.config.ts && tsc -p tsconfig.library.json",
+    "prepare": "npm run build:library",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  }
+}
