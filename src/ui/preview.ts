@@ -35,6 +35,7 @@ export interface PreviewLayout {
   cards: PreviewCard[];
   cellWidthMm: number;
   cellHeightMm: number;
+  cardPaddingMm: number;
   cellRowLabels: string[];
   isBinary: boolean;
   binaryColumnLabels: string[];
@@ -86,6 +87,7 @@ export function computePreviewLayout(parameters: GeneratorParameters): PreviewLa
     cards,
     cellWidthMm,
     cellHeightMm,
+    cardPaddingMm: toMm(parameters.cardPadding),
     cellRowLabels: encodingLayout(parameters.seedEncoding).cellLabels ?? [],
     isBinary,
     binaryColumnLabels: isBinary ? Config.BINARY_COLUMN_VALUES.map(String) : [],
@@ -117,6 +119,7 @@ export interface PassphrasePreviewLayout {
   columnLabels: string[];
   cellWidthMm: number;
   cellHeightMm: number;
+  cardPaddingMm: number;
   copies: number;
   code: string;
   warnings: PassphraseWarnings;
@@ -144,6 +147,7 @@ export function computePassphrasePreviewLayout(parameters: PassphraseParameters)
     columnLabels: Config.PASSPHRASE_COLUMN_VALUES.map(String),
     cellWidthMm,
     cellHeightMm,
+    cardPaddingMm: toMm(parameters.cardPadding),
     copies: parameters.copies,
     code: encodePassphraseConfigCode(parameters),
     warnings: { cellTooSmall, noCapacity },

@@ -19,6 +19,13 @@ function checkRange(value: number, range: [number, number], name: string): void 
   }
 }
 
+function checkIntegerRange(value: number, range: [number, number], name: string): void {
+  if (!Number.isInteger(value)) {
+    throw new RangeError(`${name}=${value} must be a whole number`);
+  }
+  checkRange(value, range, name);
+}
+
 export class GeneratorParameters {
   readonly seedLength: number;
   readonly cardCount: number;
@@ -30,14 +37,14 @@ export class GeneratorParameters {
   readonly copies: number;
 
   constructor(input: GeneratorParametersInput) {
-    checkRange(input.cardCount, Config.CARD_COUNT_RANGE, 'cardCount');
-    checkRange(input.seedLength, Config.SEED_LENGTH_RANGE, 'seedLength');
+    checkIntegerRange(input.cardCount, Config.CARD_COUNT_RANGE, 'cardCount');
+    checkIntegerRange(input.seedLength, Config.SEED_LENGTH_RANGE, 'seedLength');
     checkRange(input.cardSize.width, Config.CARD_WIDTH_RANGE, 'cardSize.width');
     checkRange(input.cardSize.height, Config.CARD_HEIGHT_RANGE, 'cardSize.height');
 
     const encoding = input.encoding ?? Config.CARDS_ENCODING_DEFAULT;
     const copies = input.copies ?? Config.WRITER_COPIES_DEFAULT;
-    checkRange(copies, Config.WRITER_COPIES_RANGE, 'copies');
+    checkIntegerRange(copies, Config.WRITER_COPIES_RANGE, 'copies');
 
     let cardSplit: number;
     if (encoding === EncodingType.Binary) {
@@ -46,7 +53,7 @@ export class GeneratorParameters {
       cardSplit = 1;
     } else {
       cardSplit = input.cardSplit ?? Config.CARD_SPLIT_DEFAULT;
-      checkRange(cardSplit, Config.CARD_SPLIT_RANGE, 'cardSplit');
+      checkIntegerRange(cardSplit, Config.CARD_SPLIT_RANGE, 'cardSplit');
     }
 
     const cardCornerRadius = input.cardCornerRadius ?? Config.CARDS_RADIUS_DEFAULT;
@@ -201,12 +208,12 @@ export class PassphraseParameters {
   readonly cellSize: Size;
 
   constructor(input: PassphraseParametersInput) {
-    checkRange(input.cardCount, Config.CARD_COUNT_RANGE, 'cardCount');
+    checkIntegerRange(input.cardCount, Config.CARD_COUNT_RANGE, 'cardCount');
     checkRange(input.cardSize.width, Config.CARD_WIDTH_RANGE, 'cardSize.width');
     checkRange(input.cardSize.height, Config.CARD_HEIGHT_RANGE, 'cardSize.height');
     checkRange(input.cardCornerRadius, Config.CARDS_RADIUS_RANGE, 'cardCornerRadius');
     checkRange(input.cardPadding, Config.CARDS_PADDING_RANGE, 'cardPadding');
-    checkRange(input.copies, Config.WRITER_COPIES_RANGE, 'copies');
+    checkIntegerRange(input.copies, Config.WRITER_COPIES_RANGE, 'copies');
     if (input.cellSize.width <= 0 || input.cellSize.height <= 0) {
       throw new RangeError(`cellSize must be positive, got ${input.cellSize.width}x${input.cellSize.height}`);
     }

@@ -142,3 +142,16 @@ describe('GeneratorParameters computed properties — Binary encoding (12 words,
     expect(cellSize.height).toBeCloseTo(wordSize.height / 11, 6);
   });
 });
+
+describe('GeneratorParameters whole-number fields', () => {
+  const base = { cardSize: { width: mm(85.6), height: mm(54) }, cardCount: 1, seedLength: 12 };
+
+  it.each([
+    ['seedLength', { seedLength: 12.5 }],
+    ['cardCount', { cardCount: 1.5 }],
+    ['cardSplit', { cardSplit: 1.5 }],
+    ['copies', { copies: 1.5 }],
+  ])('rejects a fractional %s', (_, override) => {
+    expect(() => new GeneratorParameters({ ...base, ...override })).toThrow(RangeError);
+  });
+});

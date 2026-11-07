@@ -45,6 +45,7 @@ function makeLayout(overrides: Partial<PreviewLayout> = {}): PreviewLayout {
     ],
     cellWidthMm: 10,
     cellHeightMm: 10,
+    cardPaddingMm: 1.5,
     cellRowLabels: ['a', 'b', 'c'],
     isBinary: false,
     binaryColumnLabels: [],
@@ -324,10 +325,10 @@ describe('renderPreview', () => {
     expect(container.querySelectorAll('.preview-cards .preview-word-mesh')).toHaveLength(0);
   });
 
-  it('captions the big card as a generic detail view, not the card-specific side label', () => {
+  it('shows the calculated cell size and card border below the detailed seed card', () => {
     renderPreview(container, makeLayout());
     const bigLabel = container.querySelector('.preview-big .preview-card__label');
-    expect(bigLabel?.textContent).toBe('Full detail');
+    expect(bigLabel?.textContent).toBe('Full detail · Cell size: 10.0 × 10.0 mm (calculated from card properties) · Card padding: 1.5 mm');
   });
 
   it('does not render binary markup for a non-binary layout', () => {
@@ -508,7 +509,7 @@ describe('renderPreview', () => {
     });
   });
 
-  it('uses binary-specific wording ("card count") for the cellNotSquare warning when isBinary is true', () => {
+  it('uses binary-specific wording ("Split over") for the cellNotSquare warning when isBinary is true', () => {
     const layout = makeLayout({
       isBinary: true,
       binaryColumnLabels: ['1024', '512', '256', '128', '64', '32', '16', '8', '4', '2', '1'],
@@ -516,14 +517,14 @@ describe('renderPreview', () => {
     });
     renderPreview(container, layout);
     const banner = container.querySelector('.preview-warning--warning');
-    expect(banner?.textContent).toContain('card count');
-    expect(banner?.textContent).not.toContain('card split');
+    expect(banner?.textContent).toContain('Split over (card sides)');
+    expect(banner?.textContent).not.toContain('Card split');
   });
 
-  it('keeps the non-binary wording ("card split") for the cellNotSquare warning when isBinary is false', () => {
+  it('keeps the non-binary wording ("Card split") for the cellNotSquare warning when isBinary is false', () => {
     renderPreview(container, makeLayout({ warnings: { cellTooSmall: false, cellNotSquare: true, cellSizeInvalid: false } }));
     const banner = container.querySelector('.preview-warning--warning');
-    expect(banner?.textContent).toContain('card split');
+    expect(banner?.textContent).toContain('Card split');
   });
 });
 
@@ -533,6 +534,7 @@ function makePassphraseLayout(overrides: Partial<PassphrasePreviewLayout> = {}):
     columnLabels: ['64', '32', '16', '8', '4', '2', '1'],
     cellWidthMm: 2,
     cellHeightMm: 2,
+    cardPaddingMm: 1.5,
     copies: 1,
     code: '2-0856-0540-15-020',
     warnings: { cellTooSmall: false, noCapacity: false },

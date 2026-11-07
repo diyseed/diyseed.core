@@ -36,6 +36,22 @@ export interface FieldError {
 
 const inRange = (value: number, range: [number, number]) => value >= range[0] && value <= range[1];
 
+function checkWhole(errors: FieldError[], field: string, label: string, value: number, range: [number, number]): void {
+  if (!Number.isInteger(value) || !inRange(value, range)) {
+    errors.push({ field, message: `${label} must be a whole number from ${range[0]} to ${range[1]}.` });
+  }
+}
+
+// Millimeter fields allow one decimal: the card code stores them in tenths,
+// so finer values would regenerate a slightly different stencil.
+function checkMm(errors: FieldError[], field: string, label: string, valueMm: number, range: [number, number]): void {
+  const [min, max] = range.map((points) => Number(toMm(points).toFixed(1)));
+  const isTenths = Math.abs(valueMm * 10 - Math.round(valueMm * 10)) < 1e-9;
+  if (!isTenths || valueMm < min || valueMm > max) {
+    errors.push({ field, message: `${label} must be from ${min} to ${max} mm, in 0.1 mm steps.` });
+  }
+}
+
 // The Seed/Passphrase sections (their fields, their nested reader/reference
 // checkboxes) are only reachable through their own top-level checkbox now -
 // unlike before, a reader alone can no longer surface the section on its
@@ -81,41 +97,23 @@ export function validate(values: FormValues): FieldError[] {
   // Card properties are always visible/required, regardless of which
   // section(s) are active - Seed and Passphrase both depend on them once
   // enabled, so there's no state where they can be safely skipped.
-  if (!inRange(mm(values.cardWidthMm), Config.CARD_WIDTH_RANGE)) {
-    errors.push({ field: 'cardWidthMm', message: 'Card width must be between 20 and 180 mm.' });
-  }
-  if (!inRange(mm(values.cardHeightMm), Config.CARD_HEIGHT_RANGE)) {
-    errors.push({ field: 'cardHeightMm', message: 'Card height must be between 20 and 180 mm.' });
-  }
-  if (!inRange(mm(values.cardPaddingMm), Config.CARDS_PADDING_RANGE)) {
-    errors.push({ field: 'cardPaddingMm', message: 'Card padding must be between 1 and 5 mm.' });
-  }
+  checkMm(errors, 'cardWidthMm', 'Card width', values.cardWidthMm, Config.CARD_WIDTH_RANGE);
+  checkMm(errors, 'cardHeightMm', 'Card height', values.cardHeightMm, Config.CARD_HEIGHT_RANGE);
+  checkMm(errors, 'cardPaddingMm', 'Card padding', values.cardPaddingMm, Config.CARDS_PADDING_RANGE);
 
   if (seedActive) {
-    if (!inRange(values.seedLength, Config.SEED_LENGTH_RANGE)) {
-      errors.push({ field: 'seedLength', message: `Seed length must be between ${Config.SEED_LENGTH_RANGE[0]} and ${Config.SEED_LENGTH_RANGE[1]} words.` });
+    checkWhole(errors, 'seedLength', 'Seed length', values.seedLength, Config.SEED_LENGTH_RANGE);
+    checkWhole(errors, 'cardCount', 'Split over (card sides)', values.cardCount, Config.CARD_COUNT_RANGE);
+    if (values.encoding !== EncodingType.Binary) {
+      checkWhole(errors, 'cardSplit', 'Card split', values.cardSplit, Config.CARD_SPLIT_RANGE);
     }
-    if (!inRange(values.cardCount, Config.CARD_COUNT_RANGE)) {
-      errors.push({ field: 'cardCount', message: `Card count must be between ${Config.CARD_COUNT_RANGE[0]} and ${Config.CARD_COUNT_RANGE[1]}.` });
-    }
-    if (values.encoding !== EncodingType.Binary && !inRange(values.cardSplit, Config.CARD_SPLIT_RANGE)) {
-      errors.push({ field: 'cardSplit', message: `Card split must be between ${Config.CARD_SPLIT_RANGE[0]} and ${Config.CARD_SPLIT_RANGE[1]}.` });
-    }
-    if (!inRange(values.copies, Config.WRITER_COPIES_RANGE)) {
-      errors.push({ field: 'copies', message: `Copies must be between ${Config.WRITER_COPIES_RANGE[0]} and ${Config.WRITER_COPIES_RANGE[1]}.` });
-    }
+    checkWhole(errors, 'copies', 'Stencil sets', values.copies, Config.WRITER_COPIES_RANGE);
   }
 
   if (passphraseActive) {
-    if (!inRange(values.passphrase.cardCount, Config.CARD_COUNT_RANGE)) {
-      errors.push({ field: 'passphraseCardCount', message: `Passphrase card count must be between ${Config.CARD_COUNT_RANGE[0]} and ${Config.CARD_COUNT_RANGE[1]}.` });
-    }
-    if (!inRange(values.passphrase.copies, Config.WRITER_COPIES_RANGE)) {
-      errors.push({ field: 'passphraseCopies', message: `Copies must be between ${Config.WRITER_COPIES_RANGE[0]} and ${Config.WRITER_COPIES_RANGE[1]}.` });
-    }
-    if (!inRange(mm(values.passphrase.cellSizeMm), Config.PASSPHRASE_CELL_SIZE_RANGE)) {
-      errors.push({ field: 'passphraseCellSizeMm', message: 'Passphrase cell size must be between 1 and 10 mm.' });
-    }
+    checkWhole(errors, 'passphraseCardCount', 'Passphrase card count', values.passphrase.cardCount, Config.CARD_COUNT_RANGE);
+    checkWhole(errors, 'passphraseCopies', 'Stencil sets', values.passphrase.copies, Config.WRITER_COPIES_RANGE);
+    checkMm(errors, 'passphraseCellSizeMm', 'Passphrase cell size', values.passphrase.cellSizeMm, Config.PASSPHRASE_CELL_SIZE_RANGE);
   }
 
   return errors;

@@ -103,7 +103,7 @@ function renderSeedPreviewContent(container: HTMLElement, layout: PreviewLayout)
       warningsEl.appendChild(
         warningBanner(
           'warning',
-          `Cells are ${layout.cellWidthMm.toFixed(1)}×${layout.cellHeightMm.toFixed(1)}mm — smaller than 1.5mm may be hard to punch by hand. Try a bigger card, fewer words per card, or more cards.`,
+          `Cells are ${layout.cellWidthMm.toFixed(1)} × ${layout.cellHeightMm.toFixed(1)} mm. Cells under 1.5 mm may be hard to punch by hand. Try a bigger card, fewer words per card, or more cards.`,
         ),
       );
     }
@@ -112,8 +112,8 @@ function renderSeedPreviewContent(container: HTMLElement, layout: PreviewLayout)
         warningBanner(
           'warning',
           layout.isBinary
-            ? 'Cells are noticeably stretched — consider adjusting card count or card proportions for a more even grid.'
-            : 'Cells are noticeably stretched — consider adjusting card split or card proportions for a more even grid.',
+            ? 'Cells are noticeably stretched. Try a different Split over (card sides) value or card proportions for a more even grid.'
+            : 'Cells are noticeably stretched. Try a different Card split value or card proportions for a more even grid.',
         ),
       );
     }
@@ -124,7 +124,9 @@ function renderSeedPreviewContent(container: HTMLElement, layout: PreviewLayout)
     const bigSection = document.createElement('div');
     bigSection.className = 'preview-big';
     bigSection.appendChild(
-      layout.isBinary ? renderBinaryBigCard(layout.cards[0], layout.binaryColumnLabels) : renderBigCard(layout.cards[0], layout.cellRowLabels),
+      layout.isBinary
+        ? renderBinaryBigCard(layout.cards[0], layout.binaryColumnLabels, layout.cellWidthMm, layout.cellHeightMm, layout.cardPaddingMm)
+        : renderBigCard(layout.cards[0], layout.cellRowLabels, layout.cellWidthMm, layout.cellHeightMm, layout.cardPaddingMm),
     );
     container.appendChild(bigSection);
   }
@@ -140,10 +142,10 @@ function renderSeedPreviewContent(container: HTMLElement, layout: PreviewLayout)
 
 function renderPassphrasePreviewContent(container: HTMLElement, layout: PassphrasePreviewLayout): void {
   if (layout.warnings.noCapacity) {
-    container.appendChild(warningBanner('error', 'No characters fit at this cell size — try a bigger card, smaller cells, or less padding.'));
+    container.appendChild(warningBanner('error', 'No characters fit at this cell size. Try a bigger card, smaller cells, or less padding.'));
   } else if (layout.warnings.cellTooSmall) {
     container.appendChild(
-      warningBanner('warning', `Cells are ${layout.cellWidthMm.toFixed(1)}×${layout.cellHeightMm.toFixed(1)}mm — smaller than 1.5mm may be hard to punch by hand.`),
+      warningBanner('warning', `Cells are ${layout.cellWidthMm.toFixed(1)} × ${layout.cellHeightMm.toFixed(1)} mm. Cells under 1.5 mm may be hard to punch by hand.`),
     );
   }
 
@@ -151,7 +153,7 @@ function renderPassphrasePreviewContent(container: HTMLElement, layout: Passphra
 
   const bigSection = document.createElement('div');
   bigSection.className = 'preview-big';
-  bigSection.appendChild(renderPassphraseBigCard(layout.cards[0], layout.columnLabels));
+  bigSection.appendChild(renderPassphraseBigCard(layout.cards[0], layout.columnLabels, layout.cellWidthMm, layout.cellHeightMm, layout.cardPaddingMm));
   container.appendChild(bigSection);
 
   const cardsEl = document.createElement('div');
@@ -208,7 +210,13 @@ function renderPassphraseMeshArea(blocks: number[][], showNumbers: boolean, star
   });
 }
 
-function renderPassphraseBigCard(card: PassphraseCard, columnLabels: string[]): HTMLElement {
+function renderPassphraseBigCard(
+  card: PassphraseCard,
+  columnLabels: string[],
+  cellWidthMm: number,
+  cellHeightMm: number,
+  cardPaddingMm: number,
+): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'preview-card-wrapper';
 
@@ -254,10 +262,7 @@ function renderPassphraseBigCard(card: PassphraseCard, columnLabels: string[]): 
   figure.append(topBand, leftBand, box);
   wrapper.appendChild(figure);
 
-  const label = document.createElement('div');
-  label.className = 'preview-card__label';
-  label.textContent = 'Full detail';
-  wrapper.appendChild(label);
+  wrapper.appendChild(renderDetailLabel(cellWidthMm, cellHeightMm, cardPaddingMm, false));
 
   return wrapper;
 }
@@ -462,7 +467,13 @@ function renderPassphraseHeaderGroup(columnLabels: string[], blockCount: number)
   return { labels: labelsGroup, arrows: arrowsGroup };
 }
 
-function renderBinaryBigCard(card: PreviewCard, columnLabels: string[]): HTMLElement {
+function renderBinaryBigCard(
+  card: PreviewCard,
+  columnLabels: string[],
+  cellWidthMm: number,
+  cellHeightMm: number,
+  cardPaddingMm: number,
+): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'preview-card-wrapper';
 
@@ -480,15 +491,18 @@ function renderBinaryBigCard(card: PreviewCard, columnLabels: string[]): HTMLEle
   row.appendChild(box);
   wrapper.appendChild(row);
 
-  const label = document.createElement('div');
-  label.className = 'preview-card__label';
-  label.textContent = 'Full detail';
-  wrapper.appendChild(label);
+  wrapper.appendChild(renderDetailLabel(cellWidthMm, cellHeightMm, cardPaddingMm, true));
 
   return wrapper;
 }
 
-function renderBigCard(card: PreviewCard, cellRowLabels: string[]): HTMLElement {
+function renderBigCard(
+  card: PreviewCard,
+  cellRowLabels: string[],
+  cellWidthMm: number,
+  cellHeightMm: number,
+  cardPaddingMm: number,
+): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'preview-card-wrapper';
 
@@ -513,12 +527,19 @@ function renderBigCard(card: PreviewCard, cellRowLabels: string[]): HTMLElement 
 
   wrapper.appendChild(box);
 
-  const label = document.createElement('div');
-  label.className = 'preview-card__label';
-  label.textContent = 'Full detail';
-  wrapper.appendChild(label);
+  wrapper.appendChild(renderDetailLabel(cellWidthMm, cellHeightMm, cardPaddingMm, true));
 
   return wrapper;
+}
+
+function renderDetailLabel(cellWidthMm: number, cellHeightMm: number, cardPaddingMm: number, cellSizeCalculated: boolean): HTMLElement {
+  const label = document.createElement('div');
+  label.className = 'preview-card__label';
+  const cellNote = cellSizeCalculated ? ' (calculated from card properties)' : '';
+  label.textContent =
+    `Full detail · Cell size: ${cellWidthMm.toFixed(1)} × ${cellHeightMm.toFixed(1)} mm${cellNote} · ` +
+    `Card padding: ${cardPaddingMm.toFixed(1)} mm`;
+  return label;
 }
 
 function renderWordMesh(word: PreviewWord, cellRowLabels: string[]): HTMLElement {

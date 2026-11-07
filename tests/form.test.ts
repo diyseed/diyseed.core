@@ -290,3 +290,32 @@ describe('toPassphraseParameters', () => {
     expect(params.cellSize.height).toBeCloseTo(mm(2), 6);
   });
 });
+
+describe('validate whole numbers and millimeter steps', () => {
+  it.each([
+    ['seedLength', { seedLength: 12.5 }],
+    ['cardCount', { cardCount: 1.5 }],
+    ['cardSplit', { cardSplit: 2.5 }],
+    ['copies', { copies: 1.5 }],
+  ])('flags a fractional %s', (field, override) => {
+    expect(validate({ ...DEFAULT_FORM_VALUES, ...override }).map((e) => e.field)).toContain(field);
+  });
+
+  it('flags millimeter values finer than 0.1 mm', () => {
+    expect(validate({ ...DEFAULT_FORM_VALUES, cardWidthMm: 85.65 }).map((e) => e.field)).toContain('cardWidthMm');
+  });
+
+  it('accepts millimeter values in 0.1 mm steps, including the range edges', () => {
+    expect(validate({ ...DEFAULT_FORM_VALUES, cardWidthMm: 85.6, cardHeightMm: 180, cardPaddingMm: 1 })).toEqual([]);
+  });
+
+  it('names the form label in the error message', () => {
+    const errors = validate({ ...DEFAULT_FORM_VALUES, cardCount: 99, copies: 99 });
+    expect(errors.map((e) => e.message)).toEqual(
+      expect.arrayContaining([
+        'Split over (card sides) must be a whole number from 1 to 13.',
+        'Stencil sets must be a whole number from 1 to 10.',
+      ]),
+    );
+  });
+});

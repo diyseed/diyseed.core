@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   getTopLeftCornerMarkOffsets,
+  getTopLeftCornerMarkPitch,
   getTopRightCornerMarkOffset,
   getBottomLeftCornerMarkOffset,
   getCutterGuideSegments,
@@ -101,5 +102,18 @@ describe('sideOf', () => {
     expect(sideOf(2)).toBe('B');
     expect(sideOf(3)).toBe('A');
     expect(sideOf(4)).toBe('B');
+  });
+});
+
+describe('getTopLeftCornerMarkPitch', () => {
+  it('keeps one cell width while the dots fit the row', () => {
+    expect(getTopLeftCornerMarkPitch(3, mm(2), mm(80))).toBe(mm(2));
+  });
+
+  it('tightens the pitch so every dot stays inside the row', () => {
+    const rowWidth = mm(82.6);
+    const pitch = getTopLeftCornerMarkPitch(10, mm(10.3), rowWidth);
+    const offsets = getTopLeftCornerMarkOffsets(10, 0, pitch);
+    expect(offsets[offsets.length - 1].x).toBeLessThan(rowWidth);
   });
 });

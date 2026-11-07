@@ -5,7 +5,7 @@ import * as Config from './config';
 import { getFontSizeForBox } from './fontFit';
 import { getCardSafeAreaSize, getOriginForCard } from './geometry';
 import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledCircleTL, drawRotatedTextInBoxTL, drawFilledTriangleTL } from './pdfDraw';
-import { getTopLeftCornerMarkOffsets, getTopRightCornerMarkOffset, getBottomLeftCornerMarkOffset, getCutterGuideSegments } from './cornerMarks';
+import { getTopLeftCornerMarkOffsets, getTopLeftCornerMarkPitch, getTopRightCornerMarkOffset, getBottomLeftCornerMarkOffset, getCutterGuideSegments } from './cornerMarks';
 import { buildSeedParamsSummary, buildPassphraseParamsSummary } from './summary';
 import { encodeSeedConfigCode, encodePassphraseConfigCode } from './configCode';
 import { Point, Size, point, size, mm } from '../units';
@@ -531,7 +531,7 @@ function renderPassphraseCard(
 // blocks and seed sections (Card split > 1) - both are "rows" that need
 // telling apart by punched dots once the paper stencil is gone.
 function drawRowTopMarks(page: PDFPage, rowOrigin: Point, rowSize: Size, rowNumber: number, pitch: number): void {
-  for (const offset of getTopLeftCornerMarkOffsets(rowNumber, 0, pitch)) {
+  for (const offset of getTopLeftCornerMarkOffsets(rowNumber, 0, getTopLeftCornerMarkPitch(rowNumber, pitch, rowSize.width))) {
     drawFilledCircleTL(page, point(rowOrigin.x + offset.x, rowOrigin.y + offset.y), Config.CORNER_MARK_RADIUS, CARD_OUTLINE);
   }
 

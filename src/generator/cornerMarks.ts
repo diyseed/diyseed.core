@@ -18,6 +18,14 @@ export function getTopLeftCornerMarkOffsets(count: number, padding: number, pitc
   return offsets;
 }
 
+// One cell width apart, unless that would run past the row: high row numbers
+// on rows with few, wide cells would otherwise push dots off the card. The
+// row width divided by the count keeps the last dot one pitch short of the
+// top-right dot.
+export function getTopLeftCornerMarkPitch(count: number, cellWidth: number, rowWidth: number): number {
+  return count > 0 ? Math.min(cellWidth, rowWidth / count) : cellWidth;
+}
+
 export function getTopRightCornerMarkOffset(padding: number): Point {
   return point(-padding, padding - Config.CORNER_MARK_INSET);
 }

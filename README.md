@@ -1,62 +1,120 @@
-# DIYseed crypto wallet seed store tool
+# DIYseed: metal seed backup stencil toolkit
 
-A web tool to generate stencils for BIP-39 cryptocurrency-wallet seed backup.
+A web tool to generate punching stencils for backing up a BIP-39 seed and passphrase on metal.
 
-Online version at [DIYseed.net](https://diyseed.net/).
+Online version at [https://diyseed.net](https://diyseed.net/).
 
 ![DIYseed PDF stencil generator](docs/images/product-photo.jpg)
 
-The solution is inspired by commercial seed backup solutions (Seedplate, Steelplate, and many others...).
-
 ## Motivation
-
-To have a seed words backup just on a piece of paper is not a good idea. Not just because paper can be destroyed by things like fire, water, UV radiation, etc. You can also more easily lose it than a piece of a proper metal item.
 
 There are many solutions for creating a secure backup of the seed words. But they are just overpriced pieces of metal. Especially if you are willing to create more backup tokens (for example because of Shamir backup...).
 
-We wanted to create a solution for durable metal seed backup with those thoughts in mind:
+I wanted to create a solution for durable metal seed backup with those thoughts in mind:
 - **Durability** - seed backup is as durable as commercial ones
 - **It is cheap** - you do not need any special tools to create the backup
 - **Variability** - it can store seeds of any length, and can be punched into pretty much anything: an old credit card, a metal sheet, even wood
 - **Easy to use** - it is easy to create a backup for everyone as well as read it
 - **Stealth** - commercial backup plates are branded, boxed, and obviously "crypto backup hardware." A card you punch yourself doesn't have to look like anything
 
-Buying a commercial backup plate also means giving a company your name and shipping address, and that data doesn't always stay safe. Ledger's [2020 breach](https://www.ledger.com/addressing-the-july-2020-e-commerce-and-marketing-data-breach) exposed roughly 270,000 customers' names, addresses, and phone numbers. Trezor's [breach this month](https://www.coindesk.com/tech/2026/08/13/trezor-warns-14-000-users-after-fulfilment-partner-suffers-data-breach) exposed shipping details for another ~14,000. It's not just wallet vendors either: Coinbase's [2025 insider breach](https://www.bleepingcomputer.com/news/security/coinbase-discloses-breach-faces-up-to-400-million-in-losses/) shows exchanges leak the same kind of data too, and it gets sold for targeted extortion. Generating your own stencil in the browser means none of that data ever has to exist in the first place.
+Buying a commercial backup plate also means giving a company your name and shipping address, and that data doesn't always stay safe. Ledger's [2020 breach](https://www.ledger.com/addressing-the-july-2020-e-commerce-and-marketing-data-breach) exposed roughly 270,000 customers' names, addresses, and phone numbers. Trezor's [August 2026 breach](https://www.coindesk.com/tech/2026/08/13/trezor-warns-14-000-users-after-fulfilment-partner-suffers-data-breach) exposed shipping details for another ~14,000. It's not just wallet vendors either: Coinbase's [2025 insider breach](https://www.bleepingcomputer.com/news/security/coinbase-discloses-breach-faces-up-to-400-million-in-losses/) shows exchanges leak the same kind of data too, and it gets sold for targeted extortion. Generating your own stencil in the browser means none of that data ever has to exist in the first place.
 
 ## How it works
 
-- **specify seed properties** - generate stencil for any length of the seed
-- **specify metal card properties** - generate stencil for any size of metal card
+**Writing a backup**
+- Generate a stencil PDF for your card size and seed length, and print it at 100% scale.
+- Mark each word's first 4 letters (or its index digits or bits) on the stencil.
+- Tape the stencil to the metal card and punch a dent through the paper at every mark, corner marks included.
+- Remove the stencil and destroy it.
 
-### Creating a backup
+![Writing on the stencil](docs/images/writer-animation.gif)
 
-The tool generates a PDF containing a "mesh" to store your seed. You just print it and check off your seed's characters as shown in the animation below.
+![Punched card with the stencil removed](docs/images/card-animation.gif)
 
-![DIYseed PDF stencil generator](docs/images/writer-animation.gif)
+**Reading a backup**
+- Print the stencil on transparent foil and lay it over the card, or use the printed reader page.
+- Align it to the top-left corner: the only corner with a row of dots, one dot per card number.
+- Read the letters (or digits, or bits) under each dent. A wallet completes each word from its first 4 letters.
 
-The best way to explain the rest is by example. Imagine you have a metal card (plate, sheet) of size 100x60mm and want to create a seed backup:
+![Reading a card with the reader](docs/images/reader-animation.gif)
 
-1. Use the generator at [DIYseed.net](https://diyseed.net/) and fill in the properties of the card and seed. You will get a PDF with a stencil the same size as your card, prepared to store your seed.
+## Running locally
 
-2. Mark your seed words onto the writing stencil. The writing stencil is a simple mesh. The **Y-axis** represents alphabet characters. The **X-axis** represents words of the seed. Each word is marked by its first 4 characters ([read theory about a seed](#theory-what-is-a-seed)). Other encodings and orientations are available too, under **Advanced options** in the form. See [Parameters](#parameters) for the full list.
+```
+npm install
+npm run dev            # Vite dev server, http://localhost:5173
+npm test               # Vitest
+npm run build          # single self-contained file -> build/index.html
+```
 
-3. Attach the stencil to the metal card (use glue or tape) and punch a dent with a center punch tool over the paper, at every marked position, including the corner marks (see below).
+The app builds to one HTML file with all scripts and styles inlined. Open it straight from disk, offline, or host it anywhere static. Every `v*` tag publishes it to [GitHub Releases](https://github.com/diyseed/diyseed.core/releases) as `diyseed-<version>.html`.
 
-Every card also gets small corner marks punched along with the mesh: the **top-left** corner carries a row of dots, as many dots as the card's number in the sequence, while the **top-right** and **bottom-left** corners each get a single dot. Punch those too. Once the stencil is removed, they're what let you find each card's top-left corner again and tell the cards apart, even after they're unstacked and out of order.
+The generator is also an npm library (`@diyseed/generator`), installed from Git:
 
-That's it, the backup is complete. In the end, you can remove the stencil and destroy it. A seed backup without its stencil is not readable "just by sight" (but do not rely on that - if someone has a photo of the card, for example, it can be read back with a little work).
+```
+npm install git+https://github.com/diyseed/diyseed.core.git
+```
 
-In the picture below, you can see how to store a seed with leading words **bike**, **acid**, **key**, **satoshi**, and what it looks like after the stencil is removed.
+```ts
+import { GeneratorParameters, generateWriterPdf, mm } from '@diyseed/generator';
 
-![Example of DIYseed solution](docs/images/card-animation.gif)
+const pdf: Uint8Array = await generateWriterPdf(
+  new GeneratorParameters({ cardSize: { width: mm(85.6), height: mm(54) }, cardCount: 1, seedLength: 12 }),
+);
+```
 
-### Reading a backup
+## Generator options
 
-To read a backup card, print the writing stencil onto transparent paper and overlay it on the card. Each dent lines up with the letter (or digit) it represents. Use the corner marks (see [Creating a backup](#creating-a-backup)) to line the stencil up the right way round and identify which card you're holding. Only the top-left corner carries more than one dot, so that's always the corner to align first.
+A client-side TypeScript web app. No install, no server, no account. Fill in your card and seed parameters, and it generates the stencil PDF entirely in your browser.
 
-If you can't print on transparent paper, check **Include reader** under Advanced options when generating your stencil. It adds a printable, non-transparent reader page: cut along the red dashed line, align the guidelines flush with your card's mesh, and slide it to read off letters/digits (or bit place-values, for Binary and Passphrase) one word or character at a time, using the fill-in boxes to build up the recovered seed/passphrase as you go. The principle is shown below.
+### Parameters
 
-![DIYseed PDF stencil reader](docs/images/reader-animation.gif)
+The form validates every value against the ranges below before it generates anything. The generator classes (`GeneratorParameters`, `PassphraseParameters`) throw a `RangeError` for the same ranges, with one exception: passphrase cell size, where they only reject values of 0 or less. The ranges live in `src/generator/config.ts` (`*_RANGE` / `*_DEFAULT` constants).
+
+#### Card (shared by seed and passphrase)
+
+| Form field | Range | Default | Notes |
+|---|---|---|---|
+| Card size (mm) | 20 – 180 mm per side | 85.6 × 54 mm | Default is a credit card (ISO/IEC 7810 ID-1). |
+| Card padding (mm) | 1 – 5 mm | 1.5 mm | Blank border inside the card, around the punch mesh. |
+| Card corner radius | 0 – 5 mm | 1.5 mm | Not in the form, always the default. |
+
+- **Card size:** the 20 mm floor is arbitrary (smaller cards can't fit a usable mesh). The 180 mm ceiling is what fits on an A4 page inside the margins.
+- **Padding and corner radius** are cosmetic. Pick them to match your card.
+
+#### Seed stencil
+
+| Form field | Range | Default | Notes |
+|---|---|---|---|
+| Seed length (words) | 10 – 39 | 12 | |
+| Split over (card sides) | 1 – 13 | 1 | How many card sides the words are spread across. |
+| Stencil sets | 1 – 10 | 1 | Identical stencil sets in one PDF. |
+| Card split (rows per card) | 1 – 5 | 1 | Word rows per card, for taller cards. Ignored for Binary. |
+| Encoding | Alphabet / Number / Binary | Alphabet | Each word as its 4-letter prefix, its BIP-39 index (0–2047) as 4 digits, or that index as 11 bits. |
+
+- **Seed length:** a real BIP-39 seed is 12, 15, 18, 21 or 24 words. Other lengths exist for non-standard backups (partial backups, SLIP-39 shares).
+- **Split over:** each card is one side of a physical card (1/2 are sides A/B of the first card, 3/4 the next one). Past ~6 sides, punching and reassembling in order gets unwieldy.
+- **Cell size:** derived from card size, padding, word count and encoding. The preview warns when a cell is under 1.5 mm (`MIN_CELL_SIZE_MM`, too small for a center punch on metal) or more elongated than 2:1 (`MAX_CELL_ASPECT_RATIO`, dents get ambiguous to read).
+
+#### Passphrase stencil
+
+| Form field | Range | Default | Notes |
+|---|---|---|---|
+| Passphrase | on / off | on | At least one of Seed or Passphrase must be on. |
+| Stencil sets | 1 – 10 | 1 | Identical stencil sets in one PDF. |
+| Passphrase cell size (mm) | 1 – 10 mm | 2 mm | Range checked by the form only. 1 – 1.5 mm generates, but is probably not punchable. |
+| Card count | 1 | 1 | Not in the form. The library accepts 1 – 13. |
+
+Each passphrase character is punched as 7-bit ASCII. The card holds as many passphrase rows as fit its height.
+
+#### Output pages
+
+Each section has its own checkboxes for what goes into the PDF:
+
+| Section | Pages |
+|---|---|
+| Seed | Stencil, Seed reader, Seed wordlist (BIP-39 word → index → bits) |
+| Passphrase | Stencil, Passphrase reader, Passphrase ASCII (character → code → bits) |
 
 ### Card code
 
@@ -64,7 +122,7 @@ Reading a card back needs a stencil generated with the same settings it was punc
 
 To use it, click **Generate from card code** on the generator page and type the code in. You get the full recovery kit for that card's whole set: the stencil, the reader, the BIP-39 wordlist and the ASCII table, built straight from the code and independent of the rest of the form.
 
-Every card of a set carries the same code (the [corner marks](#creating-a-backup) already tell the cards apart). Every field is plain digits, so the code can be read by a person without the app:
+Every card of a set carries the same code (the corner marks already tell the cards apart). Every field is plain digits, so the code can be read by a person without the app:
 
 | Stencil | Format | Example |
 |---|---|---|
@@ -84,149 +142,48 @@ Every card of a set carries the same code (the [corner marks](#creating-a-backup
 
 The first digit alone decides how the rest of the code is read. If the layout ever needs to change, it gets a new first digit instead of changing an existing one, so a card punched today will regenerate the same stencil even after the generator changes.
 
-## Theory: what is a seed
+## Examples
 
-We suppose everyone who is here understands what a seed is. But for our backup, it's important to know these facts:
+Sample stencils generated by the tool, cropped to the card. All seed samples are punched with the same example seed, so the encodings compare directly:
 
-1. **A seed is, at its core, one big number.** Your wallet derives every key and address it ever generates from it.
-2. **That number can just as well be split into several smaller numbers.** [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039.mediawiki) does exactly this: it slices the seed's entropy (+ a checksum) into a sequence of 11-bit chunks, each a number from 0 to 2047.
-3. **Each of those numbers is substituted with a word, purely for readability.** Which word stands for which number is fixed by the [BIP-39 wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md). That's why a seed is "a few words" (usually 12 or 24) rather than "a few numbers" to begin with.
-4. **Each word is uniquely determined by its first 4 characters.**
-   - It is enough to know only the first four letters of each word to recover your seed, so the backup stores only those. HW wallets like Ledger and Trezor will fill in the rest of the word during recovery.
+`bike acid key satoshi orbit planet garden volume ribbon timber wisdom zebra`
 
-So it makes no real difference whether you store the one big number, the several smaller numbers, the words, or just each word's first 4 characters. They're all just different representations of the same seed. In practice, most hardware wallets work with words, so storing whole words (or their 4-character prefixes) is the most convenient: that's the **Alphabet** encoding. Storing the raw numbers as bits instead is more compact and fits smaller cards: that's the **Binary** encoding (see [Parameters](#parameters)).
+**Alphabet, single line.** 12 words on a credit card (85.6 × 54 mm). Each cell holds a letter; the four cells under each word number mark that word's 4-letter prefix.
 
-## Using the generator
-
-A client-side TypeScript web app. No install, no server, no account. Open
-the page, fill in your card and seed parameters, and it generates the
-stencil PDF entirely in your browser.
-
-### Parameters
-
-All ranges below are enforced by the generator itself (`GeneratorParameters` /
-`PassphraseParameters` throw a `RangeError` outside them); the form additionally
-validates against the same ranges before it will submit.
-
-#### Seed stencil
-
-| Parameter | Range | Default | Notes |
-|---|---|---|---|
-| Seed length (words) | 10 – 39 | 12 | See [do the ranges make sense?](#do-the-ranges-make-sense) below. Standard BIP-39 seeds are 12/15/18/21/24 words; the wider range exists to support non-standard/split (e.g. Shamir) backups. |
-| Card count | 1 – 13 | 1 | How many physical cards the seed's words are spread across. In practice, 6 or fewer (3 two-sided physical cards) is about as many as stays manageable to punch, store, and reassemble. See [do the ranges make sense?](#do-the-ranges-make-sense). |
-| Card width / height | 20 – 180 mm | 85.6 × 54 mm | Default matches a credit card (ISO/IEC 7810 ID-1). Upper bound is fixed by the A4 page minus margins. |
-| Card split | 1 – 5 | 1 | Word-rows per card, for taller cards. Not user-facing for Binary encoding, since it's computed automatically. |
-| Card padding | 1 – 5 mm | 1.5 mm | Blank border inside each card, outside the punch mesh. |
-| Card corner radius | 0 – 5 mm | 1.5 mm | Not currently exposed in the form; always uses the default. |
-| Encoding | Alphabet / Binary | Alphabet | Alphabet punches each word as its 4-letter prefix; Binary punches its BIP-39 index (0–2047) as bits. |
-| Copies | 1 – 10 | 1 | Number of complete stencil sets to generate in one PDF. |
-
-#### Passphrase stencil (optional, in addition to or instead of the seed)
-
-| Parameter | Range | Default | Notes |
-|---|---|---|---|
-| Enabled | on / off | off | At least one of Seed or Passphrase must be enabled. |
-| Card count | 1 – 13 | 1 | Model supports more, but the form currently only ever generates 1 card. |
-| Cell size override | 1 – 10 mm | none (inherits) | When unset, reuses the seed's computed cell size so both stencils punch at the same pitch; if the seed is disabled, falls back to 2 mm. |
-
-Card size and padding are shared between the seed and passphrase stencils
-(there's only one set of card-size/padding fields in the form).
-
-#### Examples
-
-Sample stencils generated by the tool, one per encoding/layout combination (cropped to just the card; corner marks and, where applicable, the row/column headers are visible).
-
-**Alphabet, single line** — each cell holds a letter; the four cells under each word number are punched to mark that word's 4-letter prefix.
+Punched: `bike acid key sato orbi plan gard volu ribb timb wisd zebr`
 
 ![Alphabet stencil, single line](docs/images/seed-alphabet-single-line.png)
 
-**Alphabet, split across 3 lines (Card split = 3)** — each line is one section of the card, with a padding-sized gap between sections so the lines stay visually distinct.
+**Alphabet, two rows (Card split = 2).** The same seed extended to 24 words, on an 85.6 × 100 mm card. Splitting into rows keeps the cells close to square. Rows are separated by a padding-sized gap and each gets its own corner marks.
 
-![Alphabet stencil, three lines](docs/images/seed-alphabet-multi-line.png)
+Punched: `bike acid key sato orbi plan gard volu ribb timb wisd zebr` / `anch cany dolp elbo foss glim harb isla jung lemo magn nobl`
 
-**Number encoding** — same layout as Alphabet, with digit rows (0–9) instead of letters.
+![Alphabet stencil, two rows](docs/images/seed-alphabet-multi-line.png)
+
+**Number.** The 12-word seed on an 85.6 × 21 mm card. Same layout as Alphabet, with digit rows (0–9). Each word is punched as its BIP-39 index.
+
+Punched: `0177 0015 0976 1531 1247 1327 0765 1966 1480 1809 2018 2044`
 
 ![Number stencil](docs/images/seed-number.png)
 
-**Binary encoding** — each word is a column of 11 bits (values 1–1024, shown at left) punched to encode its BIP-39 index (0–2047) directly, rather than a printed character.
+**Binary.** The 12-word seed on a 40 × 35 mm plate. Each word is a column of 11 bits (place values 1024–1, shown at left) encoding its BIP-39 index.
+
+Punched (as bits): `177 15 976 1531 1247 1327 765 1966 1480 1809 2018 2044`
 
 ![Binary stencil](docs/images/seed-binary.png)
 
-**Passphrase stencil** — one block per passphrase (here 2, stacked with the same gap logic as multi-line seeds), each column a character position and each row a bit place-value.
+**Passphrase.** A credit card with 2 mm cells and three passphrase rows. Each column is a character position, each row a bit place value of its ASCII code.
 
-![Passphrase stencil, two blocks](docs/images/passphrase-two-blocks.png)
+Punched: row 1 `Satoshi2026!`, row 2 `my second phrase`, row 3 empty
 
-#### Do the ranges make sense?
-
-A few of the above are soft engineering limits rather than physical/real-world
-ones, worth calling out if you're changing the code or picking unusual values:
-
-- **Seed length (10–39 words).** A real BIP-39 seed is always 12, 15, 18, 21,
-  or 24 words (each length maps to a fixed entropy+checksum size). The
-  generator deliberately allows other lengths too, since it's also used for
-  non-standard cases (partial backups, Shamir/SLIP-39 shares, passphrases
-  entered as "words"), but if you're backing up a plain BIP-39 seed, only
-  those five lengths correspond to anything a wallet will actually recognize.
-- **Cell size floor.** The hard minimum for a punch cell is enforced
-  indirectly (padding/card-size ranges keep it positive), except for the
-  passphrase cell-size override, which has an explicit 1 mm floor
-  (`PASSPHRASE_OVERRIDE_CELL_SIZE_RANGE`). Below ~1.5 mm a center punch
-  generally can't produce distinguishable dents on metal, so the UI shows a
-  "cell too small" warning (`MIN_CELL_SIZE_MM`) starting at 1.5 mm even though
-  values down to 1 mm are technically accepted. Treat 1–1.5 mm cells as
-  "generates, but probably not punchable" rather than a safe range.
-- **Cell aspect ratio.** Cells more elongated than 2:1
-  (`MAX_CELL_ASPECT_RATIO`) trigger a "not square" warning. Very oblong cells
-  make the punched dent's row/column ambiguous to read back.
-- **Card size (20–180 mm).** The floor is arbitrary (a card smaller than
-  ~20 mm can't fit a usable mesh). The ceiling is a real physical constraint:
-  it's exactly what fits on an A4 page inside the document margins, since each
-  card renders as one stencil on one page.
-- **Card corner radius / padding (0–5 mm / 1–5 mm).** These are cosmetic
-  layout bounds (how rounded the corners look, how much blank border
-  surrounds the mesh) rather than anything with a physical limit. Pick
-  values based on your card's own shape.
-- **Card count (1–13).** Each card in that range corresponds to one side of
-  a physical card (see the [corner marks](#creating-a-backup): cards 1/2
-  share a physical card as sides A/B, 3/4 the next one, and so on). 13 sides
-  is technically allowed, but keeping track of, punching, and reassembling
-  more than ~6 sides (3 double-sided cards) in the right order gets
-  unwieldy fast. Treat the practical ceiling as lower than the enforced one.
-
-If you need values outside these ranges, they live in
-`src/generator/config.ts` (`*_RANGE` / `*_DEFAULT` constants).
-
-### Running locally
-```
-npm install
-npm run dev
-```
-
-### Building for deployment
-```
-npm run build
-```
-
-Outputs a static site to `dist/`, deployable to any static host.
-
-### To-Do
-- [ ] Port the Manual PDF section to the JS app
-
-## FAQ
-
-### Are just 4 characters from each word enough to recover the seed?
-Yes, each of the 2048 words in the [BIP-39 wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md) is uniquely determined by its leading 4 characters. You can check yourself: there's no pair of words in the list that share their first four letters.
-
-### Can I recover the seed without your stencils/readers?
-If you're not able to print the reading stencil for any reason, you can always draw the mesh by hand yourself.
-
-### How can I recognize the orientation of the card?
-Every stencil already includes corner marks for this. Punch them along with the mesh. The top-left corner gets a row of dots (as many as the card's number), while the top-right and bottom-left corners each get a single dot. Since only the top-left corner ever has more than one dot, you can always find the correct orientation and card number later, even after the cards are unstacked.
+![Passphrase stencil](docs/images/passphrase.png)
 
 ## Release notes
 
 ### v2
-- Added more ways to encode the seed, useful for smaller backups: a Binary encoding option alongside the existing Alphabet encoding.
-- Added an option to generate a backup stencil for a passphrase, in addition to the seed.
-- Added a [card code](#card-code) printed on every stencil card, and **Generate from card code** to regenerate the stencil and reader from it.
-- Switched from a .NET console app to a JavaScript app that runs in any browser. Rendering happens entirely client-side, so you can save the page and use it offline.
+- Switched from a .NET console app to a JavaScript app that runs in any browser. Rendering happens entirely client-side, and each release ships as a single HTML file you can download and use offline.
+- Added Number and Binary encodings alongside Alphabet. Binary fits the smallest cards.
+- Added a passphrase stencil, in addition to the seed.
+- Added printable reader pages for decoding a punched card without transparent foil.
+- Added reference tables: the BIP-39 wordlist with indexes and bits, and an ASCII table.
+- Added a [card code](#card-code) printed on every stencil page, and **Generate from card code** to regenerate the stencil and reader from it.

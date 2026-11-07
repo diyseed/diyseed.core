@@ -235,7 +235,7 @@ function buildFilename(values: FormValues): string {
     parts.push(`${values.seedLength}words-${values.cardCount}cards`);
   }
   if (isPassphraseSectionActive(values)) {
-    parts.push(`passphrase-${values.passphrase.cardCount}cards`);
+    parts.push('passphrase');
   }
   parts.push(`${values.cardWidthMm}x${values.cardHeightMm}mm`);
   if (values.includeSeedReader || values.passphrase.includeReader) {
@@ -261,7 +261,7 @@ document.getElementById('generator-form')?.addEventListener('submit', async (eve
     const seedParams: GeneratorParameters | null = isSeedSectionActive(values) ? toGeneratorParameters(values) : null;
     const passphraseParams = isPassphraseSectionActive(values) ? toPassphraseParameters(values) : null;
     if (passphraseParams && passphraseParams.charsPerBlock <= 0) {
-      renderGeneralError('No characters fit on the passphrase card at this cell size — try a bigger card, smaller cells, or less padding.');
+      renderGeneralError('No characters fit on the passphrase card at this cell size. Try a bigger card, smaller cells, or less padding.');
       return;
     }
     const input: StencilInput = {
