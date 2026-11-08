@@ -81,3 +81,18 @@ describe('passphrase encoding constants', () => {
     expect(Config.PASSPHRASE_CARD_COUNT_DEFAULT).toBe(1);
   });
 });
+
+describe('stencil code strip', () => {
+  it('fits the gap, label and code inside the reserved height', async () => {
+    const { PDFDocument, StandardFonts } = await import('pdf-lib');
+    const doc = await PDFDocument.create();
+    const labelFont = await doc.embedFont(StandardFonts.Helvetica);
+    const codeFont = await doc.embedFont(StandardFonts.CourierBold);
+    const used =
+      Config.STENCIL_CODE_TOP_GAP +
+      labelFont.heightAtSize(Config.STENCIL_CODE_LABEL_FONT_SIZE) +
+      Config.STENCIL_CODE_LABEL_GAP +
+      codeFont.heightAtSize(Config.STENCIL_CODE_FONT_SIZE);
+    expect(used).toBeLessThanOrEqual(Config.STENCIL_CODE_RESERVED_HEIGHT);
+  });
+});

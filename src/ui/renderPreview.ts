@@ -187,7 +187,7 @@ function renderStencilCode(code: string): HTMLElement {
   el.className = 'preview-code';
   const label = document.createElement('div');
   label.className = 'preview-code__label';
-  label.textContent = 'Code to regenerate these stencils';
+  label.textContent = 'Code to regenerate';
   const value = document.createElement('div');
   value.className = 'preview-code__value';
   value.textContent = code;
