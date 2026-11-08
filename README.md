@@ -27,9 +27,7 @@ Buying a commercial backup plate also means giving a company your name and shipp
 - Tape the stencil to the metal card and punch a dent through the paper at every mark, corner marks included.
 - Remove the stencil and destroy it.
 
-![Writing on the stencil](docs/images/writer-animation.gif)
-
-![Punched card with the stencil removed](docs/images/card-animation.gif)
+![Marking the seed on the stencil, then the punched card with the stencil removed](docs/images/writer-animation.gif)
 
 **Reading a backup**
 - Use the printed reader page: slide the card along its guidelines and read one word at a time.
@@ -37,7 +35,7 @@ Buying a commercial backup plate also means giving a company your name and shipp
 - Align it to the top-left corner: the only corner with a row of dots, one dot per row number.
 - Read the letters (or digits, or bits) under each dent. A wallet completes each word from its first 4 letters.
 
-![Reading a card with the reader](docs/images/reader-animation.gif)
+![Reading a card with the printed reader page](docs/images/reader-animation.gif)
 
 **Corner marks**
 
