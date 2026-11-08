@@ -123,6 +123,9 @@ export const READER_POSITION_NUMBER_HEIGHT = mm(5);
 // Fixed clearance between a position number and the line it labels, so the
 // number never touches it regardless of how the text itself gets centered.
 export const READER_POSITION_NUMBER_GAP = mm(0.4);
+// Height of each row of big word numbers below the seed reader's card (one
+// row per card split section), outside the area the card covers.
+export const READER_WORD_NUMBER_ROW_HEIGHT = mm(6);
 // Fill-in box width is the number column plus one cell per character the box
 // holds - 4 for a seed word (its 4-letter/4-digit prefix, or a Binary word's
 // up-to-4-digit index), 1 for a passphrase character.

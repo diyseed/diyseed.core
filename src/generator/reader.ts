@@ -143,7 +143,7 @@ function drawRowOrientedSeedDiagram(page: PDFPage, font: PDFFont, boldFont: PDFF
     fontSizeRange: Config.WORD_NR_FONT_SIZE_RANGE,
     increaseStep: 1,
     sampleText: '42.',
-    maxSize: size(wordWidth, sectionHeight - Config.WORD_NR_TOP_GAP),
+    maxSize: size(wordWidth, Config.READER_WORD_NUMBER_ROW_HEIGHT),
   });
 
   // Same size/scale as the passphrase reader's position numbers.
@@ -210,27 +210,39 @@ function drawRowOrientedSeedDiagram(page: PDFPage, font: PDFFont, boldFont: PDFF
       });
     }
 
-    // Big, semi-transparent word numbers, one per word - numbering starts at
-    // the section's first word on the right and ends at its last word, right
-    // at the cut line, matching how the card is inserted from the right.
-    // Shifted the same half-character as the shading, so the number stays
-    // horizontally centered in its own gray/white stripe.
+  }
+
+  // Big word numbers, one row per section, below the card's bottom edge and
+  // its ticks: the card covers the mesh while it is read, so numbers inside
+  // it would be hidden. Numbering starts at the section's first word on the
+  // right and ends at its last word at the cut line, matching how the card is
+  // inserted from the right. Shifted the same half-character as the shading
+  // (and shaded the same), so each number sits under its own stripe.
+  const wordNumbersTop = cardBottom + Config.READER_CUTLINE_OVERFLOW + Config.READER_POSITION_NUMBER_GAP;
+  const rowHeight = Config.READER_WORD_NUMBER_ROW_HEIGHT;
+  for (let s = 0; s < cardSplit; s++) {
+    const rowY = wordNumbersTop + s * rowHeight;
     for (let w = 0; w < maxWordsPerSection; w++) {
       const wordX = origin.x + cardPadding + w * wordWidth + charWidth / 2;
+      const wordIndex = s * maxWordsPerSection + w;
+      if (wordIndex % 2 === 0) {
+        drawRectTL(page, point(wordX, rowY), size(wordWidth, rowHeight), { color: WORD_SHADE });
+      }
       const wordNumber = s * maxWordsPerSection + (maxWordsPerSection - w);
       drawTextInBoxTL(
         page,
         `${wordNumber}`,
         boldFont,
         wordNumberFontSize,
-        point(wordX, sectionY + Config.WORD_NR_TOP_GAP),
-        size(wordWidth, sectionHeight - Config.WORD_NR_TOP_GAP),
-        { horizontal: 'center', vertical: 'top' },
+        point(wordX, rowY),
+        size(wordWidth, rowHeight),
+        { horizontal: 'center', vertical: 'center' },
         WORD_NR_TEXT,
         WORD_NR_OPACITY,
       );
     }
   }
+  const wordNumbersBottom = wordNumbersTop + cardSplit * rowHeight;
 
   // Character ticks, one per column, extended past the mesh's own height (as
   // long as the cut line itself) so they're easy to follow as you slide the
@@ -271,7 +283,7 @@ function drawRowOrientedSeedDiagram(page: PDFPage, font: PDFFont, boldFont: PDFF
   });
   drawScissorsIcon(page, point(origin.x, cardTop - Config.READER_CUTLINE_OVERFLOW), Config.READER_SCISSORS_SIZE, 'vertical');
 
-  return cardBottom + Config.READER_GUIDELINE_OVERFLOW;
+  return Math.max(cardBottom + Config.READER_GUIDELINE_OVERFLOW, wordNumbersBottom);
 }
 
 interface FillInGroup {

@@ -10,7 +10,7 @@ const cutX = mm(15), meshY = mm(30); // reader.ts DIAGRAM_ORIGIN
 const cardTop = meshY - pad;
 
 const W = 800, CAPTION_H = 44;
-const cropPt = { x: mm(7), y: mm(17), w: mm(146), h: mm(108) };
+const cropPt = { x: mm(7), y: mm(17), w: mm(146), h: mm(112.5) };
 const s = W / cropPt.w;
 const H = Math.round(CAPTION_H + cropPt.h * s);
 const px = (xPt, yPt) => [(xPt - cropPt.x) * s, CAPTION_H + (yPt - cropPt.y) * s];
@@ -38,7 +38,10 @@ drawMetalCard(cardImg.getContext('2d'), 10, 10, cardW, cardH, p.cardCornerRadius
 
 // Fill-in boxes (reader.ts drawFillInBoxes): 6 per row, number cell + 4 char cells.
 const boxX = (i) => cutX + pad + (i % 6) * mm(23) + mm(4);
-const boxY = (i) => mm(103.55) + Math.floor(i / 6) * mm(11);
+// reader.ts: the diagram ends below the word-number row (cut-line overflow 3 mm,
+// gap 0.4 mm, one 6 mm row), then a 10 mm section gap and a 6 mm card heading.
+const diagramBottom = cardTop + p.cardSize.height + Math.max(mm(5), mm(3) + mm(0.4) + mm(6));
+const boxY = (i) => diagramBottom + mm(16) + Math.floor(i / 6) * mm(11);
 
 function frame({ caption, cardLeftPt = null, read = -1, typed = 0 }) {
   const c = createCanvas(W, H);
