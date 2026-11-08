@@ -1,9 +1,19 @@
 name: CI
 
+# The gate for merging into main: runs on PRs, not on merges, and skips
+# docs-only changes. "Run workflow" in the Actions tab checks any branch.
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+# A new push to the same PR cancels the run still in progress.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
