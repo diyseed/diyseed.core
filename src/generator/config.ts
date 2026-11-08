@@ -79,10 +79,12 @@ export const CORNER_MARK_RADIUS = mm(0.175); // 0.35 mm dot
 // Space kept free at the bottom of every stencil page so the code always fits
 // under the last row of cards, whatever the card size.
 export const STENCIL_CODE_RESERVED_HEIGHT = mm(14);
-// Clears the paper-cutter guides below the last row of cards.
-export const STENCIL_CODE_TOP_GAP = mm(2.5);
+// Clears the paper-cutter guides below the last row of cards, with room to
+// spare so the code doesn't read as part of the card. Gap + label + code
+// (about 4.5 + 2.9 + 0.8 + 5.6 mm) must stay within the reserved height.
+export const STENCIL_CODE_TOP_GAP = mm(4.5);
 export const STENCIL_CODE_LABEL_GAP = mm(0.8);
-export const STENCIL_CODE_LABEL_TEXT = 'Code to regenerate these stencils (diyseed.net, "Generate from card code"):';
+export const STENCIL_CODE_LABEL_TEXT = 'Code to regenerate';
 export const STENCIL_CODE_LABEL_FONT_SIZE = 9;
 export const STENCIL_CODE_FONT_SIZE = 20;
 
