@@ -11,13 +11,30 @@ const cardTop = meshY - pad;
 
 // Step texts live in the README, not in the GIF; `caption` only names the step.
 const W = 800, CAPTION_H = 8;
-const cropPt = { x: mm(7), y: mm(17), w: mm(146), h: mm(112.5) };
+
+// Fill-in boxes (reader.ts drawFillInBoxes): 6 per row, number cell + 4 char cells.
+const boxX = (i) => cutX + pad + (i % 6) * mm(23) + mm(4);
+// reader.ts: the diagram ends below the word-number row (cut-line overflow 3 mm,
+// gap 0.4 mm, one 6 mm row), then a 10 mm section gap and a 6 mm card heading.
+const diagramBottom = cardTop + p.cardSize.height + Math.max(mm(5), mm(3) + mm(0.4) + mm(6));
+const boxY = (i) => diagramBottom + mm(16) + Math.floor(i / 6) * mm(11);
+
+// The diagram is shown as on the page; the fill-in boxes are cut out of the
+// page separately and drawn smaller, right below it, to keep the GIF compact.
+const cropPt = { x: mm(7), y: mm(17), w: mm(146), h: diagramBottom + mm(1) - mm(17) };
+const boxCrop = { y: boxY(0) - mm(6), h: mm(6) + mm(19) + mm(0.5) };
+const BOX_SCALE = 0.62;
+const BOX_GAP = 14;
 const s = W / cropPt.w;
-const H = Math.round(CAPTION_H + cropPt.h * s);
+const diagramH = cropPt.h * s;
+const H = Math.round(CAPTION_H + diagramH + BOX_GAP + boxCrop.h * s * BOX_SCALE + 4);
 const px = (xPt, yPt) => [(xPt - cropPt.x) * s, CAPTION_H + (yPt - cropPt.y) * s];
+const boxesTop = CAPTION_H + diagramH + BOX_GAP;
+const bpx = (xPt, yPt) => [(xPt - cropPt.x) * s * BOX_SCALE, boxesTop + (yPt - boxCrop.y) * s * BOX_SCALE];
 
 const page = await renderPdfPage(pdf, s);
 const reader = crop(page, cropPt.x * s, cropPt.y * s, cropPt.w * s, cropPt.h * s);
+const boxes = crop(page, cropPt.x * s, boxCrop.y * s, cropPt.w * s, boxCrop.h * s);
 
 // Card columns in reading order: word w, char c -> letter row (or null when the word is shorter).
 const columns = [];
@@ -37,30 +54,24 @@ const dentR = Math.min(cell.width, cell.height) * s * 0.32;
 const cardImg = createCanvas(Math.ceil(cardW) + 20, Math.ceil(cardH) + 20);
 drawMetalCard(cardImg.getContext('2d'), 10, 10, cardW, cardH, p.cardCornerRadius * s, dents.map(([x, y]) => [10 + x * s, 10 + y * s]), dentR);
 
-// Fill-in boxes (reader.ts drawFillInBoxes): 6 per row, number cell + 4 char cells.
-const boxX = (i) => cutX + pad + (i % 6) * mm(23) + mm(4);
-// reader.ts: the diagram ends below the word-number row (cut-line overflow 3 mm,
-// gap 0.4 mm, one 6 mm row), then a 10 mm section gap and a 6 mm card heading.
-const diagramBottom = cardTop + p.cardSize.height + Math.max(mm(5), mm(3) + mm(0.4) + mm(6));
-const boxY = (i) => diagramBottom + mm(16) + Math.floor(i / 6) * mm(11);
-
 function frame({ caption, cardLeftPt = null, read = -1, typed = 0 }) {
   const c = createCanvas(W, H);
   const ctx = c.getContext('2d');
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, W, H);
   ctx.drawImage(reader, 0, CAPTION_H);
+  ctx.drawImage(boxes, 0, boxesTop, boxes.width * BOX_SCALE, boxes.height * BOX_SCALE);
 
   // typed characters so far
-  ctx.font = 'bold 15px Courier, monospace';
+  ctx.font = 'bold 11px Courier, monospace';
   ctx.textAlign = 'center';
   for (let k = 0; k < typed; k++) {
     const row = columns[k];
     if (row === null) continue;
     const w = Math.floor(k / 4);
-    const [x, y] = px(boxX(w) + (k % 4 + 0.5) * mm(4), boxY(w) + mm(4));
+    const [x, y] = bpx(boxX(w) + (k % 4 + 0.5) * mm(4), boxY(w) + mm(4));
     ctx.fillStyle = k === read ? BLUE : '#222';
-    ctx.fillText(String.fromCharCode(97 + row), x, y + 5);
+    ctx.fillText(String.fromCharCode(97 + row), x, y + 4);
   }
 
   if (cardLeftPt !== null) {
@@ -90,13 +101,14 @@ function frame({ caption, cardLeftPt = null, read = -1, typed = 0 }) {
       ctx.strokeRect(lx, ly, mm(6) * s + cell.width * s, cell.height * s);
     }
     const w = Math.floor(read / 4);
-    const [gx, gy] = px(boxX(w) - mm(4), boxY(w));
+    const k = s * BOX_SCALE;
+    const [gx, gy] = bpx(boxX(w) - mm(4), boxY(w));
     ctx.fillStyle = BLUE_SHADE;
-    ctx.fillRect(gx, gy, mm(20) * s, mm(8) * s);
-    const [fx, fy] = px(boxX(w) + (read % 4) * mm(4), boxY(w));
+    ctx.fillRect(gx, gy, mm(20) * k, mm(8) * k);
+    const [fx, fy] = bpx(boxX(w) + (read % 4) * mm(4), boxY(w));
     ctx.strokeStyle = BLUE;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(fx, fy, mm(4) * s, mm(8) * s);
+    ctx.lineWidth = 1.6;
+    ctx.strokeRect(fx, fy, mm(4) * k, mm(8) * k);
   }
 
   return c;
