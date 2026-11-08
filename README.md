@@ -41,13 +41,29 @@ Buying a commercial backup plate also means giving a company your name and shipp
 
 Besides the data, every stencil has a few dots outside the mesh. Punch them like any other mark. They tell you which way up the card is, and which card and row you are holding, so a set can be put back in order even when the cards get mixed up.
 
-![Corner marks on a seed and a passphrase card](docs/images/corner-marks.svg)
-
 1. **Row number**: dots above each row's top-left corner. The first dot sits directly above the mesh's left edge, in the middle of the padding above the row. The next ones follow to the right, one cell width apart (closer only if they would not fit the row). Row 1 gets one dot, row 2 two dots, and so on. The dots count rows in reading order, across all cards of a set: each card side is at least one row, and Card split adds more. Example: 24 words split over both sides of a credit card (12 + 12) is side A = row 1 (one dot), side B = row 2 (two dots).
 2. **Row end**: one dot directly above the mesh's right edge, in the middle of the same padding.
 3. **Card end**: one dot directly below the mesh's left edge, half the padding below the card's last row.
 
 Each dot sits centred in the padding: above the first row, in the padding-wide gap between rows, and below the last row. Seed and passphrase cards use the same marks. Only the top-left corner has a row of dots, so align the reader there.
+
+#### Seed, card split = 2
+
+<img src="docs/images/corner-marks-seed.svg" alt="Corner marks on a seed card side with two rows" width="404">
+
+One card side, two rows. The next card side continues the count: 3, 4 dots.
+
+#### Passphrase
+
+<img src="docs/images/corner-marks-passphrase.svg" alt="Corner marks on a passphrase card with three rows" width="402">
+
+Three rows, each a separate passphrase. The next card continues the count: 4, 5, 6 dots.
+
+#### Detail
+
+<img src="docs/images/corner-marks-detail.svg" alt="Corner marks detail: dot positions to scale" width="560">
+
+Row 3, top-left corner, to scale (3 mm padding, 2 mm cells).
 
 ## Running locally
 
