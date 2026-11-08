@@ -49,7 +49,7 @@ describe('preview warning thresholds', () => {
 
 describe('corner mark geometry', () => {
   it('defines a slightly larger radius, in points', () => {
-    expect(Config.CORNER_MARK_RADIUS).toBeCloseTo(mm(0.35), 6);
+    expect(Config.CORNER_MARK_RADIUS).toBeCloseTo(mm(0.175), 6);
   });
 });
 

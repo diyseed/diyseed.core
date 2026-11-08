@@ -73,7 +73,7 @@ export const MAX_CELL_ASPECT_RATIO = 2;
 // CORNER MARKS
 // Marks are centred in the card padding (see cornerMarkInset), so the padding
 // must leave room for a dot on either side - the 1mm minimum does.
-export const CORNER_MARK_RADIUS = mm(0.35);
+export const CORNER_MARK_RADIUS = mm(0.175); // 0.35 mm dot
 
 // STENCIL CODE (the card code, printed once per stencil page below the cards)
 // Space kept free at the bottom of every stencil page so the code always fits

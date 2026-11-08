@@ -357,6 +357,4 @@
 <line x1="446.0" y1="590.0" x2="458.0" y2="590.0" stroke="#1F3FBF" stroke-width="1.4"/>
 <line x1="446.0" y1="650.0" x2="458.0" y2="650.0" stroke="#1F3FBF" stroke-width="1.4"/>
 <text x="462.0" y="624.5" font-size="13" font-weight="700" text-anchor="start" fill="#1F3FBF">half the padding</text>
-<line x1="216.0" y1="590.0" x2="170.0" y2="590.0" stroke="#555" stroke-width="1.2"/>
-<text x="164.0" y="594.5" font-size="13" font-weight="700" text-anchor="end" fill="#1F3FBF">⌀ 0.7 mm</text>
 </svg>

@@ -45,13 +45,11 @@ Besides the data, every stencil has a few dots outside the mesh. Punch them like
 
 ![Corner marks on a seed and a passphrase card](docs/images/corner-marks.svg)
 
-1. **Row number**: dots above each row's top-left corner. The first dot sits directly above the mesh's left edge, in the middle of the padding above the row. The next ones follow to the right, one cell width apart (closer only if they would not fit the row). Row 1 gets one dot, row 2 two dots, and so on. The count keeps going across all cards of a set: with one row per card, it is simply the card side number (1 dot on card 1 side A, 2 on side B, 3 on card 2 side A...).
+1. **Row number**: dots above each row's top-left corner. The first dot sits directly above the mesh's left edge, in the middle of the padding above the row. The next ones follow to the right, one cell width apart (closer only if they would not fit the row). Row 1 gets one dot, row 2 two dots, and so on. The dots count rows in reading order, across all cards of a set: each card side is at least one row, and Card split adds more. Example: 24 words split over both sides of a credit card (12 + 12) is side A = row 1 (one dot), side B = row 2 (two dots).
 2. **Row end**: one dot directly above the mesh's right edge, in the middle of the same padding.
 3. **Card end**: one dot directly below the mesh's left edge, half the padding below the card's last row.
 
-Every mark is a 0.7 mm dot, measured to its centre. Rows on one card are separated by a gap the size of the card padding, so every dot sits in the middle of a padding-wide strip: above the first row, between rows, and below the last row. On a punched card, twice the distance from the card edge to the top dots gives you the padding back.
-
-The seed and the passphrase use the same marks. A seed card has one row, or more with Card split. A passphrase card holds as many rows as fit its height, and each row is a separate passphrase. Because only the top-left corner has a row of dots, it is also the corner you align the reader to.
+Each dot sits centred in the padding: above the first row, in the padding-wide gap between rows, and below the last row. Seed and passphrase cards use the same marks. Only the top-left corner has a row of dots, so align the reader there.
 
 ## Running locally
 
