@@ -8,7 +8,7 @@ Online version at [https://diyseed.net](https://diyseed.net/).
 
 ## Motivation
 
-There are many solutions for creating a secure backup of the seed words. But they are just overpriced pieces of metal. Especially if you are willing to create more backup tokens (for example because of Shamir backup...).
+There are many commercial solutions for creating a secure backup of the seed words. But they are just overpriced pieces of metal. Especially if you are willing to create more backup tokens (for example because of Shamir backup...). I also wanted a secure way to store a passphrase, punched on its own separate piece of metal.
 
 I wanted to create a solution for durable metal seed backup with those thoughts in mind:
 - **Durability** - seed backup is as durable as commercial ones
@@ -17,13 +17,13 @@ I wanted to create a solution for durable metal seed backup with those thoughts 
 - **Easy to use** - it is easy to create a backup for everyone as well as read it
 - **Stealth** - commercial backup plates are branded, boxed, and obviously "crypto backup hardware." A card you punch yourself doesn't have to look like anything
 
-Buying a commercial backup plate also means giving a company your name and shipping address, and that data doesn't always stay safe. Ledger's [2020 breach](https://www.ledger.com/addressing-the-july-2020-e-commerce-and-marketing-data-breach) exposed roughly 270,000 customers' names, addresses, and phone numbers. Trezor's [August 2026 breach](https://www.coindesk.com/tech/2026/08/13/trezor-warns-14-000-users-after-fulfilment-partner-suffers-data-breach) exposed shipping details for another ~14,000. It's not just wallet vendors either: Coinbase's [2025 insider breach](https://www.bleepingcomputer.com/news/security/coinbase-discloses-breach-faces-up-to-400-million-in-losses/) shows exchanges leak the same kind of data too, and it gets sold for targeted extortion. Generating your own stencil in the browser means none of that data ever has to exist in the first place.
+Buying a commercial backup plate also means giving a company your name and shipping address, and that data doesn't always stay safe. Ledger's [2020 breach](https://www.ledger.com/addressing-the-july-2020-e-commerce-and-marketing-data-breach) exposed roughly 270,000 customers' names, addresses, and phone numbers. Trezor's [August 2026 breach](https://www.coindesk.com/tech/2026/08/13/trezor-warns-14-000-users-after-fulfilment-partner-suffers-data-breach) exposed shipping details for another ~14,000. It's not just wallet vendors either: Coinbase's [2025 insider breach](https://www.bleepingcomputer.com/news/security/coinbase-discloses-breach-faces-up-to-400-million-in-losses/) shows exchanges leak the same kind of data too, and it gets sold for targeted extortion. Do you really want the world to know you own bitcoin? Generating your own stencil in the browser means none of that data ever has to exist in the first place.
 
 ## How it works
 
 **Writing a backup**
 - Generate a stencil PDF for your card size and seed length, and print it at 100% scale.
-- Mark each word's first 4 letters (or its index digits or bits) on the stencil.
+- Mark each word's first 4 letters on the stencil. Other encodings store the word's index as digits or bits instead (see [Examples](#examples)).
 - Tape the stencil to the metal card and punch a dent through the paper at every mark, corner marks included.
 - Remove the stencil and destroy it.
 
@@ -32,11 +32,26 @@ Buying a commercial backup plate also means giving a company your name and shipp
 ![Punched card with the stencil removed](docs/images/card-animation.gif)
 
 **Reading a backup**
-- Print the stencil on transparent foil and lay it over the card, or use the printed reader page.
-- Align it to the top-left corner: the only corner with a row of dots, one dot per card number.
+- Use the printed reader page: slide the card along its guidelines and read one word at a time.
+- Even better: print the stencil on transparent foil or tracing paper and lay it straight over the card. You see every dent against its letter at once.
+- Align it to the top-left corner: the only corner with a row of dots, one dot per row number.
 - Read the letters (or digits, or bits) under each dent. A wallet completes each word from its first 4 letters.
 
 ![Reading a card with the reader](docs/images/reader-animation.gif)
+
+**Corner marks**
+
+Besides the data, every stencil has a few dots outside the mesh. Punch them like any other mark. They tell you which way up the card is, and which card and row you are holding, so a set can be put back in order even when the cards get mixed up.
+
+![Corner marks on a seed and a passphrase card](docs/images/corner-marks.svg)
+
+1. **Row number**: dots above each row's top-left corner. The first dot sits directly above the mesh's left edge, in the middle of the padding above the row. The next ones follow to the right, one cell width apart (closer only if they would not fit the row). Row 1 gets one dot, row 2 two dots, and so on. The count keeps going across all cards of a set: with one row per card, it is simply the card side number (1 dot on card 1 side A, 2 on side B, 3 on card 2 side A...).
+2. **Row end**: one dot directly above the mesh's right edge, in the middle of the same padding.
+3. **Card end**: one dot directly below the mesh's left edge, half the padding below the card's last row.
+
+Every mark is a 0.7 mm dot, measured to its centre. Rows on one card are separated by a gap the size of the card padding, so every dot sits in the middle of a padding-wide strip: above the first row, between rows, and below the last row. On a punched card, twice the distance from the card edge to the top dots gives you the padding back.
+
+The seed and the passphrase use the same marks. A seed card has one row, or more with Card split. A passphrase card holds as many rows as fit its height, and each row is a separate passphrase. Because only the top-left corner has a row of dots, it is also the corner you align the reader to.
 
 ## Running locally
 

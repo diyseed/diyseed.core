@@ -51,10 +51,6 @@ describe('corner mark geometry', () => {
   it('defines a slightly larger radius, in points', () => {
     expect(Config.CORNER_MARK_RADIUS).toBeCloseTo(mm(0.35), 6);
   });
-
-  it('defines a fixed 0.5mm inset from the mesh edge, into the card border strip', () => {
-    expect(Config.CORNER_MARK_INSET).toBeCloseTo(mm(0.5), 6);
-  });
 });
 
 describe('card padding range', () => {

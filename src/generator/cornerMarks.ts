@@ -1,19 +1,25 @@
 import { Point, Size, point } from '../units';
 import * as Config from './config';
 
-// Marks sit in the card's border strip, directly above/below the mesh corner
-// - never diagonally inset. Along the card edge they run parallel to (x for
-// top marks), they stay flush with the mesh's own edge (= padding); only the
-// perpendicular axis (y for top marks) gets the fixed 0.5mm offset, landing
-// the mark just outside the mesh, in the border strip.
+// Marks sit in the card's padding, directly above/below a mesh corner - never
+// diagonally inset. Offsets are relative to that mesh corner: along the edge
+// they stay flush with the mesh (x = 0 for the first top-left dot), across it
+// they sit `inset` outside the mesh.
 //
+// The inset is half the card padding (cornerMarkInset), so every mark is
+// centred in its padding strip: between the card edge and the first row, in
+// the padding-sized gap between rows, and below the last row. Measuring a
+// punched card's dot from the edge then gives the padding back directly.
+export function cornerMarkInset(padding: number): number {
+  return padding / 2;
+}
+
 // `pitch` spaces consecutive marks one mesh cell width apart, so the row of
 // marks reads at the same scale as the grid they sit above.
-export function getTopLeftCornerMarkOffsets(count: number, padding: number, pitch: number): Point[] {
-  const y = padding - Config.CORNER_MARK_INSET;
+export function getTopLeftCornerMarkOffsets(count: number, inset: number, pitch: number): Point[] {
   const offsets: Point[] = [];
   for (let i = 0; i < count; i++) {
-    offsets.push(point(padding + i * pitch, y));
+    offsets.push(point(i * pitch, -inset));
   }
   return offsets;
 }
@@ -26,12 +32,12 @@ export function getTopLeftCornerMarkPitch(count: number, cellWidth: number, rowW
   return count > 0 ? Math.min(cellWidth, rowWidth / count) : cellWidth;
 }
 
-export function getTopRightCornerMarkOffset(padding: number): Point {
-  return point(-padding, padding - Config.CORNER_MARK_INSET);
+export function getTopRightCornerMarkOffset(inset: number): Point {
+  return point(0, -inset);
 }
 
-export function getBottomLeftCornerMarkOffset(padding: number): Point {
-  return point(padding, -(padding - Config.CORNER_MARK_INSET));
+export function getBottomLeftCornerMarkOffset(inset: number): Point {
+  return point(0, inset);
 }
 
 export interface LineSegment {

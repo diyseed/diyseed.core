@@ -5,7 +5,7 @@ import * as Config from './config';
 import { getFontSizeForBox } from './fontFit';
 import { getCardSafeAreaSize, getOriginForCard } from './geometry';
 import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledCircleTL, drawRotatedTextInBoxTL, drawFilledTriangleTL } from './pdfDraw';
-import { getTopLeftCornerMarkOffsets, getTopLeftCornerMarkPitch, getTopRightCornerMarkOffset, getBottomLeftCornerMarkOffset, getCutterGuideSegments } from './cornerMarks';
+import { cornerMarkInset, getTopLeftCornerMarkOffsets, getTopLeftCornerMarkPitch, getTopRightCornerMarkOffset, getBottomLeftCornerMarkOffset, getCutterGuideSegments } from './cornerMarks';
 import { buildSeedParamsSummary, buildPassphraseParamsSummary } from './summary';
 import { encodeSeedConfigCode, encodePassphraseConfigCode } from './configCode';
 import { Point, Size, point, size, mm } from '../units';
@@ -269,7 +269,7 @@ function renderCard(page: PDFPage, font: PDFFont, boldFont: PDFFont, card: CardP
     // drawRowTopMarks). When a card has exactly one section, its number
     // equals the card's own number and this lands exactly where the old
     // card-level marks used to.
-    drawRowTopMarks(page, sectionOrigin, section.size, section.number, section.cellSize.width);
+    drawRowTopMarks(page, sectionOrigin, section.size, section.number, section.cellSize.width, card.padding);
     drawSection(page, font, boldFont, section, sectionOrigin);
     // Sections leave a cardPadding-sized gap before the next one, matching
     // GeneratorParameters.sectionSize's own reservation for it (and the
@@ -311,14 +311,14 @@ function drawStencilCode(pages: PDFPage[], cardsBottom: number[], labelFont: PDF
   });
 }
 
-// Single bottom-left dot for the whole card, 0.5mm below the card's own
-// bottom edge - closes off the set of per-row top marks drawn above, the
-// same way the passphrase card's trailing bottom-left mark does.
+// Single bottom-left dot for the whole card, centred in the padding below the
+// mesh's bottom-left corner - closes off the set of per-row top marks drawn
+// above, the same way the passphrase card's trailing bottom-left mark does.
 function drawBottomLeftMark(page: PDFPage, card: CardParameters, cardOrigin: Point): void {
-  const bottomLeft = getBottomLeftCornerMarkOffset(card.padding);
+  const bottomLeft = getBottomLeftCornerMarkOffset(cornerMarkInset(card.padding));
   drawFilledCircleTL(
     page,
-    point(cardOrigin.x + bottomLeft.x, cardOrigin.y + card.size.height + bottomLeft.y),
+    point(cardOrigin.x + card.padding + bottomLeft.x, cardOrigin.y + card.size.height - card.padding + bottomLeft.y),
     Config.CORNER_MARK_RADIUS,
     CARD_OUTLINE,
   );
@@ -493,11 +493,11 @@ function renderPassphraseCard(
   drawPassphraseColumnHeader(page, font, blocks[0], cardOrigin.y, firstBlockOrigin.x, headerHeight, parameters.cellSize.width, '99');
 
   blocks.forEach((positions, blockIndex) => {
-    // Top-left/top-right marks live at *this block's* own top corners (0.5mm
-    // above its mesh, flush with its own left/right edges) - one dot cluster
+    // Top-left/top-right marks live at *this block's* own top corners (centred
+    // in the padding above its mesh, flush with its own left/right edges) - one dot cluster
     // per row/column, not one for the whole card - so the count of dots
     // tells you which row you're punching, continuing across cards.
-    drawRowTopMarks(page, blockOrigin, blockSize, startRowNumber + blockIndex, parameters.cellSize.width);
+    drawRowTopMarks(page, blockOrigin, blockSize, startRowNumber + blockIndex, parameters.cellSize.width, parameters.cardPadding);
 
     // Bit place-value header (7 values, shared across every block): stays in
     // the single external margin reserved for the whole card, positioned per
@@ -510,11 +510,11 @@ function renderPassphraseCard(
     blockOrigin = point(blockOrigin.x, blockOrigin.y + blockSize.height + parameters.cardPadding);
   });
 
-  // Single bottom-left mark, 0.5mm below the last block's own bottom edge -
+  // Single bottom-left mark, half the padding below the last block's own bottom edge -
   // not the card's bottom edge, which can sit well past the last block when
   // the card is taller/wider than an exact multiple of the block size. Flush
   // with the first block's own left edge, which every row shares already.
-  const bottomLeft = getBottomLeftCornerMarkOffset(0);
+  const bottomLeft = getBottomLeftCornerMarkOffset(cornerMarkInset(parameters.cardPadding));
   drawFilledCircleTL(
     page,
     point(firstBlockOrigin.x + bottomLeft.x, lastBlockOrigin.y + blockSize.height + bottomLeft.y),
@@ -524,18 +524,18 @@ function renderPassphraseCard(
 }
 
 // Top-left dot cluster (count = rowNumber) and a single top-right dot, both
-// sitting 0.5mm above this row's own mesh and flush with its own left/right
-// edges - i.e. this row's corners, not the whole card's. `padding: 0` in the
-// offset helpers below is deliberate: rowOrigin already *is* the mesh corner,
-// so there's no extra border gap to flush against. Shared by passphrase
+// centred in the padding-sized strip above this row's own mesh and flush with
+// its own left/right edges - i.e. this row's corners, not the whole card's.
+// rowOrigin already *is* the mesh corner, which the offsets are relative to. Shared by passphrase
 // blocks and seed sections (Card split > 1) - both are "rows" that need
 // telling apart by punched dots once the paper stencil is gone.
-function drawRowTopMarks(page: PDFPage, rowOrigin: Point, rowSize: Size, rowNumber: number, pitch: number): void {
-  for (const offset of getTopLeftCornerMarkOffsets(rowNumber, 0, getTopLeftCornerMarkPitch(rowNumber, pitch, rowSize.width))) {
+function drawRowTopMarks(page: PDFPage, rowOrigin: Point, rowSize: Size, rowNumber: number, pitch: number, padding: number): void {
+  const inset = cornerMarkInset(padding);
+  for (const offset of getTopLeftCornerMarkOffsets(rowNumber, inset, getTopLeftCornerMarkPitch(rowNumber, pitch, rowSize.width))) {
     drawFilledCircleTL(page, point(rowOrigin.x + offset.x, rowOrigin.y + offset.y), Config.CORNER_MARK_RADIUS, CARD_OUTLINE);
   }
 
-  const topRight = getTopRightCornerMarkOffset(0);
+  const topRight = getTopRightCornerMarkOffset(inset);
   drawFilledCircleTL(
     page,
     point(rowOrigin.x + rowSize.width + topRight.x, rowOrigin.y + topRight.y),

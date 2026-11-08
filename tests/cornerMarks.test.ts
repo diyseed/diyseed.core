@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  cornerMarkInset,
   getTopLeftCornerMarkOffsets,
   getTopLeftCornerMarkPitch,
   getTopRightCornerMarkOffset,
@@ -11,39 +12,46 @@ import {
 import * as Config from '../src/generator/config';
 import { mm, size } from '../src/units';
 
+describe('cornerMarkInset', () => {
+  it('centres the mark in the padding strip', () => {
+    expect(cornerMarkInset(mm(1.5))).toBeCloseTo(mm(0.75), 6);
+    expect(cornerMarkInset(mm(1))).toBeCloseTo(mm(0.5), 6);
+  });
+
+  it('leaves room for the whole dot inside the minimum padding', () => {
+    const minPadding = Config.CARDS_PADDING_RANGE[0];
+    expect(cornerMarkInset(minPadding) - Config.CORNER_MARK_RADIUS).toBeGreaterThan(0);
+  });
+});
+
 describe('getTopLeftCornerMarkOffsets', () => {
-  it('stays flush with the mesh edge in x, and sits 0.5mm above the mesh in y - not diagonal', () => {
-    const padding = mm(1.5);
+  it('starts flush with the mesh edge in x, and sits `inset` above the mesh in y - not diagonal', () => {
+    const inset = mm(0.75);
     const pitch = mm(2); // one mesh cell width
-    const offsets = getTopLeftCornerMarkOffsets(3, padding, pitch);
-    const expectedY = padding - Config.CORNER_MARK_INSET;
+    const offsets = getTopLeftCornerMarkOffsets(3, inset, pitch);
     expect(offsets).toHaveLength(3);
-    expect(offsets[0]).toEqual({ x: padding, y: expectedY });
-    expect(offsets[1].x).toBeCloseTo(padding + pitch, 6);
-    expect(offsets[2].x).toBeCloseTo(padding + 2 * pitch, 6);
+    expect(offsets[0]).toEqual({ x: 0, y: -inset });
+    expect(offsets[1].x).toBeCloseTo(pitch, 6);
+    expect(offsets[2].x).toBeCloseTo(2 * pitch, 6);
     for (const offset of offsets) {
-      expect(offset.y).toBeCloseTo(expectedY, 6);
+      expect(offset.y).toBeCloseTo(-inset, 6);
     }
   });
 
   it('returns an empty array for count 0', () => {
-    expect(getTopLeftCornerMarkOffsets(0, mm(1.5), mm(2))).toEqual([]);
+    expect(getTopLeftCornerMarkOffsets(0, mm(0.75), mm(2))).toEqual([]);
   });
 });
 
 describe('getTopRightCornerMarkOffset', () => {
-  it('stays flush with the mesh edge in x, and sits 0.5mm above the mesh in y - not diagonal', () => {
-    const padding = mm(1.5);
-    const expectedY = padding - Config.CORNER_MARK_INSET;
-    expect(getTopRightCornerMarkOffset(padding)).toEqual({ x: -padding, y: expectedY });
+  it('stays flush with the mesh edge in x, and sits `inset` above the mesh in y - not diagonal', () => {
+    expect(getTopRightCornerMarkOffset(mm(0.75))).toEqual({ x: 0, y: -mm(0.75) });
   });
 });
 
 describe('getBottomLeftCornerMarkOffset', () => {
-  it('stays flush with the mesh edge in x, and sits 0.5mm beneath the mesh in y - not diagonal', () => {
-    const padding = mm(1.5);
-    const expectedY = -(padding - Config.CORNER_MARK_INSET);
-    expect(getBottomLeftCornerMarkOffset(padding)).toEqual({ x: padding, y: expectedY });
+  it('stays flush with the mesh edge in x, and sits `inset` beneath the mesh in y - not diagonal', () => {
+    expect(getBottomLeftCornerMarkOffset(mm(0.75))).toEqual({ x: 0, y: mm(0.75) });
   });
 });
 
