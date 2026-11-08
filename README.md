@@ -22,20 +22,26 @@ Buying a commercial backup plate also means giving a company your name and shipp
 ## How it works
 
 **Writing a backup**
-- Generate a stencil PDF for your card size and seed length, and print it at 100% scale.
-- Mark each word's first 4 letters on the stencil. Other encodings store the word's index as digits or bits instead (see [Examples](#examples)).
-- Tape the stencil to the metal card and punch a dent through the paper at every mark, corner marks included.
-- Remove the stencil and destroy it.
+1. Generate a stencil PDF for your card size and seed length, and print it at 100% scale.
+2. Mark each word's first 4 letters on the stencil. Other encodings store the word's index as digits or bits instead (see [Examples](#examples)).
+3. Mark the corner marks too: top left, top right and bottom left.
+4. Tape the stencil to the metal card and punch a dent through the paper at every mark.
+5. Remove the stencil and destroy it.
 
 ![Marking the seed on the stencil, then the punched card with the stencil removed](docs/images/writer-animation.gif)
 
 **Reading a backup**
-- Use the printed reader page: slide the card along its guidelines and read one word at a time.
-- Even better: print the stencil on transparent foil or tracing paper and lay it straight over the card. You see every dent against its letter at once.
-- Align it to the top-left corner: the only corner with a row of dots, one dot per row number.
-- Read the letters (or digits, or bits) under each dent. A wallet completes each word from its first 4 letters.
+
+With the printed reader page:
+1. Cut along the red dashed line.
+2. Slide the card in from the right, under the cut edge, until its padding is hidden.
+3. Read the letter next to the cut and write it into the boxes, then slide the card one column further. The word numbers below the card show which word you are on.
 
 ![Reading a card with the printed reader page](docs/images/reader-animation.gif)
+
+Even better: print the stencil on transparent foil or tracing paper and lay it straight over the card. You see every dent against its letter at once. Align it to the top-left corner: the only corner with a row of dots, one dot per row number.
+
+Either way, a wallet completes each word from its first 4 letters.
 
 **Corner marks**
 

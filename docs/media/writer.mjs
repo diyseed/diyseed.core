@@ -72,15 +72,13 @@ function drawList(ctx, current, done) {
   });
 }
 
-const CAP = 44;
+// Step texts live in the README, not in the GIF; `caption` only names the step.
+const CAP = 0;
 function frame({ caption, current = -1, done = 0, markCount = 0, corners = 0, ring = -1, wipe = null }) {
   const c = createCanvas(W, H + CAP);
   const ctx = c.getContext('2d');
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, W, H + CAP);
-  ctx.fillStyle = '#222';
-  ctx.font = 'bold 17px Helvetica, Arial, sans-serif';
-  ctx.fillText(caption, 16, 28);
   ctx.translate(0, CAP);
   drawList(ctx, current, done);
   const flat = marks.flat();

@@ -9,7 +9,8 @@ const cell = p.cellSize, pad = p.cardPadding;
 const cutX = mm(15), meshY = mm(30); // reader.ts DIAGRAM_ORIGIN
 const cardTop = meshY - pad;
 
-const W = 800, CAPTION_H = 44;
+// Step texts live in the README, not in the GIF; `caption` only names the step.
+const W = 800, CAPTION_H = 8;
 const cropPt = { x: mm(7), y: mm(17), w: mm(146), h: mm(112.5) };
 const s = W / cropPt.w;
 const H = Math.round(CAPTION_H + cropPt.h * s);
@@ -98,10 +99,6 @@ function frame({ caption, cardLeftPt = null, read = -1, typed = 0 }) {
     ctx.strokeRect(fx, fy, mm(4) * s, mm(8) * s);
   }
 
-  ctx.textAlign = 'left';
-  ctx.fillStyle = '#222';
-  ctx.font = 'bold 17px Helvetica, Arial, sans-serif';
-  ctx.fillText(caption, 16, 28);
   return c;
 }
 
