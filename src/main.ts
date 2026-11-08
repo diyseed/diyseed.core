@@ -12,7 +12,10 @@ import {
   FieldError,
 } from './ui/form';
 import { EncodingType } from './generator/encoding';
-import { GeneratorParameters } from './generator/params';
+import { GeneratorParameters, PassphraseParameters } from './generator/params';
+import { pdfFilename } from './ui/pdfFilename';
+import { codeFromSearch } from './ui/codeLink';
+import { cardDiagram } from './ui/cardDiagram';
 import { computePreviewLayout, computePassphrasePreviewLayout } from './ui/preview';
 import { renderSeedPreview, renderPassphrasePreview, STENCIL_UNCHECKED_PLACEHOLDER_TEXT } from './ui/renderPreview';
 
@@ -229,25 +232,12 @@ function downloadPdf(bytes: Uint8Array, filename: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
-function buildFilename(values: FormValues): string {
-  const parts: string[] = ['diyseed'];
-  if (isSeedSectionActive(values)) {
-    parts.push(`${values.seedLength}words-${values.cardCount}cards`);
-  }
-  if (isPassphraseSectionActive(values)) {
-    parts.push('passphrase');
-  }
-  parts.push(`${values.cardWidthMm}x${values.cardHeightMm}mm`);
-  if (values.includeSeedReader || values.passphrase.includeReader) {
-    parts.push('with-reader');
-  }
-  if (values.includeAsciiTable) {
-    parts.push('with-ascii-table');
-  }
-  if (values.includeSeedWordTable) {
-    parts.push('with-seed-word-table');
-  }
-  return `${parts.join('-')}.pdf`;
+// Names the file after the card codes of the stencils/readers in it; the
+// reference tables alone carry no code.
+function buildFilename(values: FormValues, seed: GeneratorParameters | null, passphrase: PassphraseParameters | null): string {
+  const seedIncluded = seed && (values.includeSeedStencil || values.includeSeedReader) ? seed : null;
+  const passphraseIncluded = passphrase && (values.passphrase.includeStencil || values.passphrase.includeReader) ? passphrase : null;
+  return pdfFilename(seedIncluded, passphraseIncluded);
 }
 
 document.getElementById('generator-form')?.addEventListener('submit', async (event) => {
@@ -275,7 +265,7 @@ document.getElementById('generator-form')?.addEventListener('submit', async (eve
       includeSeedWordTable: values.includeSeedWordTable,
     };
     const bytes = await generateStencilPdf(input);
-    downloadPdf(bytes, buildFilename(values));
+    downloadPdf(bytes, buildFilename(values, seedParams, passphraseParams));
   } catch (error) {
     renderGeneralError(error instanceof Error ? error.message : 'Failed to generate PDF.');
   }
@@ -304,11 +294,15 @@ function showCodeError(message: string | null): void {
 
 const codeDialog = document.getElementById('code-dialog') as HTMLDialogElement | null;
 
-document.getElementById('open-code-dialog')?.addEventListener('click', () => {
+function openCodeDialog(code?: string): void {
+  const input = document.getElementById('configCode') as HTMLInputElement | null;
   showCodeError(null);
+  if (input && code !== undefined) input.value = code;
   codeDialog?.showModal();
-  (document.getElementById('configCode') as HTMLInputElement | null)?.focus();
-});
+  input?.focus();
+}
+
+document.getElementById('open-code-dialog')?.addEventListener('click', () => openCodeDialog());
 
 document.getElementById('close-code-dialog')?.addEventListener('click', () => codeDialog?.close());
 
@@ -334,7 +328,10 @@ document.getElementById('code-form')?.addEventListener('submit', async (event) =
 
   try {
     const bytes = await generateStencilPdf(stencilInputFromCode(decoded));
-    downloadPdf(bytes, `diyseed-from-code-${code.replace(/[^\d]+/g, '-')}.pdf`);
+    downloadPdf(
+      bytes,
+      decoded.kind === 'seed' ? pdfFilename(decoded.parameters, null) : pdfFilename(null, decoded.parameters),
+    );
     showCodeError(null);
     codeDialog?.close();
   } catch (error) {
@@ -342,5 +339,29 @@ document.getElementById('code-form')?.addEventListener('submit', async (event) =
   }
 });
 
-document.getElementById('generator-form')?.addEventListener('input', updatePreview);
+function updateCardDiagram(): void {
+  const svg = document.getElementById('card-preview-svg');
+  if (!svg) return;
+  const positive = (id: string, fallback: number) => {
+    const value = (document.getElementById(id) as HTMLInputElement | null)?.valueAsNumber;
+    return value !== undefined && Number.isFinite(value) && value > 0 ? value : fallback;
+  };
+  const diagram = cardDiagram(
+    positive('cardWidthMm', DEFAULT_FORM_VALUES.cardWidthMm),
+    positive('cardHeightMm', DEFAULT_FORM_VALUES.cardHeightMm),
+    positive('cardPaddingMm', DEFAULT_FORM_VALUES.cardPaddingMm),
+  );
+  svg.setAttribute('viewBox', diagram.viewBox);
+  svg.setAttribute('aria-label', diagram.label);
+  svg.innerHTML = diagram.markup;
+}
+
+document.getElementById('generator-form')?.addEventListener('input', () => {
+  updatePreview();
+  updateCardDiagram();
+});
 updatePreview();
+updateCardDiagram();
+
+const linkedCode = codeFromSearch(location.search);
+if (linkedCode) openCodeDialog(linkedCode);

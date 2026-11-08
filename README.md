@@ -131,11 +131,22 @@ Each section has its own checkboxes for what goes into the PDF:
 | Seed | Stencil, Seed reader, Seed wordlist (BIP-39 word → index → bits) |
 | Passphrase | Stencil, Passphrase reader, Passphrase ASCII (character → code → bits) |
 
+The PDF is named after the card codes it contains: `diyseed_seed<seed code>_pass<passphrase code>.pdf`, or just the part that is generated, e.g. `diyseed_seed1-0856-0540-15-12-01-1-1.pdf`. A PDF with only reference tables is `diyseed.pdf`.
+
+#### Previews
+
+Each box in the form has a collapsible **Preview** that redraws as you type:
+
+- **Card properties:** the card outline with its width and height in mm and the padding as a dashed line.
+- **Seed** and **Passphrase:** the first card in full detail, all cards as thumbnails, and the card code. Above the detailed card is the cell size, either calculated from card size, padding and seed length (seed) or as set in the passphrase options.
+
 ### Card code
 
 Reading a card back needs a stencil generated with the same settings it was punched from (card size, padding, seed length, card count, rows, encoding). So every stencil page prints a short **card code** in large type below the cards, e.g. `1-0856-0540-15-12-01-1-1`, and the form preview shows it too. Copying it onto the card (scratch it, stamp it, or write it on the card's sleeve) is optional, just a convenience: without it you can still measure the card and try settings until the stencil lines up.
 
 To use it, click **Generate from card code** on the generator page and type the code in. You get the full recovery kit for that card's whole set: the stencil, the reader, the BIP-39 wordlist and the ASCII table, built straight from the code and independent of the rest of the form.
+
+A code can also be shared as a link: opening the generator with `?code=<card code>` (e.g. `https://diyseed.net/generator/?code=1-0856-0540-15-12-01-1-1`) opens the **Generate from card code** dialog with the code filled in. Generating still takes a click.
 
 Every card of a set carries the same code (the corner marks already tell the cards apart). Every field is plain digits, so the code can be read by a person without the app:
 

@@ -325,10 +325,13 @@ describe('renderPreview', () => {
     expect(container.querySelectorAll('.preview-cards .preview-word-mesh')).toHaveLength(0);
   });
 
-  it('shows the calculated cell size and card border below the detailed seed card', () => {
+  it('captions the detailed seed card "Full detail" and puts the cell size on its own line above it', () => {
     renderPreview(container, makeLayout());
-    const bigLabel = container.querySelector('.preview-big .preview-card__label');
-    expect(bigLabel?.textContent).toBe('Full detail · Cell size: 10.0 × 10.0 mm (calculated from card properties) · Card padding: 1.5 mm');
+    expect(container.querySelector('.preview-big .preview-card__label')?.textContent).toBe('Full detail');
+    const note = container.querySelector('.preview-big > .preview-cell-note');
+    expect(note?.querySelector('.preview-cell-note__size')?.textContent).toBe('Cell size 10.0 × 10.0 mm');
+    expect(note?.textContent).toContain('calculated from card size, padding and seed length');
+    expect(container.querySelector('.preview-big')?.firstElementChild).toBe(note);
   });
 
   it('does not render binary markup for a non-binary layout', () => {
@@ -623,5 +626,12 @@ describe('renderPreview — passphrase', () => {
     const layout = makePassphraseLayout({ warnings: { cellTooSmall: false, noCapacity: true } });
     renderPreview(container, null, layout);
     expect(container.querySelectorAll('.preview-passphrase .preview-warning--error')).toHaveLength(1);
+  });
+  it('puts the passphrase cell size on its own line above the detailed card', () => {
+    renderPreview(container, null, makePassphraseLayout());
+    const note = container.querySelector('.preview-passphrase .preview-big > .preview-cell-note');
+    expect(note?.querySelector('.preview-cell-note__size')?.textContent).toBe('Cell size 2.0 × 2.0 mm');
+    expect(note?.textContent).toContain('as set in the passphrase options');
+    expect(container.querySelector('.preview-passphrase .preview-big .preview-card__label')?.textContent).toBe('Full detail');
   });
 });
