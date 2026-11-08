@@ -1,0 +1,18 @@
+{
+  "name": "diyseed-readme-media",
+  "private": true,
+  "type": "module",
+  "description": "Regenerates the README sample images and animations in docs/images from the real generator.",
+  "scripts": {
+    "samples": "node samples.mjs",
+    "writer": "node writer.mjs",
+    "reader": "node reader.mjs",
+    "build": "node samples.mjs && node writer.mjs && node reader.mjs"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "0.1.65",
+    "gifenc": "1.0.3",
+    "gifsicle": "7.0.1",
+    "pdfjs-dist": "4.10.38"
+  }
+}

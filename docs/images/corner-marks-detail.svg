@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="85 480 560 270" width="560" height="270" font-family="Helvetica, Arial, sans-serif" role="img" aria-label="Corner marks detail: dot positions to scale">
+<rect x="85" y="480" width="560" height="270" fill="#fff"/>
+<rect x="550.0" y="500.0" width="80.0" height="30.0" fill="#eeeeee"/>
+<line x1="230.0" y1="500.0" x2="230.0" y2="530.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="310.0" y1="500.0" x2="310.0" y2="530.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="390.0" y1="500.0" x2="390.0" y2="530.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="470.0" y1="500.0" x2="470.0" y2="530.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="550.0" y1="500.0" x2="550.0" y2="530.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="630.0" y1="500.0" x2="630.0" y2="530.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="230.0" y1="500.0" x2="630.0" y2="500.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="230.0" y1="530.0" x2="630.0" y2="530.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="230.0" y1="530.0" x2="630.0" y2="530.0" stroke="#111" stroke-width="1.6"/>
+<line x1="230.0" y1="500.0" x2="230.0" y2="530.0" stroke="#111" stroke-width="1.6"/>
+<rect x="550.0" y="650.0" width="80.0" height="90.0" fill="#eeeeee"/>
+<line x1="230.0" y1="650.0" x2="230.0" y2="740.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="310.0" y1="650.0" x2="310.0" y2="740.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="390.0" y1="650.0" x2="390.0" y2="740.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="470.0" y1="650.0" x2="470.0" y2="740.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="550.0" y1="650.0" x2="550.0" y2="740.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="630.0" y1="650.0" x2="630.0" y2="740.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="230.0" y1="650.0" x2="630.0" y2="650.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="230.0" y1="695.0" x2="630.0" y2="695.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="230.0" y1="740.0" x2="630.0" y2="740.0" stroke="#b8b8b8" stroke-width="1"/>
+<line x1="230.0" y1="650.0" x2="630.0" y2="650.0" stroke="#111" stroke-width="1.6"/>
+<line x1="230.0" y1="650.0" x2="230.0" y2="740.0" stroke="#111" stroke-width="1.6"/>
+<circle cx="230.0" cy="590.0" r="14.0" fill="#111"/>
+<circle cx="310.0" cy="590.0" r="14.0" fill="#111"/>
+<circle cx="390.0" cy="590.0" r="14.0" fill="#111"/>
+<line x1="230.0" y1="530.0" x2="230.0" y2="740.0" stroke="#1F3FBF" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="218.0" y="690.0" font-size="13" font-weight="700" text-anchor="end" fill="#1F3FBF">directly above the</text>
+<text x="218.0" y="708.0" font-size="13" font-weight="700" text-anchor="end" fill="#1F3FBF">mesh's left edge</text>
+<line x1="230.0" y1="564.0" x2="310.0" y2="564.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<line x1="230.0" y1="558.0" x2="230.0" y2="570.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<line x1="310.0" y1="558.0" x2="310.0" y2="570.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<text x="270.0" y="556.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1F3FBF">1 cell width</text>
+<line x1="310.0" y1="564.0" x2="390.0" y2="564.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<line x1="310.0" y1="558.0" x2="310.0" y2="570.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<line x1="390.0" y1="558.0" x2="390.0" y2="570.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<text x="350.0" y="556.0" font-size="13" font-weight="700" text-anchor="middle" fill="#1F3FBF">1 cell width</text>
+<line x1="404.0" y1="590.0" x2="460.0" y2="590.0" stroke="#1F3FBF" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="452.0" y1="530.0" x2="452.0" y2="590.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<line x1="446.0" y1="530.0" x2="458.0" y2="530.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<line x1="446.0" y1="590.0" x2="458.0" y2="590.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<text x="462.0" y="564.5" font-size="13" font-weight="700" text-anchor="start" fill="#1F3FBF">half the padding</text>
+<line x1="452.0" y1="590.0" x2="452.0" y2="650.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<line x1="446.0" y1="590.0" x2="458.0" y2="590.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<line x1="446.0" y1="650.0" x2="458.0" y2="650.0" stroke="#1F3FBF" stroke-width="1.4"/>
+<text x="462.0" y="624.5" font-size="13" font-weight="700" text-anchor="start" fill="#1F3FBF">half the padding</text>
+</svg>
