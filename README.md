@@ -6,6 +6,16 @@ Online version at [https://diyseed.net](https://diyseed.net/).
 
 ![DIYseed PDF stencil generator](docs/images/product-photo.jpg)
 
+## Release notes
+
+### v2
+- Switched from a .NET console app to a JavaScript app that runs in any browser. Rendering happens entirely client-side, and each release ships as a single HTML file you can download and use offline.
+- Added Number and Binary encodings alongside Alphabet. Binary fits the smallest cards.
+- Added a passphrase stencil, in addition to the seed.
+- Added printable reader pages for decoding a punched card without transparent foil.
+- Added reference tables: the BIP-39 wordlist with indexes and bits, and an ASCII table.
+- Added a [card code](#card-code) printed on every stencil page, and **Generate from card code** to regenerate the stencil and reader from it.
+
 ## Motivation
 
 There are many commercial solutions for creating a secure backup of the seed words. But they are just overpriced pieces of metal. Especially if you are willing to create more backup tokens (for example because of Shamir backup...). I also wanted a secure way to store a passphrase, punched on its own separate piece of metal.
@@ -223,13 +233,3 @@ Punched as bits (word → index): bike `177` · acid `15` · key `976` · satosh
 Punched: row 1 `Satoshi2026!`, row 2 `my second phrase`, row 3 empty
 
 <img src="docs/images/passphrase.png" alt="Passphrase stencil" width="685">
-
-## Release notes
-
-### v2
-- Switched from a .NET console app to a JavaScript app that runs in any browser. Rendering happens entirely client-side, and each release ships as a single HTML file you can download and use offline.
-- Added Number and Binary encodings alongside Alphabet. Binary fits the smallest cards.
-- Added a passphrase stencil, in addition to the seed.
-- Added printable reader pages for decoding a punched card without transparent foil.
-- Added reference tables: the BIP-39 wordlist with indexes and bits, and an ASCII table.
-- Added a [card code](#card-code) printed on every stencil page, and **Generate from card code** to regenerate the stencil and reader from it.
