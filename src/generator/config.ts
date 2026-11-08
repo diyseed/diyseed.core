@@ -104,7 +104,7 @@ export const PASSPHRASE_CELL_SIZE_RANGE: [number, number] = [mm(1), mm(10)];
 export const PASSPHRASE_CARD_COUNT_DEFAULT = 1;
 
 // READER (non-transparent slide/overlay tool for decoding an already-punched
-// card - see docs/superpowers/specs/2026-08-21-reader-stencil-design.md)
+// card - see reader.ts)
 export const SEED_READER_TITLE_TEXT = 'Seed reader';
 export const PASSPHRASE_READER_TITLE_TEXT = 'Passphrase reader';
 export const READER_CUT_COLOR_RGB: [number, number, number] = [0.8, 0, 0];
