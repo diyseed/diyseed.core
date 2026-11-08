@@ -142,12 +142,16 @@ const MARK = '1. Mark the first 4 letters of each word';
 const CORNERS = '2. Mark the corner marks too: top left, top right, bottom left';
 const PUNCH = '3. Punch every mark, then remove the stencil';
 add({ caption: MARK }, 1200);
+// Slow at first so the first word can be followed letter by letter, then
+// gradually faster: each delay eases from ~1 s down to ~80 ms.
+const ease = (i, from, to, rate) => Math.round(to + (from - to) * Math.exp(-i / rate));
 let count = 0;
 SEED12.forEach((w, wi) => {
   const n = Math.min(4, w.length);
   for (let k = 0; k < n; k++) {
+    const markDelay = ease(count, 1000, 80, 7);
     count++;
-    add({ caption: MARK, current: wi, done: wi, markCount: count }, k === n - 1 ? 350 : 140);
+    add({ caption: MARK, current: wi, done: wi, markCount: count }, k === n - 1 ? markDelay + ease(wi, 700, 120, 2.5) : markDelay);
   }
 });
 for (let k = 1; k <= 3; k++) add({ caption: CORNERS, done: 12, markCount: count, corners: k, ring: k - 1 }, 700);
