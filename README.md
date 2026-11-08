@@ -60,6 +60,8 @@ npm run build          # single self-contained file -> build/index.html
 
 The app builds to one HTML file with all scripts and styles inlined. Open it straight from disk, offline, or host it anywhere static. Every `v*` tag publishes it to [GitHub Releases](https://github.com/diyseed/diyseed.core/releases) as `diyseed-<version>.html`.
 
+The sample images and animations in `docs/images` are generated from the real generator by the scripts in [`docs/media`](docs/media/README.md).
+
 The generator is also an npm library (`@diyseed/generator`), installed from Git:
 
 ```
