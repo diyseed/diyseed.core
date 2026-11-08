@@ -1,8 +1,10 @@
 name: Release
 
+# The tag is the version: pushing v2.0.1 releases 2.0.1. package.json carries
+# the major version, bumped by hand; the full version is set only in this run.
 on:
   push:
-    tags: ['v*']
+    tags: ['v*.*.*']
 
 permissions:
   contents: write
@@ -16,16 +18,18 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - name: Check tag matches package.json version
+      - name: Check tag major matches package.json
         run: |
-          version="v$(node -p "require('./package.json').version")"
-          if [ "$version" != "$GITHUB_REF_NAME" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match package.json version $version"
+          major="$(node -p "require('./package.json').version.split('.')[0]")"
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "${tag%%.*}" != "$major" ]; then
+            echo "Tag $GITHUB_REF_NAME has a different major version than package.json ($major.x). Bump package.json first."
             exit 1
           fi
       - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npm test
+      - name: Set version from the tag
+        run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
+      # Typecheck and tests already ran on the PR that changed main.
       - run: npm run build
       - run: cp build/index.html "diyseed-${GITHUB_REF_NAME}.html"
       - name: Create GitHub release

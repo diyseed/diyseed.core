@@ -90,7 +90,7 @@ npm test               # Vitest
 npm run build          # single self-contained file -> build/index.html
 ```
 
-The app builds to one HTML file with all scripts and styles inlined. Open it straight from disk, offline, or host it anywhere static. Every `v*` tag publishes it to [GitHub Releases](https://github.com/diyseed/diyseed.core/releases) as `diyseed-<version>.html`.
+The app builds to one HTML file with all scripts and styles inlined. Open it straight from disk, offline, or host it anywhere static. Every version tag (`v2.0.1`) publishes it to [GitHub Releases](https://github.com/diyseed/diyseed.core/releases) as `diyseed-<version>.html`. The tag is the version. `package.json` only carries the major version, bumped by hand; a tag with a different major version fails the release.
 
 The sample images and animations in `docs/images` are generated from the real generator by the scripts in [`docs/media`](docs/media/README.md).
 

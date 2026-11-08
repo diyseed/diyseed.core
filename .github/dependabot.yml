@@ -1,0 +1,8 @@
+# Keeps the workflow actions (checkout, setup-node) current. npm packages are
+# left out on purpose: they would mean many small PRs.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
