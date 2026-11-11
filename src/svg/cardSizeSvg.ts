@@ -1,6 +1,6 @@
 // Card properties preview: the card outline with tick-ended width/height
 // dimension lines and the padding as a dashed rectangle, all in mm.
-export interface CardDiagram {
+export interface CardSizeSvg {
   viewBox: string;
   label: string;
   markup: string;
@@ -14,7 +14,7 @@ const VIEW_WIDTH = 450;
 
 const formatMm = (value: number): string => `${Math.round(value * 10) / 10} mm`;
 
-export function cardDiagram(widthMm: number, heightMm: number, paddingMm: number): CardDiagram {
+export function cardSizeSvg(widthMm: number, heightMm: number, paddingMm: number): CardSizeSvg {
   const scale = Math.min(MAX_WIDTH / widthMm, MAX_HEIGHT / heightMm);
   const w = widthMm * scale;
   const h = heightMm * scale;

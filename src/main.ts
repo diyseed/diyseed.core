@@ -15,7 +15,7 @@ import { EncodingType } from './generator/encoding';
 import { GeneratorParameters, PassphraseParameters } from './generator/params';
 import { pdfFilename } from './ui/pdfFilename';
 import { codeFromSearch } from './ui/codeLink';
-import { cardDiagram } from './ui/cardDiagram';
+import { cardSizeSvg } from './svg/cardSizeSvg';
 import { computePreviewLayout, computePassphrasePreviewLayout } from './ui/preview';
 import { renderSeedPreview, renderPassphrasePreview, STENCIL_UNCHECKED_PLACEHOLDER_TEXT } from './ui/renderPreview';
 
@@ -346,7 +346,7 @@ function updateCardDiagram(): void {
     const value = (document.getElementById(id) as HTMLInputElement | null)?.valueAsNumber;
     return value !== undefined && Number.isFinite(value) && value > 0 ? value : fallback;
   };
-  const diagram = cardDiagram(
+  const diagram = cardSizeSvg(
     positive('cardWidthMm', DEFAULT_FORM_VALUES.cardWidthMm),
     positive('cardHeightMm', DEFAULT_FORM_VALUES.cardHeightMm),
     positive('cardPaddingMm', DEFAULT_FORM_VALUES.cardPaddingMm),

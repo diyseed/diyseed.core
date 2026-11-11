@@ -771,7 +771,7 @@ button[type="submit"]:hover {
   color: var(--color-text);
 }
 
-/* Card properties preview (cardDiagram.ts) */
+/* Card properties preview (cardSizeSvg.ts) */
 .card-diagram {
   display: block;
   width: 100%;
