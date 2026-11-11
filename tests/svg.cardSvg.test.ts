@@ -157,3 +157,19 @@ describe('cardSvg: tiny seed card', () => {
     }
   });
 });
+
+describe('cardSvg: mesh paint order', () => {
+  it('draws a shaded word\'s fills before its ds-mesh outline', () => {
+    const layout = seedLayout({ cardSize: card, cardPadding: mm(1.5), seedLength: 12, cardCount: 1, cardSplit: 1, encoding: EncodingType.Alphabet }, EncodingType.Alphabet);
+    const doc = parse(cardSvg(layout).markup);
+    const all = [...doc.documentElement.children];
+    const cls = all.map((e) => e.getAttribute('class') ?? '');
+    const fills = cls.map((c, i) => (c.startsWith('ds-fill--') ? i : -1)).filter((i) => i >= 0);
+    expect(fills.length).toBeGreaterThan(0);
+    for (const i of fills) {
+      let j = i;
+      while (cls[j].startsWith('ds-fill--')) j++;
+      expect(cls[j]).toBe('ds-mesh');
+    }
+  });
+});

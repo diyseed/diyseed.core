@@ -81,8 +81,9 @@ function textEl(t: TextBox, cls: string, sampleChars = 1): string {
 }
 
 function meshEls(mesh: MeshLayout, cellLabels: boolean): string {
-  let out = rectEl('ds-mesh', mesh.outline, ' fill="none"');
+  let out = '';
   for (const f of mesh.fills) out += rectEl(`ds-fill--${f.fill}`, f.rect);
+  out += rectEl('ds-mesh', mesh.outline, ' fill="none"');
   if (mesh.gridLines.length > 0) {
     const d = mesh.gridLines.map(([a, b]: [Point, Point]) => `M${n(a.x)} ${n(a.y)}L${n(b.x)} ${n(b.y)}`).join('');
     out += `<path class="ds-grid" fill="none" d="${d}"/>`;
@@ -102,6 +103,7 @@ function headerEls(header: HeaderLayout | null): string {
   return out;
 }
 
+// Expects a card-local layout (default origin), in PDF points; output is in mm.
 export function cardSvg(layout: SeedCardLayout | PassphraseCardLayout, options: CardSvgOptions = {}): CardSvg {
   const showWordNumbers = options.wordNumbers ?? true;
   const showHeaders = options.headers ?? true;
