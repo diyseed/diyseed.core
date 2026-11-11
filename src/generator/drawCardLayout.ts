@@ -42,7 +42,7 @@ export function drawCardLayout(
 }
 
 function drawSeedCard(page: PDFPage, fonts: CardFonts, layout: SeedCardLayout, cardOrigin: Point, style: CardStyle): void {
-  if (layout.rowHeader) {
+  if (layout.rowHeader && layout.rowHeader.labels.length > 0) {
     const label = layout.rowHeader.labels[0];
     const fontSize = headerFontSize(fonts.font, '1024', size(SEED_BINARY_HEADER_WIDTH, label.box.height));
     drawHeader(page, fonts.font, fontSize, layout.rowHeader, style);
@@ -65,13 +65,13 @@ function drawPassphraseCard(page: PDFPage, font: PDFFont, layout: PassphraseCard
   drawCardFrame(page, layout, cardOrigin, style);
 
   // Rotated labels: the fit runs on swapped axes (text length along the box height).
-  const column = layout.columnHeader.labels[0].box;
-  drawHeader(page, font, headerFontSize(font, '99', size(column.height, column.width)), layout.columnHeader, style);
+  const column = layout.columnHeader.labels[0]?.box;
+  if (column) drawHeader(page, font, headerFontSize(font, '99', size(column.height, column.width)), layout.columnHeader, style);
 
   for (const block of layout.blocks) {
     block.topMarks.forEach((mark) => drawCircle(page, mark, style));
-    const row = block.rowHeader.labels[0].box;
-    drawHeader(page, font, headerFontSize(font, '64', size(PASSPHRASE_HEADER_SIZE, row.height)), block.rowHeader, style);
+    const row = block.rowHeader.labels[0]?.box;
+    if (row) drawHeader(page, font, headerFontSize(font, '64', size(PASSPHRASE_HEADER_SIZE, row.height)), block.rowHeader, style);
     block.meshes.forEach((mesh) => drawMesh(page, mesh, style));
   }
 

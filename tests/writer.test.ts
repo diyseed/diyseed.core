@@ -114,6 +114,20 @@ describe('generateWriterPdf', () => {
     expect(loaded.getPageCount()).toBeGreaterThanOrEqual(1);
   });
 
+  it('does not throw for a passphrase card with no characters per block', async () => {
+    const params = new PassphraseParameters({
+      cardSize: { width: mm(20), height: mm(20) },
+      cardPadding: mm(5),
+      cardCornerRadius: mm(1.5),
+      cardCount: 1,
+      copies: 1,
+      cellSize: { width: mm(10.5), height: mm(10.5) },
+    });
+    expect(params.charsPerBlock).toBe(0);
+    const bytes = await generatePassphrasePdf(params);
+    expect(new TextDecoder().decode(bytes.slice(0, 5))).toBe('%PDF-');
+  });
+
   it('produces one page per copy for the passphrase stencil', async () => {
     const params = new PassphraseParameters({
       cardSize: { width: mm(150), height: mm(140) },
