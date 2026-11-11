@@ -300,3 +300,13 @@ describe('layoutSeedCard: origin', () => {
     });
   }
 });
+
+describe('layoutSeedCard: default encoding', () => {
+  it('equals the explicit encoding for a Binary card', () => {
+    const p = params({ cardSize: card, seedLength: 24, cardCount: 2, encoding: EncodingType.Binary });
+    const c = p.getCardParameters(1);
+    const layout = layoutSeedCard(c);
+    expect(layout.rowHeader).not.toBeNull();
+    expect(layout).toEqual(layoutSeedCard(c, EncodingType.Binary));
+  });
+});

@@ -17,14 +17,18 @@ function rect(origin: Point, s: Size): Rect {
 // `origin` is where the card's top-left corner sits. The default gives card-local
 // coordinates; the writer passes its cardOrigin so every value is computed in the
 // same arithmetic order it always used (byte-identical PDFs).
-export function layoutSeedCard(card: CardParameters, encoding: EncodingType, origin: Point = point(0, 0)): SeedCardLayout {
+export function layoutSeedCard(
+  card: CardParameters,
+  encoding: EncodingType = card.sections[0].encoding,
+  origin: Point = point(0, 0),
+): SeedCardLayout {
   const isBinary = encoding === EncodingType.Binary;
   const headerWidth = isBinary ? SEED_BINARY_HEADER_WIDTH : 0;
 
   const sections: SeedSectionLayout[] = [];
   let sectionOrigin = point(origin.x + card.padding, origin.y + card.padding);
   for (const section of card.sections) {
-    sections.push(layoutSection(section, sectionOrigin, card.padding, encoding));
+    sections.push(layoutSection(section, sectionOrigin, card.padding));
     sectionOrigin = point(sectionOrigin.x, sectionOrigin.y + section.size.height + card.padding);
   }
 
@@ -43,14 +47,14 @@ export function layoutSeedCard(card: CardParameters, encoding: EncodingType, ori
   };
 }
 
-function layoutSection(section: CardSectionParameters, origin: Point, padding: number, encoding: EncodingType): SeedSectionLayout {
+function layoutSection(section: CardSectionParameters, origin: Point, padding: number): SeedSectionLayout {
   const meshes: MeshLayout[] = [];
   const wordNumbers: TextBox[] = [];
 
   let wordOrigin = origin;
   section.wordNumbers.forEach((wordNumber, i) => {
     const wordShaded = (section.number + i) % 2 === 0;
-    meshes.push(layoutWordMesh(wordOrigin, section.wordSize, section.cellSize, encoding, wordShaded));
+    meshes.push(layoutWordMesh(wordOrigin, section.wordSize, section.cellSize, section.encoding, wordShaded));
     wordNumbers.push({
       text: `${wordNumber}`,
       box: {

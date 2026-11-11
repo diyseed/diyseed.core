@@ -210,3 +210,11 @@ describe('layoutPassphraseCard: origin', () => {
     });
   }
 });
+
+describe('layoutPassphraseCard: default startRowNumber', () => {
+  it('equals the explicit (cardNumber - 1) * blockCount + 1', () => {
+    const p = params(2, 2);
+    const explicit = layoutPassphraseCard(p, 2, (2 - 1) * p.blockCount + 1);
+    expect(layoutPassphraseCard(p, 2)).toEqual(explicit);
+  });
+});

@@ -16,7 +16,7 @@ export const PASSPHRASE_HEADER_SIZE = Config.BINARY_HEADER_HEIGHT;
 export function layoutPassphraseCard(
   params: PassphraseParameters,
   cardNumber: number,
-  startRowNumber: number,
+  startRowNumber: number = (cardNumber - 1) * params.blockCount + 1,
   origin: Point = point(0, 0),
 ): PassphraseCardLayout {
   const headerSize = PASSPHRASE_HEADER_SIZE;
