@@ -1,6 +1,7 @@
-import { generateStencilPdf, StencilInput } from './generator/writer';
-import { decodeConfigCode, ConfigCodeError, DecodedConfigCode } from './generator/configCode';
 import {
+  generateStencilPdf,
+  decodeConfigCode,
+  ConfigCodeError,
   validate,
   toGeneratorParameters,
   toPassphraseParameters,
@@ -8,16 +9,11 @@ import {
   isPassphraseSectionActive,
   hasAnyOutputSelected,
   DEFAULT_FORM_VALUES,
-  FormValues,
-  FieldError,
-} from './form/form';
-import { EncodingType } from './generator/encoding';
-import { GeneratorParameters, PassphraseParameters } from './generator/params';
-import { pdfFilename } from './form/pdfFilename';
-import { codeFromSearch } from './form/codeLink';
-import { cardSizeSvg } from './svg/cardSizeSvg';
-import { computePreviewLayout, computePassphrasePreviewLayout } from './ui/preview';
-import { renderSeedPreview, renderPassphrasePreview, STENCIL_UNCHECKED_PLACEHOLDER_TEXT } from './ui/renderPreview';
+  EncodingType,
+  pdfFilename,
+  codeFromSearch,
+} from '../index';
+import type { StencilInput, DecodedConfigCode, FormValues, FieldError, GeneratorParameters, PassphraseParameters } from '../index';
 
 function readForm(): FormValues {
   const num = (id: string, fallback: number) => {
@@ -118,21 +114,6 @@ function renderGeneralError(message: string): void {
   list.appendChild(item);
 }
 
-const SHARED_REQUIRED_FIELD_IDS = ['cardWidthMm', 'cardHeightMm'];
-const SEED_REQUIRED_FIELD_IDS = ['seedLength', 'cardCount'];
-
-function hasEmptyRequiredField(values: FormValues): boolean {
-  const isEmpty = (id: string) => (document.getElementById(id) as HTMLInputElement | null)?.value === '';
-  // Card properties are always visible, so always required.
-  if (SHARED_REQUIRED_FIELD_IDS.some(isEmpty)) {
-    return true;
-  }
-  if (isSeedSectionActive(values) && SEED_REQUIRED_FIELD_IDS.some(isEmpty)) {
-    return true;
-  }
-  return false;
-}
-
 function updateCardSplitVisibility(): void {
   const encodingEl = document.getElementById('encoding') as HTMLSelectElement | null;
   const cardSplitInput = document.getElementById('cardSplit');
@@ -152,7 +133,7 @@ function setDisabled(id: string, disabled: boolean): void {
 
 // The Seed/Passphrase boxes themselves stay visible always now (their own
 // checkbox lives in their title, not a separate top-level toggle) - only
-// their body (fields, Advanced options, Preview) hides when unchecked. The
+// their body (fields, Advanced options) hides when unchecked. The
 // three nested Stencil/reader/reference checkboxes stay visible either way,
 // just disabled while their section is off, since they mean nothing without
 // it (matches how readForm() already zeroes them out).
@@ -181,43 +162,11 @@ function updateGenerateButtonVisibility(values: FormValues): void {
   button?.classList.toggle('is-hidden', !hasAnyOutputSelected(values));
 }
 
-function updatePreview(): void {
-  const seedPreviewEl = document.getElementById('seed-preview');
-  const passphrasePreviewEl = document.getElementById('passphrase-preview');
-  if (!seedPreviewEl || !passphrasePreviewEl) return;
-
+function updateForm(): void {
   const values = readForm();
-
   updateCardSplitVisibility();
   updateSectionVisibility(values);
   updateGenerateButtonVisibility(values);
-
-  if (hasEmptyRequiredField(values)) {
-    renderSeedPreview(seedPreviewEl, null);
-    renderPassphrasePreview(passphrasePreviewEl, null);
-    return;
-  }
-
-  const errors = validate(values);
-  if (errors.length > 0) {
-    renderSeedPreview(seedPreviewEl, null);
-    renderPassphrasePreview(passphrasePreviewEl, null);
-    return;
-  }
-
-  try {
-    // seedParams is only needed for the seed's own preview now - Passphrase's
-    // cell size no longer derives from it.
-    const seedParams = isSeedSectionActive(values) ? toGeneratorParameters(values) : null;
-    const seedLayout = seedParams && values.includeSeedStencil ? computePreviewLayout(seedParams) : null;
-    const passphraseParams = isPassphraseSectionActive(values) ? toPassphraseParameters(values) : null;
-    const passphraseLayout = passphraseParams && values.passphrase.includeStencil ? computePassphrasePreviewLayout(passphraseParams) : null;
-    renderSeedPreview(seedPreviewEl, seedLayout, values.includeSeedStencil ? undefined : STENCIL_UNCHECKED_PLACEHOLDER_TEXT);
-    renderPassphrasePreview(passphrasePreviewEl, passphraseLayout, values.passphrase.includeStencil ? undefined : STENCIL_UNCHECKED_PLACEHOLDER_TEXT);
-  } catch {
-    renderSeedPreview(seedPreviewEl, null);
-    renderPassphrasePreview(passphrasePreviewEl, null);
-  }
 }
 
 function downloadPdf(bytes: Uint8Array, filename: string): void {
@@ -339,29 +288,8 @@ document.getElementById('code-form')?.addEventListener('submit', async (event) =
   }
 });
 
-function updateCardDiagram(): void {
-  const svg = document.getElementById('card-preview-svg');
-  if (!svg) return;
-  const positive = (id: string, fallback: number) => {
-    const value = (document.getElementById(id) as HTMLInputElement | null)?.valueAsNumber;
-    return value !== undefined && Number.isFinite(value) && value > 0 ? value : fallback;
-  };
-  const diagram = cardSizeSvg(
-    positive('cardWidthMm', DEFAULT_FORM_VALUES.cardWidthMm),
-    positive('cardHeightMm', DEFAULT_FORM_VALUES.cardHeightMm),
-    positive('cardPaddingMm', DEFAULT_FORM_VALUES.cardPaddingMm),
-  );
-  svg.setAttribute('viewBox', diagram.viewBox);
-  svg.setAttribute('aria-label', diagram.label);
-  svg.innerHTML = diagram.markup;
-}
-
-document.getElementById('generator-form')?.addEventListener('input', () => {
-  updatePreview();
-  updateCardDiagram();
-});
-updatePreview();
-updateCardDiagram();
+document.getElementById('generator-form')?.addEventListener('input', updateForm);
+updateForm();
 
 const linkedCode = codeFromSearch(location.search);
 if (linkedCode) openCodeDialog(linkedCode);
