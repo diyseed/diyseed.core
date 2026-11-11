@@ -174,8 +174,10 @@ The PDF is named after the card codes it contains: `diyseed_seed<seed code>_pass
 
 The app is a plain form without previews. Consumers that want them (the diyseed website does) draw them from the library:
 
-- `cardSvg(layout, options?)` takes a `SeedCardLayout` from `layoutSeedCard(card, encoding)` or a `PassphraseCardLayout` from `layoutPassphraseCard(params, cardNumber, startRowNumber)`, plus optional `CardSvgOptions` (`wordNumbers`, `headers`, `cellLabels`). It returns `{ markup, viewBox, card }` in mm. The cell size comes from the parameters (`GeneratorParameters.cellSize`, `PassphraseParameters.cellSize`) and the card code from `encodeSeedConfigCode` / `encodePassphraseConfigCode`.
-- `cardSizeSvg(widthMm, heightMm, paddingMm)` returns `{ viewBox, label, markup }`: the card outline with its width and height in mm and the padding as a dashed line.
+- `cardSvg(layout, options?)` takes a `SeedCardLayout` from `layoutSeedCard(card, encoding?, origin?)` or a `PassphraseCardLayout` from `layoutPassphraseCard(params, cardNumber, startRowNumber?, origin?)`, plus optional `CardSvgOptions` (`wordNumbers`, `headers`, `cellLabels`). It returns `{ markup, viewBox, card }` in mm (`viewBox` is a `Rect`). `encoding` defaults to the card's own, `startRowNumber` to `(cardNumber - 1) * blockCount + 1`.
+- Layout coordinates are PDF points; `cardSvg` output is in mm. `cardSvg` expects a card-local layout, so leave `origin` at its default.
+- The seed `card` argument comes from `GeneratorParameters.getCardParameters(n)`, with `n` from 1 to `effectiveCardCount`. The cell size comes from the parameters (`GeneratorParameters.cellSize`, `PassphraseParameters.cellSize`) and the card code from `encodeSeedConfigCode` / `encodePassphraseConfigCode`.
+- `cardSizeSvg(widthMm, heightMm, paddingMm)` returns `{ viewBox, label, markup }` (here `viewBox` is a string, unlike `cardSvg`'s `Rect`): the card outline with its width and height in mm and the padding as a dashed line.
 
 The SVG carries class names only (`ds-*` for cards, `card-diagram__*` for the card-size drawing), no colours, so the consumer supplies the styling. The PDF writer uses the same layout, so previews match the printed stencil.
 

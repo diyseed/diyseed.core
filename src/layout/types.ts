@@ -1,8 +1,9 @@
 import type { Point, Size } from '../units';
 
-// All coordinates are PDF points, card-local, top-left origin: the card's own
-// top-left corner is (0, 0). Headers drawn outside the card get negative
-// coordinates.
+// All coordinates are PDF points, top-left origin, relative to the `origin`
+// passed to the layout function (card-local with the default origin: the card's
+// own top-left corner is (0, 0)). Headers drawn outside the card get negative
+// coordinates with the default origin.
 
 export type Rect = { x: number; y: number; width: number; height: number };
 
