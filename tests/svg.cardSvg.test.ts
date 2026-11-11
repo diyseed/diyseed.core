@@ -6,7 +6,7 @@ import * as Config from '../src/generator/config';
 import { layoutSeedCard } from '../src/layout/seedCard';
 import { layoutPassphraseCard } from '../src/layout/passphraseCard';
 import { cardSvg } from '../src/svg/cardSvg';
-import { mm, size } from '../src/units';
+import { mm, size, toMm } from '../src/units';
 
 const card = size(mm(85.6), mm(54));
 
@@ -56,6 +56,27 @@ describe('cardSvg: default seed card', () => {
     expect(doc.querySelectorAll('.ds-grid').length).toBeGreaterThan(0);
   });
 
+  it('sizes word numbers to fit their column, all alike', () => {
+    const widths = [...doc.querySelectorAll('rect.ds-mesh')].map((e) => Number(e.getAttribute('width')));
+    const sizes = [...doc.querySelectorAll('.ds-word-number')].map((e) => Number(e.getAttribute('font-size')));
+    expect(sizes).toHaveLength(12);
+    sizes.forEach((s, i) => {
+      expect(s).toBeLessThanOrEqual(0.8 * widths[i] + 1e-6);
+      expect(s).toBeLessThanOrEqual(toMm(Config.WORD_NR_FONT_SIZE_RANGE[1]) + 1e-6);
+    });
+    expect(new Set(sizes).size).toBe(1);
+  });
+
+  it('keeps cell labels inside their cells', () => {
+    const labelled = parse(cardSvg(layout, { cellLabels: true }).markup);
+    const cell = layout.cellSize;
+    for (const e of labelled.querySelectorAll('.ds-cell-label')) {
+      const s = Number(e.getAttribute('font-size'));
+      expect(s).toBeLessThanOrEqual(toMm(cell.width) + 1e-6);
+      expect(s).toBeLessThanOrEqual(toMm(cell.height) + 1e-6);
+    }
+  });
+
   it('omits word numbers when asked', () => {
     expect(parse(cardSvg(layout, { wordNumbers: false }).markup).querySelectorAll('.ds-word-number')).toHaveLength(0);
   });
@@ -75,6 +96,17 @@ describe('cardSvg: binary seed card', () => {
     const doc = parse(result.markup);
     expect(doc.querySelectorAll('.ds-header-label')).toHaveLength(11);
     expect(doc.querySelectorAll('.ds-header-arrow')).toHaveLength(11);
+  });
+
+  it('keeps header labels inside their boxes', () => {
+    const rh = layout.rowHeader!;
+    const doc = parse(cardSvg(layout).markup);
+    [...doc.querySelectorAll('.ds-header-label')].forEach((e, i) => {
+      const box = rh.labels[i].box;
+      const s = Number(e.getAttribute('font-size'));
+      expect(s).toBeLessThanOrEqual(toMm(box.height) + 1e-6);
+      expect(s).toBeLessThanOrEqual(toMm(box.width) + 1e-6);
+    });
   });
 
   it('crops to the card without headers', () => {

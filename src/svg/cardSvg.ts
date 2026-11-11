@@ -1,4 +1,5 @@
 import { toMm } from '../units';
+import * as Config from '../generator/config';
 import type { Point } from '../units';
 import type {
   Circle,
@@ -44,16 +45,23 @@ function circleEl(c: Circle): string {
   return `<circle class="ds-corner-mark" cx="${n(c.cx)}" cy="${n(c.cy)}" r="${n(c.r)}"/>`;
 }
 
-function textEl(t: TextBox, cls: string): string {
+// Font size (points): fit the box height and the sample run's width (0.6 em per
+// char), like the PDF; word numbers share one size via the '42.' sample and a cap.
+function fitSize(height: number, width: number, sampleChars: number, role: TextBox['role']): number {
+  const size = Math.min(height * 0.8, width / (sampleChars * 0.6));
+  return role === 'word-number' ? Math.min(size, Config.WORD_NR_FONT_SIZE_RANGE[1]) : size;
+}
+
+function textEl(t: TextBox, cls: string, sampleChars = 1): string {
   const { box, align } = t;
   const anchor = { left: 'start', center: 'middle', right: 'end' } as const;
   const baseline = { top: 'hanging', center: 'central', bottom: 'text-after-edge' } as const;
 
   if (t.rotated) {
-    // Reads bottom-to-top. Run length is the box's long side, font size comes from
-    // the short (cross) side; 'bottom' anchors the text start at the box's bottom
+    // Reads bottom-to-top: width and height swap for the fit (run = box height,
+    // cross = box width); 'bottom' anchors the text start at the box's bottom
     // edge (toward the card), 'top' its end at the top edge.
-    const fontSize = Math.min(box.width, box.height) * 0.8;
+    const fontSize = fitSize(box.width, box.height, sampleChars, t.role);
     const cx = box.x + box.width / 2;
     const [py, textAnchor] =
       align.vertical === 'bottom' ? [box.y + box.height, 'start'] : align.vertical === 'top' ? [box.y, 'end'] : [box.y + box.height / 2, 'middle'];
@@ -63,8 +71,7 @@ function textEl(t: TextBox, cls: string): string {
     );
   }
 
-  // Font size is 0.8 of the box height.
-  const fontSize = box.height * 0.8;
+  const fontSize = fitSize(box.height, box.width, sampleChars, t.role);
   const x = align.horizontal === 'left' ? box.x : align.horizontal === 'right' ? box.x + box.width : box.x + box.width / 2;
   const y = align.vertical === 'top' ? box.y : align.vertical === 'bottom' ? box.y + box.height : box.y + box.height / 2;
   return (
@@ -87,7 +94,8 @@ function meshEls(mesh: MeshLayout, cellLabels: boolean): string {
 function headerEls(header: HeaderLayout | null): string {
   if (!header) return '';
   let out = '';
-  for (const t of header.labels) out += textEl(t, 'ds-header-label');
+  const longest = Math.max(1, ...header.labels.map((t) => t.text.length));
+  for (const t of header.labels) out += textEl(t, 'ds-header-label', longest);
   for (const [a, b, c] of header.arrows) {
     out += `<polygon class="ds-header-arrow" points="${n(a.x)},${n(a.y)} ${n(b.x)},${n(b.y)} ${n(c.x)},${n(c.y)}"/>`;
   }
@@ -116,7 +124,7 @@ export function cardSvg(layout: SeedCardLayout | PassphraseCardLayout, options: 
     for (const section of layout.sections) {
       for (const mesh of section.meshes) body += meshEls(mesh, showCellLabels);
       for (const m of section.topMarks) body += circleEl(m);
-      if (showWordNumbers) for (const t of section.wordNumbers) body += textEl(t, 'ds-word-number');
+      if (showWordNumbers) for (const t of section.wordNumbers) body += textEl(t, 'ds-word-number', 3);
     }
     body += circleEl(layout.bottomLeftMark);
     if (showHeaders) body += headerEls(layout.rowHeader);
