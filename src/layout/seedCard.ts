@@ -1,26 +1,17 @@
 import { CardParameters, CardSectionParameters } from '../generator/params';
 import { EncodingType, encodingLayout } from '../generator/encoding';
 import * as Config from '../generator/config';
-import {
-  cornerMarkInset,
-  getTopLeftCornerMarkOffsets,
-  getTopLeftCornerMarkPitch,
-  getTopRightCornerMarkOffset,
-  getBottomLeftCornerMarkOffset,
-} from '../generator/cornerMarks';
+import { cornerMarkInset, getBottomLeftCornerMarkOffset } from '../generator/cornerMarks';
 import { Point, Size, point } from '../units';
 import { ARROW_FOOTPRINT, headerArrowsLeft } from './headers';
-import type { Circle, Fill, HeaderLayout, MeshLayout, Rect, SeedCardLayout, SeedSectionLayout, TextBox } from './types';
+import { circle, rowTopMarks } from './marks';
+import type { Fill, HeaderLayout, MeshLayout, Rect, SeedCardLayout, SeedSectionLayout, TextBox } from './types';
 
 // The left header strip the writer reserves for a Binary card's bit labels.
 export const SEED_BINARY_HEADER_WIDTH = Config.BINARY_HEADER_HEIGHT;
 
 function rect(origin: Point, s: Size): Rect {
   return { x: origin.x, y: origin.y, width: s.width, height: s.height };
-}
-
-function circle(center: Point): Circle {
-  return { cx: center.x, cy: center.y, r: Config.CORNER_MARK_RADIUS };
 }
 
 // `origin` is where the card's top-left corner sits. The default gives card-local
@@ -126,18 +117,6 @@ function layoutWordMesh(origin: Point, wordSize: Size, cellSize: Size, encoding:
   }
 
   return { outline, fills, gridLines, cellLabels };
-}
-
-// Same arithmetic as the writer's drawRowTopMarks: top-left cluster first,
-// then the single top-right mark.
-function rowTopMarks(rowOrigin: Point, rowSize: Size, rowNumber: number, pitch: number, padding: number): Circle[] {
-  const inset = cornerMarkInset(padding);
-  const marks = getTopLeftCornerMarkOffsets(rowNumber, inset, getTopLeftCornerMarkPitch(rowNumber, pitch, rowSize.width)).map(
-    (offset) => circle(point(rowOrigin.x + offset.x, rowOrigin.y + offset.y)),
-  );
-  const topRight = getTopRightCornerMarkOffset(inset);
-  marks.push(circle(point(rowOrigin.x + rowSize.width + topRight.x, rowOrigin.y + topRight.y)));
-  return marks;
 }
 
 // Same arithmetic as the writer's drawBinaryRowHeader + drawHeaderArrowsLeft,

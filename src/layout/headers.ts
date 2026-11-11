@@ -19,3 +19,16 @@ export function headerArrowsLeft(count: number, edgeX: number, startY: number, c
   }
   return arrows;
 }
+
+// Small downward-pointing triangles, one per column, sitting just above the
+// edge they point into. Same arithmetic as the writer's drawHeaderArrowsTop.
+export function headerArrowsTop(count: number, edgeY: number, startX: number, cellWidth: number): Triangle[] {
+  const tipY = edgeY - ARROW_TIP_GAP;
+  const baseY = tipY - ARROW_SIZE;
+  const arrows: Triangle[] = [];
+  for (let i = 0; i < count; i++) {
+    const cx = startX + cellWidth * i + cellWidth / 2;
+    arrows.push([point(cx - ARROW_SIZE / 2, baseY), point(cx + ARROW_SIZE / 2, baseY), point(cx, tipY)]);
+  }
+  return arrows;
+}

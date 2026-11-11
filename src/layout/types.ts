@@ -12,10 +12,12 @@ export type Triangle = [Point, Point, Point];
 
 export type Fill = 'shade' | 'shade-intersection';
 
+// For rotated text (reads bottom-to-top), `vertical` still refers to the box's
+// own top/bottom edges: 'bottom' is the writer's 'end' anchor.
 export type TextBox = {
   text: string;
   box: Rect;
-  align: { horizontal: 'left' | 'center' | 'right'; vertical: 'top' | 'center' };
+  align: { horizontal: 'left' | 'center' | 'right'; vertical: 'top' | 'center' | 'bottom' };
   rotated?: boolean;
   role: 'word-number' | 'cell-label' | 'header';
 };
@@ -56,4 +58,21 @@ export interface SeedCardLayout extends CardLayoutBase {
   sections: SeedSectionLayout[];
   bottomLeftMark: Circle;
   rowHeader: HeaderLayout | null;
+}
+
+export interface PassphraseBlockLayout {
+  rowNumber: number;
+  origin: Point;
+  size: Size;
+  meshes: MeshLayout[];
+  // Top-left cluster (count = row number), then the single top-right mark.
+  topMarks: Circle[];
+  rowHeader: HeaderLayout;
+}
+
+export interface PassphraseCardLayout extends CardLayoutBase {
+  kind: 'passphrase';
+  blocks: PassphraseBlockLayout[];
+  columnHeader: HeaderLayout;
+  bottomLeftMark: Circle;
 }
