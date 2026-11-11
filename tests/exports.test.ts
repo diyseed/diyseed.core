@@ -7,6 +7,7 @@ describe('library exports', () => {
     'isSeedSectionActive', 'isPassphraseSectionActive', 'hasAnyOutputSelected',
     'pdfFilename', 'codeFromSearch', 'layoutSeedCard', 'layoutPassphraseCard',
     'cardSvg', 'cardSizeSvg', 'physicalCardNumberOf', 'sideOf',
+    'seedCellWarnings', 'passphraseWarnings',
   ] as const;
 
   it.each(functions)('exports %s as a function', (name) => {

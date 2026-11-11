@@ -14,6 +14,8 @@ export {
 export type { FormValues, PassphraseFormValues, FieldError } from './form/form';
 export { pdfFilename } from './form/pdfFilename';
 export { codeFromSearch } from './form/codeLink';
+export { seedCellWarnings, passphraseWarnings } from './form/warnings';
+export type { SeedCellWarnings, PassphraseWarnings } from './form/warnings';
 export { layoutSeedCard, SEED_BINARY_HEADER_WIDTH } from './layout/seedCard';
 export { layoutPassphraseCard, PASSPHRASE_HEADER_SIZE } from './layout/passphraseCard';
 export type {
