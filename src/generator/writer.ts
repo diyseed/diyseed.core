@@ -8,7 +8,8 @@ import { drawRectTL, drawRoundedRectTL, drawLineTL, drawTextInBoxTL, drawFilledC
 import { cornerMarkInset, getTopLeftCornerMarkOffsets, getTopLeftCornerMarkPitch, getTopRightCornerMarkOffset, getBottomLeftCornerMarkOffset, getCutterGuideSegments } from './cornerMarks';
 import { buildSeedParamsSummary, buildPassphraseParamsSummary } from './summary';
 import { encodeSeedConfigCode, encodePassphraseConfigCode } from './configCode';
-import { Point, Size, point, size, mm } from '../units';
+import { Point, Size, point, size } from '../units';
+import { ARROW_SIZE, ARROW_TIP_GAP, ARROW_FOOTPRINT } from '../layout/headers';
 
 const BLACK = rgb(0, 0, 0);
 const CARD_OUTLINE = BLACK;
@@ -420,12 +421,6 @@ function drawPassphraseRowHeader(
 
   drawHeaderArrowsLeft(page, values.length, cardOriginX, blockOriginY, cellHeight);
 }
-
-const ARROW_SIZE = mm(1.2);
-const ARROW_TIP_GAP = mm(0.3);
-// Exactly the arrow's own footprint from the edge - text stops right where
-// the arrow starts, no separate breathing-room gap on top of that.
-const ARROW_FOOTPRINT = ARROW_SIZE + ARROW_TIP_GAP;
 
 // Small downward-pointing triangles, one per column, sitting just above the
 // edge they point into (a card's top edge, or a block's own top edge).
