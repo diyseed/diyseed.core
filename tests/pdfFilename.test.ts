@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pdfFilename } from '../src/ui/pdfFilename';
+import { pdfFilename } from '../src/form/pdfFilename';
 import { GeneratorParameters, PassphraseParameters } from '../src/generator/params';
 import * as Config from '../src/generator/config';
 import { mm } from '../src/units';

@@ -10,11 +10,11 @@ import {
   DEFAULT_FORM_VALUES,
   FormValues,
   FieldError,
-} from './ui/form';
+} from './form/form';
 import { EncodingType } from './generator/encoding';
 import { GeneratorParameters, PassphraseParameters } from './generator/params';
-import { pdfFilename } from './ui/pdfFilename';
-import { codeFromSearch } from './ui/codeLink';
+import { pdfFilename } from './form/pdfFilename';
+import { codeFromSearch } from './form/codeLink';
 import { cardSizeSvg } from './svg/cardSizeSvg';
 import { computePreviewLayout, computePassphrasePreviewLayout } from './ui/preview';
 import { renderSeedPreview, renderPassphrasePreview, STENCIL_UNCHECKED_PLACEHOLDER_TEXT } from './ui/renderPreview';
