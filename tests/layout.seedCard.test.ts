@@ -12,7 +12,7 @@ import {
 import { layoutSeedCard, SEED_BINARY_HEADER_WIDTH } from '../src/layout/seedCard';
 import { ARROW_FOOTPRINT, ARROW_SIZE, ARROW_TIP_GAP } from '../src/layout/headers';
 import type { Rect } from '../src/layout/types';
-import { mm, size } from '../src/units';
+import { mm, point, size } from '../src/units';
 
 const card = size(mm(85.6), mm(54));
 
@@ -263,4 +263,40 @@ describe('layoutSeedCard: tiny card', () => {
       expect(rects).toBeGreaterThan(0);
     }
   });
+});
+
+describe('layoutSeedCard: origin', () => {
+  // Every x / cx shifts by dx, every y / cy by dy; everything else is unchanged.
+  function expectShifted(actual: unknown, base: unknown, dx: number, dy: number, path = '$'): void {
+    if (Array.isArray(base)) {
+      expect(Array.isArray(actual), path).toBe(true);
+      expect((actual as unknown[]).length, path).toBe(base.length);
+      base.forEach((b, i) => expectShifted((actual as unknown[])[i], b, dx, dy, `${path}[${i}]`));
+    } else if (typeof base === 'object' && base !== null) {
+      expect(Object.keys(actual as object).sort(), path).toEqual(Object.keys(base).sort());
+      for (const [k, b] of Object.entries(base)) {
+        const a = (actual as Record<string, unknown>)[k];
+        if (typeof b === 'number' && (k === 'x' || k === 'cx')) expect(a, `${path}.${k}`).toBeCloseTo(b + dx, 9);
+        else if (typeof b === 'number' && (k === 'y' || k === 'cy')) expect(a, `${path}.${k}`).toBeCloseTo(b + dy, 9);
+        else expectShifted(a, b, dx, dy, `${path}.${k}`);
+      }
+    } else {
+      expect(actual, path).toEqual(base);
+    }
+  }
+
+  const cases: [string, ConstructorParameters<typeof GeneratorParameters>[0], EncodingType][] = [
+    ['alphabet', { cardSize: card, cardPadding: mm(1.5), seedLength: 12, cardCount: 1, cardSplit: 1, encoding: EncodingType.Alphabet }, EncodingType.Alphabet],
+    ['number split 2', { cardSize: card, seedLength: 24, cardCount: 1, cardSplit: 2, encoding: EncodingType.Number }, EncodingType.Number],
+    ['binary', { cardSize: card, seedLength: 24, cardCount: 2, encoding: EncodingType.Binary }, EncodingType.Binary],
+  ];
+
+  for (const [name, input, encoding] of cases) {
+    it(`shifts every coordinate by the origin (${name})`, () => {
+      const c = params(input).getCardParameters(1);
+      const base = layoutSeedCard(c, encoding);
+      const shifted = layoutSeedCard(c, encoding, point(37.5, 81.25));
+      expectShifted(shifted, base, 37.5, 81.25);
+    });
+  }
 });

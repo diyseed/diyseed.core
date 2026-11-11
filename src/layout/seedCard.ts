@@ -23,12 +23,15 @@ function circle(center: Point): Circle {
   return { cx: center.x, cy: center.y, r: Config.CORNER_MARK_RADIUS };
 }
 
-export function layoutSeedCard(card: CardParameters, encoding: EncodingType): SeedCardLayout {
+// `origin` is where the card's top-left corner sits. The default gives card-local
+// coordinates; the writer passes its cardOrigin so every value is computed in the
+// same arithmetic order it always used (byte-identical PDFs).
+export function layoutSeedCard(card: CardParameters, encoding: EncodingType, origin: Point = point(0, 0)): SeedCardLayout {
   const isBinary = encoding === EncodingType.Binary;
   const headerWidth = isBinary ? SEED_BINARY_HEADER_WIDTH : 0;
 
   const sections: SeedSectionLayout[] = [];
-  let sectionOrigin = point(card.padding, card.padding);
+  let sectionOrigin = point(origin.x + card.padding, origin.y + card.padding);
   for (const section of card.sections) {
     sections.push(layoutSection(section, sectionOrigin, card.padding, encoding));
     sectionOrigin = point(sectionOrigin.x, sectionOrigin.y + section.size.height + card.padding);
@@ -42,10 +45,10 @@ export function layoutSeedCard(card: CardParameters, encoding: EncodingType): Se
     radius: card.radius,
     padding: card.padding,
     cellSize: card.cellSize,
-    bounds: { x: isBinary ? -headerWidth : 0, y: 0, width: card.size.width + headerWidth, height: card.size.height },
+    bounds: { x: origin.x - headerWidth, y: origin.y, width: card.size.width + headerWidth, height: card.size.height },
     sections,
-    bottomLeftMark: circle(point(card.padding + bottomLeft.x, card.size.height - card.padding + bottomLeft.y)),
-    rowHeader: isBinary ? layoutBinaryRowHeader(card.size.height, card.padding, headerWidth) : null,
+    bottomLeftMark: circle(point(origin.x + card.padding + bottomLeft.x, origin.y + card.size.height - card.padding + bottomLeft.y)),
+    rowHeader: isBinary ? layoutBinaryRowHeader(origin, card.size.height, card.padding, headerWidth) : null,
   };
 }
 
@@ -138,15 +141,15 @@ function rowTopMarks(rowOrigin: Point, rowSize: Size, rowNumber: number, pitch: 
 }
 
 // Same arithmetic as the writer's drawBinaryRowHeader + drawHeaderArrowsLeft,
-// with the card's left edge at x = 0.
-function layoutBinaryRowHeader(cardHeight: number, cardPadding: number, headerWidth: number): HeaderLayout {
+// with cardOrigin replaced by origin.
+function layoutBinaryRowHeader(origin: Point, cardHeight: number, cardPadding: number, headerWidth: number): HeaderLayout {
   const gridHeight = cardHeight - 2 * cardPadding;
   const rowHeight = gridHeight / Config.BINARY_COLUMN_VALUES.length;
   const labels: TextBox[] = Config.BINARY_COLUMN_VALUES.map((value, i) => ({
     text: `${value}`,
-    box: { x: -headerWidth, y: cardPadding + rowHeight * i, width: headerWidth - ARROW_FOOTPRINT, height: rowHeight },
+    box: { x: origin.x - headerWidth, y: origin.y + cardPadding + rowHeight * i, width: headerWidth - ARROW_FOOTPRINT, height: rowHeight },
     align: { horizontal: 'right', vertical: 'center' },
     role: 'header',
   }));
-  return { labels, arrows: headerArrowsLeft(Config.BINARY_COLUMN_VALUES.length, 0, cardPadding, rowHeight) };
+  return { labels, arrows: headerArrowsLeft(Config.BINARY_COLUMN_VALUES.length, origin.x, origin.y + cardPadding, rowHeight) };
 }
