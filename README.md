@@ -110,8 +110,8 @@ const pdf: Uint8Array = await generateWriterPdf(
 
 The library has no UI and no DOM dependency. Export groups:
 
-- **Generation:** `generateStencilPdf`, `generateWriterPdf`, `generatePassphrasePdf`, `GeneratorParameters`, `PassphraseParameters`, card code encode/decode.
-- **Form validation:** `validate`, `toGeneratorParameters`, `toPassphraseParameters`, `DEFAULT_FORM_VALUES`, `pdfFilename`, `codeFromSearch`.
+- **Generation:** `generateStencilPdf`, `generateWriterPdf`, `generatePassphrasePdf`, `GeneratorParameters`, `PassphraseParameters`, `encodeSeedConfigCode`, `encodePassphraseConfigCode`, `decodeConfigCode`.
+- **Form validation:** `validate`, `toGeneratorParameters`, `toPassphraseParameters`, `DEFAULT_FORM_VALUES`, `pdfFilename`, `codeFromSearch`, `seedCellWarnings`, `passphraseWarnings`.
 - **Layout:** `layoutSeedCard`, `layoutPassphraseCard`, the stencil-card model shared by the PDF writer and the SVG output.
 - **SVG:** `cardSvg`, `cardSizeSvg`. Output carries class names only (`ds-*`, `card-diagram__*`), consumers supply styling.
 
@@ -146,7 +146,7 @@ The form validates every value against the ranges below before it generates anyt
 
 - **Seed length:** a real BIP-39 seed is 12, 15, 18, 21 or 24 words. Other lengths exist for non-standard backups (partial backups, SLIP-39 shares).
 - **Split over:** each card is one side of a physical card (1/2 are sides A/B of the first card, 3/4 the next one). Past ~6 sides, punching and reassembling in order gets unwieldy.
-- **Cell size:** derived from card size, padding, word count and encoding. Under 1.5 mm (`MIN_CELL_SIZE_MM`) is too small for a center punch on metal, and more elongated than 2:1 (`MAX_CELL_ASPECT_RATIO`) makes dents ambiguous to read.
+- **Cell size:** derived from card size, padding, word count and encoding. Under 1.5 mm (`MIN_CELL_SIZE_MM`) is too small for a center punch on metal, and more elongated than 2:1 (`MAX_CELL_ASPECT_RATIO`) makes dents ambiguous to read. The app doesn't show warnings; consumers get the same checks from `seedCellWarnings(params)` and `passphraseWarnings(params)`.
 
 #### Passphrase stencil
 
@@ -174,8 +174,8 @@ The PDF is named after the card codes it contains: `diyseed_seed<seed code>_pass
 
 The app is a plain form without previews. Consumers that want them (the diyseed website does) draw them from the library:
 
-- `cardSvg(layout)` returns the SVG of one card, from `layoutSeedCard` or `layoutPassphraseCard`: the full-detail card, with the cell size and card code available from the layout.
-- `cardSizeSvg` returns the card outline with its width and height in mm and the padding as a dashed line.
+- `cardSvg(layout, options?)` takes a `SeedCardLayout` from `layoutSeedCard(card, encoding)` or a `PassphraseCardLayout` from `layoutPassphraseCard(params, cardNumber, startRowNumber)`, plus optional `CardSvgOptions` (`wordNumbers`, `headers`, `cellLabels`). It returns `{ markup, viewBox, card }` in mm. The cell size comes from the parameters (`GeneratorParameters.cellSize`, `PassphraseParameters.cellSize`) and the card code from `encodeSeedConfigCode` / `encodePassphraseConfigCode`.
+- `cardSizeSvg(widthMm, heightMm, paddingMm)` returns `{ viewBox, label, markup }`: the card outline with its width and height in mm and the padding as a dashed line.
 
 The SVG carries class names only (`ds-*` for cards, `card-diagram__*` for the card-size drawing), no colours, so the consumer supplies the styling. The PDF writer uses the same layout, so previews match the printed stencil.
 
