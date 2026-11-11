@@ -108,6 +108,13 @@ const pdf: Uint8Array = await generateWriterPdf(
 );
 ```
 
+The library has no UI and no DOM dependency. Export groups:
+
+- **Generation:** `generateStencilPdf`, `generateWriterPdf`, `generatePassphrasePdf`, `GeneratorParameters`, `PassphraseParameters`, card code encode/decode.
+- **Form validation:** `validate`, `toGeneratorParameters`, `toPassphraseParameters`, `DEFAULT_FORM_VALUES`, `pdfFilename`, `codeFromSearch`.
+- **Layout:** `layoutSeedCard`, `layoutPassphraseCard`, the stencil-card model shared by the PDF writer and the SVG output.
+- **SVG:** `cardSvg`, `cardSizeSvg`. Output carries class names only (`ds-*`, `card-diagram__*`), consumers supply styling.
+
 ## Generator options
 
 A client-side TypeScript web app. No install, no server, no account. Fill in your card and seed parameters, and it generates the stencil PDF entirely in your browser.
@@ -139,7 +146,7 @@ The form validates every value against the ranges below before it generates anyt
 
 - **Seed length:** a real BIP-39 seed is 12, 15, 18, 21 or 24 words. Other lengths exist for non-standard backups (partial backups, SLIP-39 shares).
 - **Split over:** each card is one side of a physical card (1/2 are sides A/B of the first card, 3/4 the next one). Past ~6 sides, punching and reassembling in order gets unwieldy.
-- **Cell size:** derived from card size, padding, word count and encoding. The preview warns when a cell is under 1.5 mm (`MIN_CELL_SIZE_MM`, too small for a center punch on metal) or more elongated than 2:1 (`MAX_CELL_ASPECT_RATIO`, dents get ambiguous to read).
+- **Cell size:** derived from card size, padding, word count and encoding. Under 1.5 mm (`MIN_CELL_SIZE_MM`) is too small for a center punch on metal, and more elongated than 2:1 (`MAX_CELL_ASPECT_RATIO`) makes dents ambiguous to read.
 
 #### Passphrase stencil
 
@@ -165,14 +172,16 @@ The PDF is named after the card codes it contains: `diyseed_seed<seed code>_pass
 
 #### Previews
 
-Each box in the form has a collapsible **Preview** that redraws as you type:
+The app is a plain form without previews. Consumers that want them (the diyseed website does) draw them from the library:
 
-- **Card properties:** the card outline with its width and height in mm and the padding as a dashed line.
-- **Seed** and **Passphrase:** the first card in full detail, all cards as thumbnails, and the card code. Above the detailed card is the cell size, either calculated from card size, padding and seed length (seed) or as set in the passphrase options.
+- `cardSvg(layout)` returns the SVG of one card, from `layoutSeedCard` or `layoutPassphraseCard`: the full-detail card, with the cell size and card code available from the layout.
+- `cardSizeSvg` returns the card outline with its width and height in mm and the padding as a dashed line.
+
+The SVG carries class names only (`ds-*` for cards, `card-diagram__*` for the card-size drawing), no colours, so the consumer supplies the styling. The PDF writer uses the same layout, so previews match the printed stencil.
 
 ### Card code
 
-Reading a card back needs a stencil generated with the same settings it was punched from (card size, padding, seed length, card count, rows, encoding). So every stencil page prints a short **card code** in large type below the cards, e.g. `1-0856-0540-15-12-01-1-1`, and the form preview shows it too. Copying it onto the card (scratch it, stamp it, or write it on the card's sleeve) is optional, just a convenience: without it you can still measure the card and try settings until the stencil lines up.
+Reading a card back needs a stencil generated with the same settings it was punched from (card size, padding, seed length, card count, rows, encoding). So every stencil page prints a short **card code** in large type below the cards, e.g. `1-0856-0540-15-12-01-1-1`. Copying it onto the card (scratch it, stamp it, or write it on the card's sleeve) is optional, just a convenience: without it you can still measure the card and try settings until the stencil lines up.
 
 To use it, click **Generate from card code** on the generator page and type the code in. You get the full recovery kit for that card's whole set: the stencil, the reader, the BIP-39 wordlist and the ASCII table, built straight from the code and independent of the rest of the form.
 
