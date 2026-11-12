@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { codeFromSearch } from '../src/ui/codeLink';
+import { codeFromSearch } from '../src/form/codeLink';
 
 describe('codeFromSearch', () => {
   it('reads and trims the code parameter', () => {

@@ -8,7 +8,7 @@ import {
   isPassphraseSectionActive,
   hasAnyOutputSelected,
   DEFAULT_FORM_VALUES,
-} from '../src/ui/form';
+} from '../src/form/form';
 import { EncodingType } from '../src/generator/encoding';
 import { mm } from '../src/units';
 
