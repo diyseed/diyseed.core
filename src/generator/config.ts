@@ -4,10 +4,12 @@ import { EncodingType } from './encoding';
 
 // DOCUMENT STRINGS
 export const DOCUMENT_TITLE = 'Protect your crypto-wallet seed backup - DIYseed.net';
-// Printed bottom-right on every page (drawPageChrome, writer.ts) - a single
+// Printed bottom-right on every page (drawPageChrome, pageChrome.ts) - a single
 // override point for anyone building/forking this generator to put their own
 // URL here instead.
 export const DOCUMENT_FOOTER_TEXT = 'github.com/diyseed/diyseed.core';
+// Printed bottom-left on every page: the website, same override point.
+export const DOCUMENT_FOOTER_URL = 'https://diyseed.net';
 export const DOCUMENT_SEED_HEADER_TEXT = 'Seed stencil';
 export const DOCUMENT_PASSPHRASE_HEADER_TEXT = 'Passphrase stencil';
 

@@ -49,5 +49,15 @@ export function drawPageChrome(pages: PDFPage[], font: PDFFont, boldFont: PDFFon
       { horizontal: 'right', vertical: 'top' },
       FOOTER_TEXT_COLOR,
     );
+    drawTextInBoxTL(
+      page,
+      Config.DOCUMENT_FOOTER_URL,
+      font,
+      Config.FOOTER_FONT_SIZE,
+      point(Config.DOCUMENT_MARGIN_H, Config.DOCUMENT_SIZE.height - Config.DOCUMENT_MARGIN_BOTTOM),
+      { width: Config.EFFECTIVE_PAGE_SIZE.width, height: Config.DOCUMENT_MARGIN_BOTTOM },
+      { horizontal: 'left', vertical: 'top' },
+      FOOTER_TEXT_COLOR,
+    );
   }
 }
