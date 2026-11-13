@@ -1,5 +1,6 @@
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
 import * as Config from './config';
+import { drawPageChrome } from './pageChrome';
 import { drawRectTL, drawLineTL, drawTextInBoxTL } from './pdfDraw';
 import { drawBitCell, BitCellStyle } from './referenceTableCell';
 import { Point, point, size } from '../units';
@@ -147,7 +148,6 @@ export async function generateAsciiTablePdf(): Promise<Uint8Array> {
   // Reuse the shared page chrome (title/footer) - lazy import avoids a
   // circular dependency at module-load time, same as generateStencilPdf does
   // for reader.ts.
-  const { drawPageChrome } = await import('./writer');
   drawPageChrome([page], chromeFont, chromeBoldFont, Config.ASCII_TABLE_TITLE_TEXT, '7-bit encoding reference, printable characters only (32-126)');
 
   return doc.save();

@@ -6,7 +6,7 @@ import { getFontSizeForBox } from './fontFit';
 import { drawLineTL, drawRectTL, drawTextInBoxTL, drawRotatedTextInBoxTL, toPdfY } from './pdfDraw';
 import { layoutNumberedBoxes } from './readerBoxes';
 import { buildSeedParamsSummary, buildPassphraseParamsSummary } from './summary';
-import { drawPageChrome } from './writer';
+import { drawPageChrome } from './pageChrome';
 import { Point, Size, point, size } from '../units';
 
 const BLACK = rgb(0, 0, 0);

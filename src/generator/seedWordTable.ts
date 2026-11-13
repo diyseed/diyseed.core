@@ -1,5 +1,6 @@
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from 'pdf-lib';
 import * as Config from './config';
+import { drawPageChrome } from './pageChrome';
 import { drawRectTL, drawLineTL, drawTextInBoxTL, drawRotatedTextInBoxTL } from './pdfDraw';
 import { drawBitCell, BitCellStyle } from './referenceTableCell';
 import { Point, Size, point, size, mm } from '../units';
@@ -170,7 +171,6 @@ export async function generateSeedWordTablePdf(): Promise<Uint8Array> {
   // Reuse the shared page chrome (title/footer) - lazy import avoids a
   // circular dependency at module-load time, same as generateStencilPdf does
   // for reader.ts/asciiTable.ts.
-  const { drawPageChrome } = await import('./writer');
   drawPageChrome(pages, chromeFont, chromeBoldFont, Config.SEED_TABLE_TITLE_TEXT, `${BIP39_WORDLIST.length}-word BIP-39 encoding reference`);
 
   return doc.save();

@@ -10,6 +10,10 @@ import { CardStyle, drawCardLayout } from './drawCardLayout';
 import { point, size } from '../units';
 import { layoutSeedCard } from '../layout/seedCard';
 import { layoutPassphraseCard } from '../layout/passphraseCard';
+import { drawPageChrome, HEADER_TEXT_COLOR, FOOTER_TEXT_COLOR } from './pageChrome';
+import { generateSeedReaderPdf, generatePassphraseReaderPdf } from './reader';
+import { generateAsciiTablePdf } from './asciiTable';
+import { generateSeedWordTablePdf } from './seedWordTable';
 
 const BLACK = rgb(0, 0, 0);
 const CARD_OUTLINE = BLACK;
@@ -19,8 +23,6 @@ const SHADE_INTERSECTION = rgb(0.85, 0.85, 0.85);
 const CELL_TEXT = rgb(0.55, 0.55, 0.55);
 const WORD_NR_TEXT = BLACK;
 const WORD_NR_OPACITY = 0.6;
-const HEADER_TEXT_COLOR = rgb(0, 0, 0);
-const FOOTER_TEXT_COLOR = rgb(0.608, 0.608, 0.608);
 
 const CARD_STYLE: CardStyle = {
   outline: CARD_OUTLINE,
@@ -81,49 +83,6 @@ export async function generateWriterPdf(parameters: GeneratorParameters): Promis
   drawPageChrome(pages, chromeFont, chromeBoldFont, Config.DOCUMENT_SEED_HEADER_TEXT, buildSeedParamsSummary(parameters));
 
   return doc.save();
-}
-
-export function drawPageChrome(pages: PDFPage[], font: PDFFont, boldFont: PDFFont, headerText: string, paramsSummary: string): void {
-  // The params summary sits to the right of the title, on the same line, in
-  // small gray text - so it needs the title's own rendered width to know
-  // where it can start.
-  const titleWidth = boldFont.widthOfTextAtSize(headerText, Config.HEADER_FONT_SIZE);
-  const summaryGap = Config.PARAMS_SUMMARY_GAP;
-  const summaryX = Config.DOCUMENT_MARGIN_H + titleWidth + summaryGap;
-  const summaryWidth = Math.max(0, Config.EFFECTIVE_PAGE_SIZE.width - titleWidth - summaryGap);
-
-  for (const page of pages) {
-    drawTextInBoxTL(
-      page,
-      headerText,
-      boldFont,
-      Config.HEADER_FONT_SIZE,
-      point(Config.DOCUMENT_MARGIN_H, 0),
-      { width: Config.EFFECTIVE_PAGE_SIZE.width, height: Config.DOCUMENT_MARGIN_TOP },
-      { horizontal: 'left', vertical: 'center' },
-      HEADER_TEXT_COLOR,
-    );
-    drawTextInBoxTL(
-      page,
-      paramsSummary,
-      font,
-      Config.PARAMS_SUMMARY_FONT_SIZE,
-      point(summaryX, 0),
-      { width: summaryWidth, height: Config.DOCUMENT_MARGIN_TOP },
-      { horizontal: 'left', vertical: 'center' },
-      FOOTER_TEXT_COLOR,
-    );
-    drawTextInBoxTL(
-      page,
-      Config.DOCUMENT_FOOTER_TEXT,
-      font,
-      Config.FOOTER_FONT_SIZE,
-      point(Config.DOCUMENT_MARGIN_H, Config.DOCUMENT_SIZE.height - Config.DOCUMENT_MARGIN_BOTTOM),
-      { width: Config.EFFECTIVE_PAGE_SIZE.width, height: Config.DOCUMENT_MARGIN_BOTTOM },
-      { horizontal: 'right', vertical: 'top' },
-      FOOTER_TEXT_COLOR,
-    );
-  }
 }
 
 export async function generatePassphrasePdf(parameters: PassphraseParameters): Promise<Uint8Array> {
@@ -212,12 +171,6 @@ export async function generateStencilPdf(input: StencilInput): Promise<Uint8Arra
   if (!includesSeed && !includesPassphrase && !input.includeAsciiTable && !input.includeSeedWordTable) {
     throw new Error('At least one of seed, passphrase, the ASCII table, or the seed word table must be included.');
   }
-
-  // Lazy imports avoid a circular dependency at module-load time - reader.ts
-  // imports drawPageChrome from this module.
-  const { generateSeedReaderPdf, generatePassphraseReaderPdf } = await import('./reader');
-  const { generateAsciiTablePdf } = await import('./asciiTable');
-  const { generateSeedWordTablePdf } = await import('./seedWordTable');
 
   const parts: Promise<Uint8Array>[] = [];
   if (input.seed) {
